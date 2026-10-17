@@ -1,0 +1,430 @@
+{
+  "erstelltAm": 1785883810244,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "division-negativ-zaehler",
+        "anschlussId": "division-negativ-zaehler-ausgang-wert"
+      },
+      "id": "division-n1",
+      "zu": {
+        "knotenId": "division-negativ-zaehler-negiert",
+        "anschlussId": "division-negativ-zaehler-negiert-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-negativ-minus-eins",
+        "anschlussId": "division-negativ-minus-eins-ausgang-wert"
+      },
+      "id": "division-n2",
+      "zu": {
+        "knotenId": "division-negativ-zaehler-negiert",
+        "anschlussId": "division-negativ-zaehler-negiert-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-negativ-nenner",
+        "anschlussId": "division-negativ-nenner-ausgang-wert"
+      },
+      "id": "division-n3",
+      "zu": {
+        "knotenId": "division-negativ-nenner-negiert",
+        "anschlussId": "division-negativ-nenner-negiert-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-negativ-minus-eins",
+        "anschlussId": "division-negativ-minus-eins-ausgang-wert"
+      },
+      "id": "division-n4",
+      "zu": {
+        "knotenId": "division-negativ-nenner-negiert",
+        "anschlussId": "division-negativ-nenner-negiert-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-negativ-nenner-negiert",
+        "anschlussId": "division-negativ-nenner-negiert-ausgang-wert"
+      },
+      "id": "division-n5",
+      "zu": {
+        "knotenId": "division-negativ-kehrwert",
+        "anschlussId": "division-negativ-kehrwert-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-negativ-zaehler-negiert",
+        "anschlussId": "division-negativ-zaehler-negiert-ausgang-wert"
+      },
+      "id": "division-n6",
+      "zu": {
+        "knotenId": "division-negativ-produkt",
+        "anschlussId": "division-negativ-produkt-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-negativ-kehrwert",
+        "anschlussId": "division-negativ-kehrwert-ausgang-wert"
+      },
+      "id": "division-n7",
+      "zu": {
+        "knotenId": "division-negativ-produkt",
+        "anschlussId": "division-negativ-produkt-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-negativ-produkt",
+        "anschlussId": "division-negativ-produkt-ausgang-wert"
+      },
+      "id": "division-n8",
+      "zu": {
+        "knotenId": "division-negativ-ausgang",
+        "anschlussId": "division-negativ-ausgang-eingang-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Vorzeichen zum Zähler verschieben",
+  "knoten": [
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-zaehler-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Zähler a"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-negativ-zaehler",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-nenner-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Nenner b < 0"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-negativ-nenner",
+      "position": {
+        "x": 30,
+        "y": 310
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-minus-eins-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "wert": "-1"
+      },
+      "name": "Zahl",
+      "id": "division-negativ-minus-eins",
+      "position": {
+        "x": 310,
+        "y": 500
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-zaehler-negiert-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-zaehler-negiert-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-zaehler-negiert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-negativ-zaehler-negiert",
+      "position": {
+        "x": 430,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-nenner-negiert-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-nenner-negiert-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-nenner-negiert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-negativ-nenner-negiert",
+      "position": {
+        "x": 430,
+        "y": 310
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-kehrwert-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-kehrwert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.kehrwert"
+      },
+      "name": "Kehrwert",
+      "id": "division-negativ-kehrwert",
+      "position": {
+        "x": 780,
+        "y": 310
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-produkt-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-produkt-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-produkt-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-negativ-produkt",
+      "position": {
+        "x": 1090,
+        "y": 170
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-negativ-ausgang-eingang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Ergebnis"
+      },
+      "name": "Karten-Ausgang",
+      "id": "division-negativ-ausgang",
+      "position": {
+        "x": 1420,
+        "y": 180
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.5d7c91ae.negativer-nenner",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.65
+  },
+  "formatVersion": 7,
+  "version": 1
+}

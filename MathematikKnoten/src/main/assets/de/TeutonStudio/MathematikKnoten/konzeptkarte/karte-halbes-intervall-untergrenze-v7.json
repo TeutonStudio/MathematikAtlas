@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810215,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-eingang-0",
         "anschlussId": "definition-halbes-intervall-untergrenze-eingang-0-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-variable-x",
         "anschlussId": "definition-halbes-intervall-untergrenze-variable-x-anschluss-0"
@@ -24,113 +26,135 @@
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-einzel-links",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-eingang-0",
         "anschlussId": "definition-halbes-intervall-untergrenze-eingang-0-wert"
       },
+      "id": "definition-halbes-intervall-untergrenze-einzel-links",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-einzel",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-einzel-anschluss-0"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-leer-links",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-leer",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-leer-anschluss-0"
       },
+      "id": "definition-halbes-intervall-untergrenze-leer-links",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-randfall",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-randfall-anschluss-0"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-offen-links",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-eingang-1",
         "anschlussId": "definition-halbes-intervall-untergrenze-eingang-1-wert"
       },
+      "id": "definition-halbes-intervall-untergrenze-offen-links",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-randfall",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-randfall-anschluss-1"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-geschlossen-links",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-einzel",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-einzel-anschluss-1"
       },
+      "id": "definition-halbes-intervall-untergrenze-geschlossen-links",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-randfall",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-randfall-anschluss-2"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-links-relation-methode",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-kleiner",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-kleiner-anschluss-2"
       },
+      "id": "definition-halbes-intervall-untergrenze-links-relation-methode",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-term-zu-methode",
         "anschlussId": "definition-halbes-intervall-untergrenze-term-zu-methode-anschluss-0"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-links-methode-filter",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-term-zu-methode",
         "anschlussId": "definition-halbes-intervall-untergrenze-term-zu-methode-anschluss-1"
       },
+      "id": "definition-halbes-intervall-untergrenze-links-methode-filter",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-mengenfilter",
         "anschlussId": "definition-halbes-intervall-untergrenze-mengenfilter-anschluss-1"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-reelle-zahlen-links",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-reelle-zahlen",
         "anschlussId": "definition-halbes-intervall-untergrenze-reelle-zahlen-anschluss-0"
       },
+      "id": "definition-halbes-intervall-untergrenze-reelle-zahlen-links",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-mengenfilter",
         "anschlussId": "definition-halbes-intervall-untergrenze-mengenfilter-anschluss-0"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-links-halbstrahl-offen",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-mengenfilter",
         "anschlussId": "definition-halbes-intervall-untergrenze-mengenfilter-anschluss-2"
       },
+      "id": "definition-halbes-intervall-untergrenze-links-halbstrahl-offen",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-vereinigung",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-vereinigung-anschluss-0"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-links-halbstrahl-rand",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-randfall",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-randfall-anschluss-3"
       },
+      "id": "definition-halbes-intervall-untergrenze-links-halbstrahl-rand",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-vereinigung",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-vereinigung-anschluss-1"
       }
     },
     {
-      "id": "definition-halbes-intervall-untergrenze-ausgangsverbindung",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-halbes-intervall-untergrenze-links-vereinigung",
         "anschlussId": "definition-halbes-intervall-untergrenze-links-vereinigung-anschluss-2"
       },
+      "id": "definition-halbes-intervall-untergrenze-ausgangsverbindung",
       "zu": {
         "knotenId": "definition-halbes-intervall-untergrenze-karten-ausgang",
         "anschlussId": "definition-halbes-intervall-untergrenze-karten-ausgang-anschluss-0"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "definition-halbes-intervall-untergrenze-variable-x:migration-grundraum",
+        "anschlussId": "definition-halbes-intervall-untergrenze-variable-x:migration-grundraum:Ausgang:menge"
+      },
+      "id": "definition-halbes-intervall-untergrenze-variable-x:migration-grundraum:verbindung",
+      "zu": {
+        "knotenId": "definition-halbes-intervall-untergrenze-variable-x",
+        "anschlussId": "definition-halbes-intervall-untergrenze-variable-x:grundraum"
       }
     }
   ],
@@ -144,22 +168,22 @@
         "breite": 240,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-halbes-intervall-untergrenze-eingang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-halbes-intervall-untergrenze-eingang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.zahl",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "grenze",
       "id": "definition-halbes-intervall-untergrenze-eingang-0",
@@ -175,18 +199,18 @@
         "breite": 240,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.aussage",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-halbes-intervall-untergrenze-eingang-1-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.aussage",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-halbes-intervall-untergrenze-eingang-1-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "vorschauWert": "false",
         "typ": "mathematik.aussage",
@@ -202,13 +226,14 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.ordnungsrelation",
+      "art": "mathematik.praedikat",
       "größe": {
         "breite": 220,
         "höhe": 110
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -216,9 +241,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-kleiner-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -226,9 +253,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-kleiner-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -236,13 +265,16 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-kleiner-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
-        "relation": "kleiner"
+        "operator": "relation.kleiner",
+        "relation": "kleiner",
+        "praedikatSeite": "relationen"
       },
-      "name": "Kleiner",
+      "name": "Prädikat",
       "id": "definition-halbes-intervall-untergrenze-links-kleiner",
       "position": {
         "x": 600,
@@ -256,21 +288,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.objekt",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-halbes-intervall-untergrenze-karten-ausgang-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "menge"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.objekt",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-halbes-intervall-untergrenze-karten-ausgang-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "menge"},
       "name": "Karten-Ausgang",
       "id": "definition-halbes-intervall-untergrenze-karten-ausgang",
       "position": {
@@ -287,13 +317,31 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
+          "vertrag": {"typ": {
+            "art": "atom",
+            "id": "mathematik.zahl.reell"
+          }},
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-variable-x-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "grundraum",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-untergrenze-variable-x:grundraum",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -307,7 +355,10 @@
         "x": 0,
         "y": 160
       },
-      "eigenschaften": {}
+      "eigenschaften": {"variable.grundraumVertrag": {
+        "wert": "1",
+        "typ": "text"
+      }}
     },
     {
       "art": "mathematik.termZuMethode",
@@ -317,6 +368,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
@@ -324,9 +376,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-term-zu-methode-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -334,6 +388,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-term-zu-methode-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -347,7 +402,10 @@
         "x": 300,
         "y": 160
       },
-      "eigenschaften": {}
+      "eigenschaften": {"atlas.darstellungsform": {
+        "wert": "adapter",
+        "typ": "text"
+      }}
     },
     {
       "art": "mathematik.mengenfilter",
@@ -357,6 +415,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -364,9 +423,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-mengenfilter-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -374,9 +435,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-mengenfilter-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -384,6 +447,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-mengenfilter-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -397,13 +461,26 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.reelleZahlen",
+      "art": "mathematik.menge",
       "größe": {
         "breite": 210,
         "höhe": 90
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-untergrenze-reelle-zahlen-mengen-dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -411,10 +488,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-reelle-zahlen-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
-      "parameter": {},
+      "parameter": {"mengeAuswahl": "R"},
       "name": "Reelle Zahlen",
       "id": "definition-halbes-intervall-untergrenze-reelle-zahlen",
       "position": {
@@ -424,23 +502,30 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.einzelmenge",
+      "art": "mathematik.endlicheMenge",
       "größe": {
         "breite": 220,
         "höhe": 110
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.objekt",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
-          "name": "element",
+          "name": "element1",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.objekt"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-einzel-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -448,10 +533,14 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-einzel-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
-      "parameter": {},
+      "parameter": {
+        "endlicheMenge.anzahl": "1",
+        "eingabeModus": "graph"
+      },
       "name": "Einzelmenge",
       "id": "definition-halbes-intervall-untergrenze-links-einzel",
       "position": {
@@ -461,13 +550,26 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.leereMenge",
+      "art": "mathematik.menge",
       "größe": {
         "breite": 220,
         "höhe": 110
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-untergrenze-links-leer-mengen-dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -475,10 +577,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-leer-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
-      "parameter": {},
+      "parameter": {"mengeAuswahl": "leer"},
       "name": "Leere Menge",
       "id": "definition-halbes-intervall-untergrenze-links-leer",
       "position": {
@@ -495,6 +598,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
@@ -502,9 +606,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-randfall-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -512,9 +618,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-randfall-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
@@ -522,21 +630,24 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-randfall-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 2
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
+          "artVereinigtEingänge": [
+            "wahr",
+            "lüge"
+          ],
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-randfall-anschluss-3",
-          "reihenfolge": 0,
-          "artVereinigtEingänge": [
-            "wahr",
-            "lüge"
-          ]
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
         }
       ],
       "parameter": {},
@@ -549,52 +660,115 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.vereinigung",
+      "art": "mathematik.mengenrechner",
       "größe": {
         "breite": 220,
         "höhe": 110
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.menge",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.menge",
+            "mathematik.methode"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-vereinigung-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.menge",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.menge",
+            "mathematik.methode"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-halbes-intervall-untergrenze-links-vereinigung-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
           "name": "menge",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "definition-halbes-intervall-untergrenze-links-vereinigung-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
         "festeEingänge": "2",
-        "operatorAnzeige": "wert"
+        "operatorAnzeige": "wert",
+        "operator": "menge.vereinigung"
       },
       "name": "Vereinigung",
       "id": "definition-halbes-intervall-untergrenze-links-vereinigung",
       "position": {
         "x": 900,
         "y": 320
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.menge",
+      "größe": {
+        "breite": 230,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-untergrenze-variable-x:migration-grundraum:Eingang:dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-halbes-intervall-untergrenze-variable-x:migration-grundraum:Ausgang:menge",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {"mengeAuswahl": "R"},
+      "name": "Grundraum · x",
+      "id": "definition-halbes-intervall-untergrenze-variable-x:migration-grundraum",
+      "position": {
+        "x": -340,
+        "y": 160
       },
       "eigenschaften": {}
     }
@@ -605,6 +779,6 @@
     "y": 0,
     "zoom": 0.75
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

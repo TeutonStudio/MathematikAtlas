@@ -155,7 +155,8 @@ object RechnerOperatorDefinitionen {
         val methode = op == ZusätzlicherZahlenOperator.STAMMFUNKTION
         val typ = if (methode) FormelTyp.METHODE else FormelTyp.ZAHL
         RechnerOperatorDefinition(OperatorFamilie.ZAHL, op.stabileId, op.titel, op.symbolLatex, op.symbolLatex,
-            listOf(signatur(eingänge, typ, if (op == ZusätzlicherZahlenOperator.STAMMFUNKTION) "stammfunktion" else "wert")),
+            listOf(signatur(eingänge, typ, if (op == ZusätzlicherZahlenOperator.STAMMFUNKTION) "stammfunktion" else "wert")) +
+                if(op==ZusätzlicherZahlenOperator.POLYNOM) listOf(signatur(eingänge.take(1),id="variable")) else emptyList(),
             eingänge.map { StrukturRechnerEingang(it.name, it.typ) }, typ, aliases = setOf(op.name))
     }
 

@@ -1,0 +1,36 @@
+{
+  "erstelltAm": 1785883810583,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Äquivalente Darstellungen Integral",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 620,
+        "höhe": 210
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.zahlenrechner",
+        "regel": "Äquivalente Darstellungen verändern weder Eingangsbereiche noch offene Definitionsbedingungen."
+      },
+      "name": "Äquivalente Darstellung",
+      "id": "zahlenrechner-zahl-integral-aequivalente-regel",
+      "position": {
+        "x": 70,
+        "y": 65
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.7f1a662c.aequivalente",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

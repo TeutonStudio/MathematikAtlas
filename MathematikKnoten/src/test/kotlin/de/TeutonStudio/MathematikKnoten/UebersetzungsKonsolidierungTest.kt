@@ -12,7 +12,7 @@ class UebersetzungsKonsolidierungTest {
     private val register=GesamterMathematikAuswerter.erzeugeRegister()
     private fun z(n:Long)=RationaleZahl.von(n)
     private fun ziel(z:String)=konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),z)
-    private fun eval(k:KnotenDaten,w:BedingterWert,port:String="wert")=register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k,mapOf(port to w),RechenKontext()))
+    private fun eval(k:KnotenDaten,w:BedingterWert,port:String="wert")=register.findeNachMigration(k.art).auswerten(KnotenAuswertungsKontext(k,mapOf(port to w),RechenKontext()))
     private fun phasen(k:KartenDaten)=listOf(MathematikKartenMigrationen::nachDekodierung,MathematikKartenMigrationen::nachLaden,MathematikKartenMigrationen::vorSpeichern,
         { a:KartenDaten -> MathematikKartenCodec.lese(KartenDatenJson.schreibe(a)) },
         { a:KartenDaten -> MathematikKartenCodec.lade(KartenDatenJson.schreibe(a)) },
@@ -58,7 +58,7 @@ class UebersetzungsKonsolidierungTest {
             for(alt in defekte) for(neu in phasen(KartenDaten(name="Defekt",knoten=listOf(alt)))) {
                 val k=neu.knoten.single();assertNotNull(k.parameter[RECHNER_MIGRATION_DIAGNOSE])
                 assertEquals(alt,k.copy(parameter=alt.parameter));assertEquals(neu,neu.migriereÜbersetzungsKonsolidierung())
-                val r=register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k,emptyMap(),RechenKontext()))
+                val r=register.findeNachMigration(k.art).auswerten(KnotenAuswertungsKontext(k,emptyMap(),RechenKontext()))
                 assertTrue(r.ausgaben.isEmpty());assertTrue(r.fehler.orEmpty().startsWith("Migrationsdiagnose:"))
             }
         }

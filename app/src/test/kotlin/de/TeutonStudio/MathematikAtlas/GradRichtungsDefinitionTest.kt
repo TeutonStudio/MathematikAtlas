@@ -30,7 +30,7 @@ class GradRichtungsDefinitionTest {
                 assertEquals(winkelraum(d-1), w.werteVorrat)
                 val polar = konfiguriereÜbersetzerPolarAnschlüsse(konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "kartesisch"), true)
                 val kartesisch = eval(polar, mapOf("radius" to BedingterWert(RationaleZahl.Eins), "winkel" to w))
-                val spalte = eval(KnotenDaten(art = "mathematik.tupelZuSpalte", name = "Tupel zu Vektor"), mapOf("tupel" to kartesisch))
+                val spalte = eval(konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),"spalte"), mapOf("wert" to kartesisch))
                 val matrix = Matrix(List(d) { i -> List(d) { j -> if (i == j) RationaleZahl.von(2) else RationaleZahl.Null } })
                 val op = konfiguriereStrukturRechner(StrukturFormelRechnerVorlagen.Matrix.erzeuge(GraphPunkt.Zero), de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie.MATRIX, "matrix.produkt")
                 val term = eval(op, mapOf("links" to BedingterWert(matrix), "rechts" to spalte))
@@ -58,7 +58,7 @@ class GradRichtungsDefinitionTest {
             kanten += VerbindungDaten(von = AnschlussVerweis(a.id,a.anschlüsse.single { it.name == aus && it.richtung == AnschlussRichtung.Ausgang }.id),
                 zu = AnschlussVerweis(b.id,b.anschlüsse.single { it.name == ein && it.richtung == AnschlussRichtung.Eingang }.id))
         }
-        val raum = definition.knoten.single { it.art == "mathematik.iteriertesKartesischesProdukt" }
+        val raum = definition.knoten.single { it.parameter["operator"] == "menge.iteriertesKartesischesProdukt" }
         val variable = konfiguriereVariablenStruktur(MathematikKnotenVorlagen.Variable.erzeuge(GraphPunkt(0f,900f)), VARIABLE_STRUKTUR_WINKEL).also { knoten += it }
         val polar = konfiguriereÜbersetzerPolarAnschlüsse(konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt(350f,900f)),"kartesisch"),true).let { it.copy(parameter=it.parameter+("standardwert.radius" to "1")) }.also { knoten += it }
         val vektor = neu(MathematikKnotenVorlagen.TupelZuSpalte,700f,900f)

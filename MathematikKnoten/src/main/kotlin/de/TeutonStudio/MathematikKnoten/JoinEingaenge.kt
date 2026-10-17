@@ -29,13 +29,18 @@ private fun joinPorts(knoten: KnotenDaten): List<AnschlussDaten> {
 }
 
 /** Idempotente fachliche Migration, ohne Dateien oder historische Kartenversionen zu schreiben. */
-fun KartenDaten.normalisiereJoinEingänge(): KartenDaten {
+fun KartenDaten.normalisiereJoinEingänge(überführeEinzelAnschlüsse: Boolean = false): KartenDaten {
     val ziele = mutableMapOf<AnschlussVerweis, Pair<AnschlussVerweis, Int>>()
     val fallbackVerbindungen = mutableMapOf<VerbindungsId, String>()
     val neu = knoten.map { k ->
         if (RECHNER_MIGRATION_DIAGNOSE in k.parameter) return@map k
         val ports = joinPorts(k)
         if (ports.isEmpty()) return@map k
+        if (!überführeEinzelAnschlüsse) {
+            if(ports.none {it.belegung==AnschlussBelegung.Mehrfach}) return@map k
+            if(ports.size!=1) return@map k.copy(parameter=k.parameter+(RECHNER_MIGRATION_DIAGNOSE to
+                "${k.art} bleibt erhalten: Gemischte Sammel- und Einzeloperanden benötigen eine ausdrückliche Konfiguration."))
+        }
         val join = ports.firstOrNull { it.belegung == AnschlussBelegung.Mehrfach } ?: ports.first()
         val namen = (ports.map { it.name } + k.parameter["join.rollen"].orEmpty().split(",")).filter { it.isNotBlank() }.toSet()
         val ids = ports.map { it.id }.toSet()
@@ -88,7 +93,7 @@ fun KartenDaten.normalisiereJoinEingänge(): KartenDaten {
 }
 
 fun joinVorlage(vorlage: KnotenVorlage): KnotenVorlage {
-    val k = KartenDaten(name = "Join", knoten = listOf(vorlage.erzeuge(GraphPunkt.Zero))).normalisiereJoinEingänge().knoten.single()
+    val k = KartenDaten(name = "Join", knoten = listOf(vorlage.erzeuge(GraphPunkt.Zero))).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true).knoten.single()
     return vorlage.copy(anschlüsse = k.anschlüsse, standardParameter = k.parameter)
 }
 

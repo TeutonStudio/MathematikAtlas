@@ -117,7 +117,7 @@ class KartenJsonTest {
         assertEquals(ZAHLENRECHNER_ART, gelesen.art)
         assertEquals(UniversellerZahlenOperator.MINIMUM.stabileId, gelesen.parameter[ZAHLENRECHNER_OPERATOR])
         assertEquals("minimum", gelesen.parameter.getValue("modus"))
-        assertEquals(listOf(extremwert.anschlüsse.first().id, extremwert.anschlüsse.last().id), gelesen.anschlüsse.map { it.id })
+        assertEquals(extremwert.anschlüsse.map {it.id}, gelesen.anschlüsse.map { it.id })
     }
 
     @Test fun `Reelles Intervall behält Grundmenge und Anschluss IDs beim Roundtrip`() {
@@ -139,7 +139,8 @@ class KartenJsonTest {
 
         val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(vektor, polynom), verbindungen = listOf(verbindung))))
 
-        assertEquals("mathematik.vektorZuPolynom", gelesen.knoten.single { it.id == polynom.id }.art)
+        assertEquals(ZAHLENRECHNER_ART, gelesen.knoten.single { it.id == polynom.id }.art)
+        assertEquals("variable",gelesen.knoten.single {it.id==polynom.id}.parameter["polynom.argumentModus"])
         assertEquals("t", gelesen.knoten.single { it.id == polynom.id }.parameter.getValue("variable"))
         assertEquals(polynom.anschlüsse.map { it.id }, gelesen.knoten.single { it.id == polynom.id }.anschlüsse.map { it.id })
         assertEquals(listOf(verbindung), gelesen.verbindungen)

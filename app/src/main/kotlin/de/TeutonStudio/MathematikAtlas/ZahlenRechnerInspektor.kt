@@ -22,7 +22,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 internal object ZahlenRechnerInspektor : KnotenInspektor {
     override fun hatBereich(knoten: KnotenDaten, bereich: KnotenInspektorBereich): Boolean = when (bereich) {
         KnotenInspektorBereich.Knotendaten -> true
-        KnotenInspektorBereich.Eingangsdaten -> knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach } && (UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR])?.let { istVariadischerZahlenOperator(it) || istKomplexKonstruktor(it) } == true || ErweiterterZahlenOperator.vonId(knoten.parameter[ZAHLENRECHNER_OPERATOR]) in setOf(ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL, ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL))
+        KnotenInspektorBereich.Eingangsdaten -> hatRechnerEingangsEinstellungen(knoten)
         KnotenInspektorBereich.Ausgangsdaten -> UniversellerZahlenOperator.vonIdOderNull(knoten.parameter[ZAHLENRECHNER_OPERATOR]) == UniversellerZahlenOperator.DIFFERENTIAL
     }
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) = FachInhalt(knoten, ergebnis, aktionen, true)

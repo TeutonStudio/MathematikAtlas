@@ -26,7 +26,7 @@ fun KnotenVorlage.stabileKonzeptId(): String {
     return listOf(art, stabilerKonzeptName(), variantenSchlüssel).joinToString("|")
 }
 
-fun KnotenVorlage.stabileVariantenId(): VariantenId = VariantenId(
+fun KnotenVorlage.stabileVariantenId(): VariantenId = if(art=="mathematik.zahlenrechner" && name=="Vektor zu Polynom" && standardParameter["polynom.argumentModus"]=="variable") VariantenId("mathematik.vektorZuPolynom|variable=${standardParameter["variable"] ?: "x"}|Vektor zu Polynom") else VariantenId(
     buildString {
         append(art)
         standardParameter.toSortedMap().forEach { (schlüssel, wert) ->

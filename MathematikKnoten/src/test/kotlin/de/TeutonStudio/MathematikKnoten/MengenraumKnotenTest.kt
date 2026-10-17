@@ -22,14 +22,14 @@ class MengenraumKnotenTest {
         MengenraumKnotenVorlagen.alle.forEach { vorlage ->
             val knoten = vorlage.erzeuge(GraphPunkt.Zero)
             assertTrue(knoten.anschlüsse.any { it.name == "menge" && it.richtung == AnschlussRichtung.Ausgang })
-            assertNotNull(register.finde(knoten.art), "Auswerter für ${knoten.art} fehlt.")
+            assertNotNull(register.findeNachMigration(knoten.art), "Auswerter für ${knoten.art} fehlt.")
         }
     }
 
     @Test
     fun `Leere Menge Knoten gibt die kanonische leere Menge aus`() {
         val knoten = MengenraumKnotenVorlagen.LeereMenge.erzeuge(GraphPunkt.Zero)
-        val menge = register.finde(knoten.art)!!.auswerten(
+        val menge = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(knoten, emptyMap(), RechenKontext()),
         ).ausgaben.getValue("menge").objekt
 
@@ -40,7 +40,7 @@ class MengenraumKnotenTest {
     @Test
     fun `Abbildungsmenge folgt der Konvention A hoch B gleich Abbildungen B nach A`() {
         val knoten = MengenraumKnotenVorlagen.Abbildungsmenge.erzeuge(GraphPunkt.Zero)
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
+        val ergebnis = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
@@ -64,7 +64,7 @@ class MengenraumKnotenTest {
         val vektorKnoten = MengenraumKnotenVorlagen.Vektorraum.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf("dimension" to "4"),
         )
-        val vektor = register.finde(vektorKnoten.art)!!.auswerten(
+        val vektor = register.findeNachMigration(vektorKnoten.art).auswerten(
             KnotenAuswertungsKontext(vektorKnoten, grundmenge, RechenKontext()),
         ).ausgaben.getValue("menge").objekt
         assertEquals(Tensorraum(ReelleZahlen, dimensionen(4)), vektor)
@@ -72,7 +72,7 @@ class MengenraumKnotenTest {
         val matrixKnoten = MengenraumKnotenVorlagen.Matrizenraum.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf("zeilen" to "2", "spalten" to "5"),
         )
-        val matrix = register.finde(matrixKnoten.art)!!.auswerten(
+        val matrix = register.findeNachMigration(matrixKnoten.art).auswerten(
             KnotenAuswertungsKontext(matrixKnoten, grundmenge, RechenKontext()),
         ).ausgaben.getValue("menge").objekt
         assertEquals(Matrizenraum(2, 5, ReelleZahlen), matrix)
@@ -80,7 +80,7 @@ class MengenraumKnotenTest {
         val tensorKnoten = MengenraumKnotenVorlagen.Tensorraum.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf("dimensionen" to "2,3,4"),
         )
-        val tensor = register.finde(tensorKnoten.art)!!.auswerten(
+        val tensor = register.findeNachMigration(tensorKnoten.art).auswerten(
             KnotenAuswertungsKontext(tensorKnoten, grundmenge, RechenKontext()),
         ).ausgaben.getValue("menge").objekt
         assertEquals(Tensorraum(ReelleZahlen, dimensionen(2, 3, 4)), tensor)
@@ -98,7 +98,7 @@ class MengenraumKnotenTest {
             ),
         )
         val knoten = MengenraumKnotenVorlagen.Tensorraum.erzeuge(GraphPunkt.Zero)
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
+        val ergebnis = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
@@ -123,7 +123,7 @@ class MengenraumKnotenTest {
         val n = Variable("n")
         val knoten = MengenraumKnotenVorlagen.Tensorraum.erzeuge(GraphPunkt.Zero)
         assertFailsWith<IllegalArgumentException> {
-            register.finde(knoten.art)!!.auswerten(
+            register.findeNachMigration(knoten.art).auswerten(
                 KnotenAuswertungsKontext(
                     knoten,
                     mapOf(
@@ -146,14 +146,14 @@ class MengenraumKnotenTest {
         val gültig = MengenraumKnotenVorlagen.ModuloZahlenraum.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf("modul" to "7"),
         )
-        val menge = register.finde(gültig.art)!!.auswerten(
+        val menge = register.findeNachMigration(gültig.art).auswerten(
             KnotenAuswertungsKontext(gültig, emptyMap(), RechenKontext()),
         ).ausgaben.getValue("menge").objekt
         assertEquals(ModuloZahlenraum(7), menge)
 
         val ungültig = gültig.copy(parameter = mapOf("modul" to "1"))
         assertFailsWith<IllegalArgumentException> {
-            register.finde(ungültig.art)!!.auswerten(
+            register.findeNachMigration(ungültig.art).auswerten(
                 KnotenAuswertungsKontext(ungültig, emptyMap(), RechenKontext()),
             )
         }

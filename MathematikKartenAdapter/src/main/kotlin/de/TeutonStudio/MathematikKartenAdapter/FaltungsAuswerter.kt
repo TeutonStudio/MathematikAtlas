@@ -156,13 +156,7 @@ internal object FaltungsdefinatorAuswerter : MathematikKnotenAuswerter {
 }
 
 /** Historische Einzelprojektion delegiert an den kanonischen Methodenaufruf. */
-internal object MethodenAnwendungAuswerter : MathematikKnotenAuswerter {
-    override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis =
-        MethodenAufrufAuswerter.auswerten(kontext.copy(knoten = kontext.knoten.copy(parameter = kontext.knoten.parameter + mapOf(
-            METHODEN_AUFRUF_ARGUMENTPROJEKTION to METHODEN_ARGUMENTPROJEKTION_SEPARIERT,
-            METHODEN_AUFRUF_ERGEBNISPROJEKTION to METHODEN_ERGEBNISPROJEKTION_DIREKT,
-        ))))
-}
+
 
 internal object MethodenZielmengeAuswerter : MathematikKnotenAuswerter {
     override fun auswerten(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {

@@ -29,18 +29,14 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("übersetzungen") { registriereÜbersetzungsKnoten() },
         MathematikAuswerterPaket("zahlenrechner") { registriereUniversellenZahlenRechner() },
         MathematikAuswerterPaket("zahlenrechner-erweiterungen") { registriereZahlenRechnerErweiterungen() },
-        MathematikAuswerterPaket("matrixdiagonale") { registriereMatrixdiagonale() },
-        MathematikAuswerterPaket("spur-und-tupelsumme") { registriereSpurUndTupelsumme() },
         MathematikAuswerterPaket("tupeloperationen") { registriereTupelOperationKnoten() },
         MathematikAuswerterPaket("transponieren") { registriereTransponieren() },
         MathematikAuswerterPaket("geometrie-grundobjekte") { registriereGeometrieGrundobjekte() },
         MathematikAuswerterPaket("geometrie-teilobjekte") { registriereGeometrieTeilobjekte() },
-        MathematikAuswerterPaket("geometrie-relationen") { registriereGeometrieRelationen() },
         MathematikAuswerterPaket("geometrie-transformationen") { registriereGeometrieTransformationen() },
         MathematikAuswerterPaket("mengenraeume") { registriereMengenraumKnoten() },
         MathematikAuswerterPaket("mengen-operatoren") { registriereMengenOperatorKnoten() },
         MathematikAuswerterPaket("praedikat") { registrierePraedikatKnoten() },
-        MathematikAuswerterPaket("aussagenlogik") { registriereAussagenLogikKnoten() },
         MathematikAuswerterPaket("strukturrechner") { registriereStrukturRechnerKnoten() },
         MathematikAuswerterPaket("lineare-strukturen") { registriereLineareStrukturErweiterungen() },
         MathematikAuswerterPaket("lineare-algebra") { registriereLineareAlgebraGrundlagen() },
@@ -81,9 +77,7 @@ object StandardMathematikAuswerterPakete {
         MathematikAuswerterPaket("zahlenrechner-differential") { registriereZahlenRechnerDifferential() },
         MathematikAuswerterPaket("null-distanz") { registriereNullDistanz() },
         MathematikAuswerterPaket("vektorkonstruktor") { registriereVektorKonstruktor() },
-        MathematikAuswerterPaket("vektor-orientierung") { registriereVektorOrientierungsKnoten() },
         MathematikAuswerterPaket("multinomvektor") { registriereMultinomVektor() },
-        MathematikAuswerterPaket("polynom-multinom-vertrag") { registrierePolynomMultinomVertrag() },
         MathematikAuswerterPaket("rechner-methodenhebung") { registriereRechnerMethodenHebung() },
     )
 
@@ -108,15 +102,10 @@ private fun installiereKanonischeRechnerDispatcher(register: MathematikAuswerter
     RechnerFamilie.entries.forEach { familie ->
         val fachauswerter = fachauswerterNachFamilie.getValue(familie)
         register.registriere(familie.knotenArt, MathematikKnotenAuswerter { kontext ->
-            val standardId = when (familie) {
-                RechnerFamilie.ZAHL -> de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator.ADDITION.stabileId
-                RechnerFamilie.VEKTOR -> de.TeutonStudio.MathematikRechenSystem.kern.VektorRechnerOperator.ADDITION.stabileId
-                RechnerFamilie.MATRIX -> StrukturRechnerOperatoren.fuer(StrukturRechnerKnotenFamilie.MATRIX).first().id
-                RechnerFamilie.TENSOR -> de.TeutonStudio.MathematikRechenSystem.kern.TensorRechnerOperator.TENSORPRODUKT.stabileId
-            }
-            val gespeichert = kontext.knoten.parameter[familie.operatorParameter]
+            val operatorId = kontext.knoten.parameter[familie.operatorParameter]
                 ?: (if (familie == RechnerFamilie.TENSOR) kontext.knoten.parameter["operator"] else null)
-            val operatorId = gespeichert ?: standardId
+            if (operatorId == null) return@MathematikKnotenAuswerter KnotenAuswertungsErgebnis(
+                emptyMap(), fehler = "Gespeicherte Operator-ID fehlt für ${familie.name.lowercase()}; zuerst die Karte laden und ihre Migration prüfen.")
             when (RechnerOperatorRegistry.finde(familie, operatorId)) {
                 is RechnerOperatorAuflösung.Bekannt -> fachauswerter.auswerten(kontext)
                 is RechnerOperatorAuflösung.Unbekannt -> KnotenAuswertungsErgebnis(

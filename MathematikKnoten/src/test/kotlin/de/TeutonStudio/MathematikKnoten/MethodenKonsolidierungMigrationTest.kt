@@ -17,7 +17,7 @@ class MethodenKonsolidierungMigrationTest {
     }
     @Test fun `alle 43 gespeicherten Altaufrufe werden mit stabilen Anschlussidentitaeten migriert`() {
         var anzahl=0;var dateien=0
-        File("src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte").walkTopDown().filter { it.extension=="json" }.forEach { f ->
+        File("src/test/resources/konsolidierung-m7/originalkarten/MathematikKnoten/src/main/assets/de/TeutonStudio/MathematikKnoten/konzeptkarte").walkTopDown().filter { it.extension=="json" }.forEach { f ->
             val text=f.readText()
             val nodes=org.json.JSONObject(text).optJSONArray("knoten") ?: return@forEach
             if ((0 until nodes.length()).none { nodes.getJSONObject(it).optString("art")==METHODEN_ANWENDUNG_ART }) return@forEach

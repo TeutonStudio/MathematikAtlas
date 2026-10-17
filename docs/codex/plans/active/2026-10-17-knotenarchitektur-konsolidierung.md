@@ -13,8 +13,8 @@ M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle
 M4: v3.4.7 veröffentlicht, finaler Master 69d4e70a; PR- und Masterabnahme grün.
 M5: v3.4.8 veröffentlicht, finaler Master fb1984f9; PR- und Masterabnahme grün.
 M6: v3.4.9 veröffentlicht, finaler Master 49945974; PR- und Masterabnahme grün.
-M7a: v3.4.10/x auf samai/v3.4.10/konsolidierung-m7, Basis 49945974; enges Migrationsschutz-/Logarithmusrelease.
-M7b: Alt-Auswerterbereinigung und Kartenkanonisierung offen; noch keine Folgeversion reserviert.
+M7a: v3.4.10 veröffentlicht, finaler Master f2d06d30; PR- und Masterabnahme grün.
+M7b: v3.4.11/x auf samai/v3.4.11/konsolidierung-m7b in Umsetzung, Basis f2d06d30; Produkt-/Releaseabnahme und Gesamtabschluss offen.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -107,8 +107,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M4 Mengen: v3.4.7 veröffentlicht, 69d4e70a4f1bdbf69b23f0ee708f5893d5232947, PR #461; drei Spezialarten konsolidiert, 121 gemeinsame/123 Androidtypen, alle sechs jüngsten PR-Gates und vier finalen Master-Workflows grün.
 - [x] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8 veröffentlicht, fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a, PR #462; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
 - [x] M6 Begriffe und Verantwortlichkeiten: v3.4.9 veröffentlicht, 49945974dbe96778b70341f29a32bd96747d18d8, PR #463; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
-- [-] M7a Migrationsschutz und Logarithmuskorrekturen: v3.4.10/x direkt ab v3.4.9/49945974 auf samai/v3.4.10/konsolidierung-m7; Produkt-/Releaseabnahme offen.
-- [ ] M7b Alt-Auswerterbereinigung, Kartenkanonisierung und Gesamtabschlussprüfung: erst nach vollständiger M7a-Masterabnahme reservieren, keine Folgeversion beansprucht.
+- [x] M7a Migrationsschutz, historische Rollen und Zeichenbarriere: v3.4.10 veröffentlicht, f2d06d3087a0f27bbe58fad81187e8c6ac0c3501, PR #464; alle sechs finalen PR-Gates und vier Master-Workflows grün.
+- [-] M7b Alt-Auswerterbereinigung, Kartenkanonisierung und Gesamtabschlussprüfung: v3.4.11/x direkt vom vollständig geprüften v3.4.10-Master f2d06d30 auf samai/v3.4.11/konsolidierung-m7b reserviert; Produktarbeit und lokale Gesamtprüfung abgeschlossen; Veröffentlichung an die finalen SHA-Gates gebunden.
 
 ## 10. Konkrete Umsetzungsschritte
 
@@ -912,3 +912,176 @@ e66e0c92 bleibt ohne Mergefreigabe. Keine Produktänderung nach diesem Lauf.
 RPM am korrigierten Stand erneut versucht: 2 s/22 Tasks,
 /tmp/atlas-m7a-zeichenstatus-rpm.log, weiterhin Invalid or unsupported type rpm.
 Lokale Paketinstallation nicht möglich; unveränderte Linux-CI-Abnahme erforderlich.
+
+
+### M7a veröffentlicht; M7b reserviert
+
+PR #464 wurde ausschließlich am freigegebenen Korrekturhead
+32f32e5c67ba21f47665be59a881d935ea2f69f7 regulär ohne Admin-/Bypassoption
+als v3.4.10 integriert. Finaler Mastercommit f2d06d3087a0f27bbe58fad81187e8c6ac0c3501
+folgt unmittelbar auf v3.4.9/49945974. GitHub-Squash: Autor Alexander,
+Committer GitHub. Lokale Reservierung 565ece41 und Produktcommits e66e0c92 /
+32f32e5c sind SamAI/SamAI verifiziert; kein Connector-Produktcommit.
+
+Korrigierte lokale Vollsuite: 2256 Fälle/0 Fehler/1 vorhandener Skip,
+also 2255 bestanden, 3m34s/277 Tasks. 17 gezielte Desktoptests und unabhängiger
+Renderer-Nachreview ohne Blocker. Alle 523 Repositorykarten über vier Phasen
+idempotent und im Rundlauf stabil, ohne Diagnosen. Der ältere Push-Android-
+Testfehler e66e0c92 bleibt dokumentiert. Code-Race bei Sampling gegenüber
+asynchronen Zeichenpaketen belegt; konkrete Auslösung des früheren CI-Fehlers
+mangels Bildartefakten nicht bewiesen. Die strikte Fertigbarriere wurde ohne
+Sleep, Toleranzänderung oder Testretry korrigiert.
+
+Alle sechs aktuellen PR-Gates am 32f32e5c bestanden, einschließlich des zuvor
+roten Push-Gates. Neuer isolierter Androidbericht /tmp/atlas-m7a-runtime-32f32e5c.zip:
+Editor 7/7 und App 61/61, insgesamt 68/68 ohne Fehler oder Skips. Die früheren
+68 erfolgreichen Androidtests gelten ausschließlich als historische Evidenz.
+Lokales Standalone-kotlinc fehlt und RPM ist unsupported; Kern und Linux-RPM/
+Neustartpersistenz wurden durch unveränderte CI erfolgreich geprüft.
+
+Finale Masterabnahme am exakten f2d06d30: Android 39011501316,
+Linux/RPM/Neustartpersistenz 39011501582, Kern/isolierte Android-Laufzeit
+39011501513 und Release-Guard 39011501311 jeweils completed/success;
+beide Kernworkflowjobs verify und android-runtime erfolgreich. M7a ist damit
+abgeschlossen. Diese Abnahme ersetzt vorherige offene M7a-Statusangaben.
+
+Erst danach wurde M7b als v3.4.11/x direkt vom finalen Mastercommit reserviert.
+Umfang: nachgewiesene Bereinigung historischer Auswerter und kanonische
+Repositorykarten, mit vollständiger Verbraucher-, Fixture-, Plattform- und
+Vertragsevidenz. Originalschutz, historische Ladbarkeit und diagnostische Sperren
+bleiben Abnahmekriterien. Keine neuen oder aus dem kanonischen Katalog entfernten
+Typen, weiterhin 121/123. Gesamtabschluss M0–M7 bleibt offen. Keine Folgeversion
+reserviert. Android/Desktop/Linux/current_version bleiben bis zum M7b-Zielabschluss
+kohärent auf der veröffentlichten 3.4.10.
+
+
+### M7b-Zielumfang und Metadaten
+
+M7b beginnt direkt auf der vollständig geprüften M7a-Basis f2d06d30.
+Zielmetadaten sind Android 3.4.11/3004011 und Desktop/Linux 3.4.11;
+current_version ist im PR-Zielbaum 3.4.11. Der Roadmapstatus released bezeichnet
+keine vorzeitige Veröffentlichung; dafür sind finaler Mastercommit v3.4.11 und
+grüne Releaseprüfungen erforderlich.
+
+Zur sicheren Konsolidierung des historischen vektorZuPolynom-Pfads wird der
+vorhandene Polynomoperator um einen ausdrücklichen Argumentmodus erweitert.
+Das ist kein neuer Operator oder Knotentyp. Die Kernüberladung mit Variable
+validiert und delegiert an den bestehenden Algorithmus; keine zweite Formel.
+Historische Zeilenkonstruktoren erhalten die fehlenden Ladeumsetzungen, bevor
+zugehörige Aliase entfernt werden. Gültige vorhandene Operator-IDs werden an
+der gesamten kanonischen Registry geprüft, nicht ausschließlich an einem Enum.
+Diese Voraussetzungen gehören zu nachgewiesener Verbrauchermigration vor der
+Auswerterbereinigung und Kartenkanonisierung.
+
+Unveränderter kanonischer Katalog 121 gemeinsame/123 Android-Arten,
+Änderungs-Version x, keine Folgeversion reserviert. Gesamtabschluss und Produkt-
+freigabe bleiben bis vollständiger unabhängiger Verifikation offen. Root bleibt
+alleiniger Produktwriter; Releaseverwaltung ändert nur Metadaten und Plan.
+
+
+M7b Produktstart nach final grüner M7a-Masterabnahme: 523 Originalkarten und
+SHA-Ledger unter MathematikKnoten/src/test/resources/konsolidierung-m7/originalkarten
+unveränderlich gesichert. Exporttest verifiziert alle Prüfsummen, kanonische
+Gleichheit und Speicherrundläufe; optionaler Export ausschließlich nach /tmp.
+Erster Exportlauf grün, 5 s/42 Tasks (/tmp/atlas-m7b-export.log). Danach 523
+Produktkarten auf Format 10 gebracht und statische Referenzen, Quellenindex,
+Standardmanifesthashes und requiredNodeTypes synchronisiert. Stabile Pfade und
+Karten-/Versionsidentitäten bleiben; historische Aufruffixtures bleiben unverändert.
+Repository-/Architektur- und 15-Standardkartenprüfung grün.
+
+Zusätzliche eng notwendige Vertragslücke: VektorZuPolynom besitzt einen
+intrinsischen Variablennamen statt zusätzlichem Argumentanschluss. Ein AST-Ersatz
+wäre ohne neue Formelcapability nicht ausführbar und würde bindungslose symbolische
+Koeffizienten abweisen. Deshalb erhält der vorhandene zahl.polynom ausdrücklich
+die Modi eingang und variable; beide delegieren denselben Multinomkern. Die
+öffentliche Variable-Overload behält ihre strengeren Validatoren und delegiert
+danach ebenfalls. Kein neuer Operator oder Knotentyp, kein Stringauswerter,
+keine erfundene Quellenidentität. Vorhandene erweiterte Zahlenoperatoren werden
+anhand der vollständigen Registry statt einer zu engen Universeller-Enum geprüft.
+Gezielte Verifikation gestartet; UI-Konfigurationsplan und Legacybereinigung offen.
+
+
+M7b Umsetzung und Vertragsprüfung: unabhängige historische Registrierungen für
+konsolidierte Operationen entfernt, Methoden-Anwendungssonderdispatch entfernt.
+Explizite finale Rechnerkomposition weist fehlende Operator-IDs ab. Historische
+Zeilenquellen und gespeicherte Basisindizes werden streng und identitätserhaltend
+umgesetzt; öffentliche Kernbasis bleibt einsbasiert, Loaderposition nullbasiert.
+Die gemeinsame Polynomkonfiguration inklusive Inspector, Verlustvorschau und Undo
+ist umgesetzt. Quellen-ID-Kollisionen werden getrennt von intrinsischen Namen
+behandelt; echte Quellbereiche bleiben bei Grad null erhalten.
+
+Unabhängig gefundene echte Altvertragsverluste geschlossen: Division mit offenem
+Nenner erhält den Nullersatz als Fall einschließlich Methodenhebung; freie und
+gebundene Formeln teilen die Null-/Voraussetzungslogik, ohne äußere Knotenkonfiguration
+zu erben. Anzeigealiase bleiben erhalten. Automatischer Joinumbau beim Laden
+entfällt, weil er ursprüngliche Einzelport-IDs und Verträge entfernte; bestehende
+Joinbeiträge bleiben, gemischte nicht unterstützte Verträge werden bewahrt und
+diagnostiziert. Alle 523 Originalkarten bestehen nun zusätzlich die Prüfung jedes
+ursprünglichen Anschluss-/Verbindungs-ID-Erhalts. Produktkarten erneut aus diesen
+Originalen exportiert, Indizes und Standardhashes nachgezogen.
+
+Echte JVM-Suiten von Knoten, Adapter und Rechenkern grün in 20 s/49 Tasks
+(/tmp/atlas-m7b-suiten-real-siebte.log), anschließend reine Bereinigung privater
+unbenutzter Legacyhilfen und weitere finale Abnahme. Desktop-Shadowtesttasks ohne
+Testquellen wurden nicht als ausgeführte Tests gezählt. Repository, Architektur,
+15 Standardkarten, Releaseplan 117, Versionsfolge und 14 Guardregressionen grün;
+zusätzliche Standalone-Kernprüfung weiterhin wegen fehlendem kotlinc nicht
+verfügbar. Gesamte Produktprüfung und unabhängige abschließende Freigabe laufen;
+noch kein Produktcommit, PR oder Veröffentlichung. ADR:
+../decisions/2026-10-17-kanonische-auswerter-und-identitaetserhalt.md.
+
+
+M7b Schlussdelta: Dynamische Grad-, Unterraum-, Endliche-Menge- und
+Multinom-Definitionskarten durchlaufen ebenfalls die vollständige nachLaden-
+Pipeline. Insbesondere bleibt der historische Indexgrundraum explizit, und die
+Subtraktion im Multinom verwendet unmittelbar zahl.subtraktion. Neue reale
+Auswertungsfälle prüfen die leere lokale Menge sowie Multinome für Dimensionen
+0/1/3, Tupel und beide Vektororientierungen. Konzeptausgangsmarker verwenden nur
+im Test den vorhandenen Durchreichvertrag; keine produktive Ersatzregistrierung.
+11 gezielte Appfälle grün (2 s/78 Tasks,
+/tmp/atlas-m7b-dynamische-definitionen-viert.log). Unabhängige Schlussprüfung ohne
+neue Blocker. Vollständiger Wiederholungslauf auf diesem Quellstand gestartet.
+
+
+M7b lokale Schlussabnahme vollständig: /tmp/atlas-m7b-produkt-final.log,
+57 s/277 Tasks, 2273 Fälle/0 Fehler/1 vorhandener Skip (2272 bestanden).
+JVM-/Desktoptests, Lint, Android-App-/Instrumentierungs-APKs und Desktopkompilierung
+grün. Repository/Architektur, 15 Standardkarten, Releaseplan 117, Versionsfolge,
+14 Guardregressionen und git diff --check grün. Unabhängige Schlussprüfung ohne
+offene Blocker. Zusätzliches Kernskript wegen fehlendem kotlinc nicht ausführbar;
+Gradle-Kerntests bestanden. Lokale RPM-Prüfung /tmp/atlas-m7b-rpm.log scheitert
+an nicht unterstütztem jpackage-rpm-Pakettyp. Native Emulator-/RPM-/Persistenz-
+Abnahme und Veröffentlichung bleiben an die finalen PR-/Master-SHAs gebunden.
+
+
+M7b erste SHA-Abnahme 9bb9699927fe1c2630dc47bd9e955047c17e92fc:
+PR #465, fünf Gates grün einschließlich Linux-RPM/Installation/zwei Starts
+mit derselben Karten-ID, Revision 1→2 und Deinstallation. Isolierte Emulator-
+abnahme: 68 Fälle, 66 bestanden, zwei Fehler in StandardKartenMigrationGeraeteTest
+(aktualisiert=0 statt 1). Kein Merge oder Retry. Fehlerartefakt
+/tmp/atlas-m7b-runtime-9bb96999-failed.zip, SHA-256
+22fb016cb3d3dc49bd4e5bc130cede70e0540786c1090bb09e1873b09e67b086;
+Zähler aus HTML, keine XML im Archiv. Dauerhafte Belege:
+https://github.com/TeutonStudio/MathematikAtlas/pull/465#issuecomment-6231690513.
+
+Produktursache gezielt lokal reproduziert: Der Installer verwendete ausschließlich
+historische Vorlagenlisten als Bekanntmenge; der separat im kanonischen Katalog
+ergänzte mathematik.mengenrechner fehlte. Nach Kanonisierung der Produktkarten
+übersprang der Installer die Karte „Hebbare Definitionslücke“ vor ihrer
+Aktualisierung. Neuer Manifestabdeckungstest über alle 15 Standardkarten schlägt
+vor Fix genau mit dieser fehlenden Art fehl (/tmp/atlas-m7b-installer-vorher.log).
+Enger Fix ergänzt alle kanonischen Katalogarten zur vorhandenen Bekanntmenge;
+historische Ladetypen, Provenienz-/Hash-/Originalschutz unverändert. Gezielte
+Installer-/Provenienztests anschließend grün (1 s/78 Tasks,
+/tmp/atlas-m7b-installer-nachher.log), unabhängig ohne neue Blocker geprüft.
+Vollständige Produkt- und danach neue SHA-Abnahme erforderlich; alter Head bleibt
+gesperrt.
+
+
+M7b Installer-Schlussdelta vollständig lokal grün:
+/tmp/atlas-m7b-installer-produkt-final.log, 57 s/277 Tasks, 2274 Fälle,
+0 Fehler, 1 vorhandener Skip (2273 bestanden), einschließlich JVM-/Desktoptests,
+Lint und sämtlicher APK-/Desktop-Builds. Repository/Architektur, 15 Standardkarten,
+Releaseplan 117, Versionsfolge, 14 Guardregressionen und Diff erneut grün.
+Nur zwei Produktionszeilen im Installer und der gezielte Abdeckungstest ergänzt;
+Veröffentlichung weiterhin erst nach neuen SHA-Gates und Geräteabnahme.

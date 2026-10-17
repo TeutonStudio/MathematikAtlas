@@ -15,40 +15,40 @@ class JoinEingaengeTest {
         val quellen = (1..anzahl).map(::quelle)
         return KartenDaten(name = "Join", knoten = quellen + ziel, verbindungen = quellen.mapIndexed { i, q ->
             VerbindungDaten(von = ref(q), zu = ref(ziel, if (i == 0) "a" else "b"))
-        }).normalisiereJoinEingänge()
+        }).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true)
     }
     @Test fun `Migration ist idempotent und behaelt alle Verbindungsidentitaeten`() {
         val k = karte(3)
         assertEquals(3, k.verbindungen.size)
         assertEquals(1, k.verbindungen.map { it.zu }.distinct().size)
-        assertEquals(k, k.normalisiereJoinEingänge())
+        assertEquals(k, k.normalisiereJoinEingänge(überführeEinzelAnschlüsse=true))
         assertEquals(k, KartenDatenJson.lese(KartenDatenJson.schreibe(k)))
         assertEquals(10, KartenDatenJson.FORMAT_VERSION)
     }
     @Test fun `Addition sammelt alle Quellen und eine Quelle wird durchgegeben`() {
         for (n in 1..5) {
             val k = karte(n)
-            val e = MathematikKartenLaufzeit().auswerten(k).knoten.getValue(k.knoten.last().id)
+            val e = MathematikKartenLaufzeit().auswertenNachMigration(k).knoten.getValue(k.knoten.last().id)
             assertNull(e.fehler)
             assertEquals(RationaleZahl.von(n * (n + 1) / 2), e.ausgaben.getValue("wert").objekt)
         }
     }
     @Test fun `Ohne Operanden entsteht kein impliziter Wert`() {
         val k = karte(0)
-        assertNotNull(MathematikKartenLaufzeit().auswerten(k).knoten.getValue(k.knoten.last().id).fehler)
+        assertNotNull(MathematikKartenLaufzeit().auswertenNachMigration(k).knoten.getValue(k.knoten.last().id).fehler)
     }
     @Test fun `Wiederholte Quelle zaehlt mehrfach`() {
         val k = karte(1)
         val neu = k.wendeAn(KartenAktion.VerbindungEinfügen(k.verbindungen.single().copy(id = neueVerbindungsId())))
         assertEquals(2, neu.verbindungen.size)
-        assertEquals(RationaleZahl.von(2), MathematikKartenLaufzeit().auswerten(neu).knoten.getValue(k.knoten.last().id).ausgaben.getValue("wert").objekt)
+        assertEquals(RationaleZahl.von(2), MathematikKartenLaufzeit().auswertenNachMigration(neu).knoten.getValue(k.knoten.last().id).ausgaben.getValue("wert").objekt)
     }
     @Test fun `Lokale Werte werden erhalten leere Plaetze entfallen`() {
         val ziel = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero)
             .copy(parameter = mapOf("standardwert.a" to "4", "standardwert.b" to "7"))
-        val k = KartenDaten(name = "Lokal", knoten = listOf(ziel)).normalisiereJoinEingänge()
+        val k = KartenDaten(name = "Lokal", knoten = listOf(ziel)).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true)
         assertEquals(2, k.knoten.single().parameter.count { it.key.startsWith("join.lokal.") })
-        assertEquals(RationaleZahl.von(11), MathematikKartenLaufzeit().auswerten(k).knoten.getValue(ziel.id).ausgaben.getValue("wert").objekt)
+        assertEquals(RationaleZahl.von(11), MathematikKartenLaufzeit().auswertenNachMigration(k).knoten.getValue(ziel.id).ausgaben.getValue("wert").objekt)
     }
     @Test fun `Andockpunkte bleiben eindeutig und freier Bereich ergaenzt statt zu ersetzen`() {
         val k = karte(2)
@@ -100,11 +100,11 @@ class JoinEingaengeTest {
         assertEquals(2, k.verbindungen.size)
     }
     private fun einzeln(ziel: KnotenDaten, wert: BedingterWert): KnotenAuswertungsErgebnis {
-        val k = KartenDaten(name = "Einzel", knoten = listOf(ziel)).normalisiereJoinEingänge().knoten.single()
+        val k = KartenDaten(name = "Einzel", knoten = listOf(ziel)).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true).knoten.single()
         val join = k.anschlüsse.single { it.belegung == AnschlussBelegung.Mehrfach }
         val q = KnotenDaten(art = "test.quelle", name = "Quelle", anschlüsse = listOf(join.copy(id = neueAnschlussId(), name = "wert", richtung = AnschlussRichtung.Ausgang, belegung = AnschlussBelegung.Einzeln)))
         val karte = KartenDaten(name = "Einzel", knoten = listOf(q, k), verbindungen = listOf(VerbindungDaten(von = ref(q), zu = AnschlussVerweis(k.id, join.id))))
-        return KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister()).auswerten(karte, mapOf(q.id to mapOf("wert" to wert))).knoten.getValue(k.id)
+        return KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister()).auswertenNachMigration(karte, mapOf(q.id to mapOf("wert" to wert))).knoten.getValue(k.id)
     }
     @Test fun `Alle Zahlenoperatoren erhalten den validierten Einzelwert samt Herkunft`() {
         val wert = BedingterWert(RationaleZahl.von(7), annahmen = setOf(Gleichheit(Variable("x"), RationaleZahl.Eins)))
@@ -141,8 +141,8 @@ class JoinEingaengeTest {
         val basis = StrukturFormelRechnerVorlagen.Aussagesatz.erzeuge(GraphPunkt.Zero)
         val ziel = konfiguriereStrukturRechner(basis, StrukturRechnerKnotenFamilie.AUSSAGESATZ, "aussage.konjunktion")
             .copy(parameter = mapOf("operator" to "aussage.konjunktion", "standardwert.a" to "true", "standardwert.b" to "false"))
-        val k = KartenDaten(name = "Bool", knoten = listOf(ziel)).normalisiereJoinEingänge()
-        val e = MathematikKartenLaufzeit().auswerten(k).knoten.getValue(ziel.id)
+        val k = KartenDaten(name = "Bool", knoten = listOf(ziel)).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true)
+        val e = MathematikKartenLaufzeit().auswertenNachMigration(k).knoten.getValue(ziel.id)
         assertNull(e.fehler)
         assertEquals(Wahrheitswert.Lüge, (e.ausgaben.values.single().objekt as Aussage).entscheide(RechenKontext()).wahrheitswert)
     }
@@ -150,25 +150,25 @@ class JoinEingaengeTest {
         val k = karte(3)
         val runtime = MathematikKartenLaufzeit()
         val ziel = k.knoten.last().id
-        assertEquals(RationaleZahl.von(6), runtime.auswerten(k).knoten.getValue(ziel).ausgaben.getValue("wert").objekt)
+        assertEquals(RationaleZahl.von(6), runtime.auswertenNachMigration(k).knoten.getValue(ziel).ausgaben.getValue("wert").objekt)
         val geändert = k.copy(knoten = k.knoten.mapIndexed { i, n -> if (i == 2) n.copy(parameter = mapOf("wert" to "10")) else n })
-        assertEquals(RationaleZahl.von(13), runtime.auswerten(geändert).knoten.getValue(ziel).ausgaben.getValue("wert").objekt)
-        assertEquals(RationaleZahl.von(3), runtime.auswerten(geändert.copy(verbindungen = geändert.verbindungen.dropLast(1))).knoten.getValue(ziel).ausgaben.getValue("wert").objekt)
+        assertEquals(RationaleZahl.von(13), runtime.auswertenNachMigration(geändert).knoten.getValue(ziel).ausgaben.getValue("wert").objekt)
+        assertEquals(RationaleZahl.von(3), runtime.auswertenNachMigration(geändert.copy(verbindungen = geändert.verbindungen.dropLast(1))).knoten.getValue(ziel).ausgaben.getValue("wert").objekt)
     }
     @Test fun `Migration bewahrt Mischreihenfolge lokaler und verbundener Operanden`() {
         val ziel = MathematikKnotenVorlagen.Multiplikation.erzeuge(GraphPunkt.Zero).copy(parameter = mapOf("standardwert.a" to "2"))
         val q = quelle(3)
-        val k = KartenDaten(name = "Gemischt", knoten = listOf(q, ziel), verbindungen = listOf(VerbindungDaten(von = ref(q), zu = ref(ziel, "b")))).normalisiereJoinEingänge()
-        val e = MathematikKartenLaufzeit().auswerten(k).knoten.getValue(ziel.id)
+        val k = KartenDaten(name = "Gemischt", knoten = listOf(q, ziel), verbindungen = listOf(VerbindungDaten(von = ref(q), zu = ref(ziel, "b")))).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true)
+        val e = MathematikKartenLaufzeit().auswertenNachMigration(k).knoten.getValue(ziel.id)
         assertEquals(listOf(RationaleZahl.von(2), RationaleZahl.von(3)), e.eingänge.values.map { it.objekt })
-        assertEquals(k, k.normalisiereJoinEingänge())
+        assertEquals(k, k.normalisiereJoinEingänge(überführeEinzelAnschlüsse=true))
     }
 
     @Test fun `Operatorwechsel zu Einzelanschluessen verlangt bestaetigten Verbindungskonflikt`() {
         val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
         val a = quelle(2); val b = quelle(3)
         val alt = KartenDaten(name = "Wechsel", knoten = listOf(a, b, basis), verbindungen = listOf(
-            VerbindungDaten(von = ref(a), zu = ref(basis, "a")), VerbindungDaten(von = ref(b), zu = ref(basis, "b")))).normalisiereJoinEingänge()
+            VerbindungDaten(von = ref(a), zu = ref(basis, "a")), VerbindungDaten(von = ref(b), zu = ref(basis, "b")))).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true)
         val ziel = alt.knoten.last()
         val neu = konfiguriereZahlenRechner(ziel, UniversellerZahlenOperator.SUBTRAKTION)
         assertTrue(neu.anschlüsse.all { it.belegung == AnschlussBelegung.Einzeln })
@@ -183,7 +183,7 @@ class JoinEingaengeTest {
         val ziel = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf("standardwert.b" to "2"),
             eingangsKartenVerweise = mapOf("a" to KartenVerweis(KartenId("fallback"), 1)))
-        val k = KartenDaten(name = "Fallback", knoten = listOf(q, ziel), verbindungen = listOf(VerbindungDaten(von = ref(q), zu = ref(ziel, "a")))).normalisiereJoinEingänge()
+        val k = KartenDaten(name = "Fallback", knoten = listOf(q, ziel), verbindungen = listOf(VerbindungDaten(von = ref(q), zu = ref(ziel, "a")))).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true)
         val clipboard = AtlasZwischenablage()
         assertTrue(clipboard.kopiere(k, k.knoten.map { it.id }.toSet()))
         val ausschnitt = assertNotNull(clipboard.erzeugeEinfügung(GraphPunkt.Zero))
@@ -191,7 +191,7 @@ class JoinEingaengeTest {
         kopien.forEach { kopie ->
             var aufrufe = 0
             val auswerter = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister(), KartenQuelle { aufrufe++; null })
-            val e = auswerter.auswerten(kopie).knoten.getValue(kopie.knoten.last().id)
+            val e = auswerter.auswertenNachMigration(kopie).knoten.getValue(kopie.knoten.last().id)
             assertNull(e.fehler)
             assertEquals(RationaleZahl.von(5), e.ausgaben.getValue("wert").objekt)
             assertEquals(0, aufrufe)
@@ -202,7 +202,7 @@ class JoinEingaengeTest {
         val quelle = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero)
         val methode = konfiguriereMethodenQuelle(MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt.Zero), quelle)
         val k = KartenDaten(name = "Methode", knoten = listOf(methode))
-        val e = MathematikKartenLaufzeit().auswerten(k).knoten.getValue(methode.id)
+        val e = MathematikKartenLaufzeit().auswertenNachMigration(k).knoten.getValue(methode.id)
         assertNull(e.fehler)
         val m = e.ausgaben.getValue("methode").objekt as MathematischeMethode
         assertEquals(RationaleZahl.von(5), vereinfache(m.wendeAn(listOf(RationaleZahl.von(2), RationaleZahl.von(3))) as ZahlAusdruck))
@@ -211,14 +211,14 @@ class JoinEingaengeTest {
     @Test fun `Geordneter Operatorwechsel uebernimmt lokale Werte und meldet Ueberhang`() {
         val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero).copy(parameter = mapOf(
             "operator" to "zahl.addition", "standardwert.a" to "2", "standardwert.b" to "3"))
-        val k = KartenDaten(name = "Lokalwechsel", knoten = listOf(basis)).normalisiereJoinEingänge()
+        val k = KartenDaten(name = "Lokalwechsel", knoten = listOf(basis)).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true)
         val runtime = MathematikKartenLaufzeit()
         val kandidat = konfiguriereZahlenRechner(k.knoten.single(), UniversellerZahlenOperator.SUBTRAKTION)
         val plan = planeKonfiguration(k, kandidat, runtime.graphPrüfung, runtime::auswerten)
         assertFalse(plan.auswirkung.trenntVerbindungen)
         assertEquals("2", plan.karte.knoten.single().parameter["standardwert.a"])
         assertEquals("3", plan.karte.knoten.single().parameter["standardwert.b"])
-        assertEquals(RationaleZahl.von(-1), runtime.auswerten(plan.karte).knoten.getValue(basis.id).ausgaben.getValue("wert").objekt)
+        assertEquals(RationaleZahl.von(-1), runtime.auswertenNachMigration(plan.karte).knoten.getValue(basis.id).ausgaben.getValue("wert").objekt)
         val unär = planeKonfiguration(k, konfiguriereZahlenRechner(k.knoten.single(), UniversellerZahlenOperator.BETRAG), runtime.graphPrüfung, runtime::auswerten)
         assertTrue(unär.auswirkung.trenntVerbindungen)
         assertEquals(listOf("3"), unär.auswirkung.entfallendeLokaleWerte)
@@ -226,7 +226,7 @@ class JoinEingaengeTest {
     @Test fun `Join zu Join behaelt alle Quellen waehrend Join zu binaer geordnet entfaltet`() {
         val basis = ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
         val quellen = (1..3).map(::quelle)
-        val ziel = KartenDaten(name = "Vorlage", knoten = listOf(basis)).normalisiereJoinEingänge().knoten.single()
+        val ziel = KartenDaten(name = "Vorlage", knoten = listOf(basis)).normalisiereJoinEingänge(überführeEinzelAnschlüsse=true).knoten.single()
         val k = KartenDaten(name = "Wechsel", knoten = quellen + ziel, verbindungen = quellen.mapIndexed { index, q ->
             VerbindungDaten(von = ref(q), zu = ref(ziel, "a"), eingangsReihenfolge = index)
         })
@@ -242,7 +242,7 @@ class JoinEingaengeTest {
     @Test fun `Joinformel zeigt alle Beitraege und keinen freien Reserveoperanden`() {
         val k = karte(3)
         val ziel = k.knoten.last()
-        val ergebnis = MathematikKartenLaufzeit().auswerten(k).knoten.getValue(ziel.id)
+        val ergebnis = MathematikKartenLaufzeit().auswertenNachMigration(k).knoten.getValue(ziel.id)
         assertEquals("1 + 2 + 3", joinOperatorFormel(ziel, ergebnis, " + "))
         val projiziert = k.gruppenProjektion().mitMehrfachAndockpunkten().karte.knoten.last()
         assertEquals("1 + 2 + 3", joinOperatorFormel(projiziert, ergebnis, " + "))

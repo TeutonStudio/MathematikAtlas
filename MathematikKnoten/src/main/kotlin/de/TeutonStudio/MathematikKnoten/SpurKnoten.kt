@@ -67,15 +67,3 @@ object SpurKnotenVorlagen {
 
     val alle = listOf(Spur, IterierteSummeTupel)
 }
-
-/** Registriert die Spur und erweitert die vorhandene iterierte Summe rückwärtskompatibel um Tupel. */
-internal fun MathematikAuswerterRegister.registriereSpurUndTupelsumme() {
-    registriere(SPUR_ART) { kontext ->
-        val eingang = kontext.eingänge["matrix"] ?: error("Matrixeingang fehlt.")
-        val matrix = eingang.objekt as? Tensorartig ?: error("Der Eingang ist keine Matrix.")
-        KnotenAuswertungsErgebnis(
-            ausgaben = mapOf("spur" to BedingterWert(spur(matrix), eingang.annahmen)),
-            eingänge = kontext.eingänge,
-        )
-    }
-}

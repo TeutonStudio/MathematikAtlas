@@ -32,7 +32,7 @@ class UngleichheitKnotenTest {
         assertEquals(listOf(MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Objekt.id), eingänge.map { it.art })
         assertEquals("aussage", ausgang.name)
         assertEquals(MathematikAnschlussArten.Aussage.id, ausgang.art)
-        assertNotNull(register.finde(knoten.art))
+        assertNotNull(register.findeNachMigration(knoten.art))
         assertEquals(1, MathematikKnotenVorlagen.alle.count { it.art == knoten.art })
     }
 
@@ -49,7 +49,7 @@ class UngleichheitKnotenTest {
     @Test
     fun `Knotenausgabe verwendet darstellbares Ungleichheitszeichen`() {
         val knoten = MathematikKnotenVorlagen.Ungleichheit.erzeuge(GraphPunkt.Zero)
-        val auswerter = requireNotNull(register.finde(knoten.art))
+        val auswerter = requireNotNull(register.findeNachMigration(knoten.art))
         val ausgabe = auswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
@@ -76,7 +76,7 @@ class UngleichheitKnotenTest {
     @Test
     fun `fehlende rechte Seite bleibt ein Knotenfehler`() {
         val knoten = MathematikKnotenVorlagen.Ungleichheit.erzeuge(GraphPunkt.Zero)
-        val auswerter = requireNotNull(register.finde(knoten.art))
+        val auswerter = requireNotNull(register.findeNachMigration(knoten.art))
 
         val fehler = assertFailsWith<IllegalStateException> {
             auswerter.auswerten(
@@ -88,12 +88,12 @@ class UngleichheitKnotenTest {
             )
         }
 
-        assertEquals("Rechte Seite fehlt.", fehler.message)
+        assertEquals("Für 'Ungleichheit' fehlt der Eingang 'rechts'.", fehler.message)
     }
 
     private fun werteAus(links: String, rechts: String): Ungleichheit {
         val knoten = MathematikKnotenVorlagen.Ungleichheit.erzeuge(GraphPunkt.Zero)
-        val auswerter = requireNotNull(register.finde(knoten.art))
+        val auswerter = requireNotNull(register.findeNachMigration(knoten.art))
         val ergebnis = auswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,

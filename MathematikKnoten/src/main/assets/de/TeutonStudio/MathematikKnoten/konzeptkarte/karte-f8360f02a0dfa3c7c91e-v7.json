@@ -14,7 +14,7 @@
       "anschlüsse": [],
       "parameter": {
         "knotenArt": "mathematik.matrixProdukt",
-        "regel": "Wähle Zeile i der linken Matrix A. Ihre Einträge bleiben in der gespeicherten Reihenfolge aᵢ₁,…,aᵢₙ."
+        "regel": "Wähle Zeile i der linken Matrix A. Ihre Einträge bleiben in der gespeicherten Reihenfolge aᵢ\u2081,\u2026,aᵢ\u2099."
       },
       "name": "A unten links",
       "id": "falk-links",
@@ -71,7 +71,7 @@
       "anschlüsse": [],
       "parameter": {
         "knotenArt": "mathematik.matrixProdukt",
-        "regel": "cᵢⱼ = Σₖ₌₁ⁿ aᵢₖ·bₖⱼ. Keine Konjugation und keine Vertauschung: Auch über ℍ steht aᵢₖ stets vor bₖⱼ."
+        "regel": "cᵢⱼ = Σ\u2096\u208c\u2081\u207f aᵢ\u2096·b\u2096ⱼ. Keine Konjugation und keine Vertauschung: Auch über ℍ steht aᵢ\u2096 stets vor b\u2096ⱼ."
       },
       "name": "Geordnete Produktsumme",
       "id": "falk-summe",
@@ -107,6 +107,6 @@
     "y": 0,
     "zoom": 0.72
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

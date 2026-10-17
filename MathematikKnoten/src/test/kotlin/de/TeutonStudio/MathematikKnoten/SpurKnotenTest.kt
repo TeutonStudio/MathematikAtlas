@@ -32,7 +32,7 @@ class SpurKnotenTest {
             MathematikAnschlussArten.Zahl.id,
             knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.art,
         )
-        assertNotNull(register.finde(SPUR_ART))
+        assertNotNull(register.findeNachMigration(SPUR_ART))
     }
 
     @Test
@@ -45,7 +45,7 @@ class SpurKnotenTest {
             ),
         )
         val annahme = de.TeutonStudio.MathematikRechenSystem.kern.Gleichheit(Variable("x"), zahl(1))
-        val ergebnis = register.finde(SPUR_ART)!!.auswerten(
+        val ergebnis = register.findeNachMigration(SPUR_ART).auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
                 eingänge = mapOf("matrix" to BedingterWert(matrix, setOf(annahme))),
@@ -62,7 +62,7 @@ class SpurKnotenTest {
         val knoten = SpurKnotenVorlagen.IterierteSummeTupel.erzeuge(GraphPunkt.Zero)
         val a = Variable("a")
         val tupel = Tupel(listOf(a, zahl(2), zahl(3)))
-        val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
+        val ergebnis = register.findeNachMigration(ZAHLENRECHNER_ART).auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
                 eingänge = mapOf("tupel" to BedingterWert(tupel)),
@@ -101,20 +101,11 @@ class SpurKnotenTest {
             ),
         )
 
-        val fehler = assertFailsWith<IllegalArgumentException> {
-            register.finde(SPUR_ART)!!.auswerten(
-                KnotenAuswertungsKontext(
-                    knoten = knoten,
-                    eingänge = mapOf("matrix" to BedingterWert(matrix)),
-                    rechenKontext = RechenKontext(),
-                ),
-            )
-        }
+        val ergebnis=register.findeNachMigration(SPUR_ART).auswerten(KnotenAuswertungsKontext(
+            knoten,mapOf("matrix" to BedingterWert(matrix)),RechenKontext()))
+        kotlin.test.assertTrue(ergebnis.ausgaben.isEmpty())
+        kotlin.test.assertTrue(ergebnis.fehler.orEmpty().contains("quadratische Matrix"))
 
-        assertEquals(
-            "Die Spur ist nur für quadratische Matrizen definiert; erhalten wurde 2×3.",
-            fehler.message,
-        )
     }
 
     private fun zahl(wert: Long): RationaleZahl = RationaleZahl.von(wert)

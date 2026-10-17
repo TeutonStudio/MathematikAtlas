@@ -10,7 +10,7 @@ import kotlin.test.*
 class MengenKonsolidierungTest {
     private val register=GesamterMathematikAuswerter.erzeugeRegister()
     private fun graph(n:Int)=konfiguriereEndlicheMenge(MathematikKnotenVorlagen.EndlicheMenge.erzeuge(GraphPunkt.Zero),ENDLICHE_MENGE_GRAPH,n)
-    private fun eval(k:KnotenDaten,werte:Map<String,BedingterWert>)=register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k,werte,RechenKontext()))
+    private fun eval(k:KnotenDaten,werte:Map<String,BedingterWert>)=register.findeNachMigration(k.art).auswerten(KnotenAuswertungsKontext(k,werte,RechenKontext()))
     private fun z(n:Long)=RationaleZahl.von(n)
     private val altVorlagen get()=listOf(MathematikKnotenVorlagen.Einzelmenge,MengenraumKnotenVorlagen.Potenzmenge,MengenraumKnotenVorlagen.Abbildungsmenge)
     private fun phasen(k:KartenDaten)=listOf(MathematikKartenMigrationen::nachDekodierung,MathematikKartenMigrationen::nachLaden,MathematikKartenMigrationen::vorSpeichern,

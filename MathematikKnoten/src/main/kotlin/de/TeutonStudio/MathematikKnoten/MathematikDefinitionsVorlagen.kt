@@ -13,6 +13,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 fun alleMathematikDefinitionsVorlagen(): List<KnotenVorlage> =
     (
         alleMathematikKnotenVorlagen().filterNot { it.art == ZAHLENRECHNER_ART } +
+            listOf(MathematikKnotenVorlagen.VektorZuPolynom) +
             ZahlenRechnerKnotenVorlagen.alle +
             AxiomKnotenVorlagen.alle
     ).map(de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog::kanonisiereMethodenUndRelationsVorlage)

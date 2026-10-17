@@ -30,14 +30,14 @@ class AussagenLogikKnotenTest {
         assertEquals("aussage", eingang.name)
         assertEquals(MathematikAnschlussArten.Aussage.id, eingang.art)
         assertEquals(MathematikAnschlussArten.Aussage.id, ausgang.art)
-        assertNotNull(register.finde(knoten.art))
+        assertNotNull(register.findeNachMigration(knoten.art))
         assertEquals(1, alleMathematikKnotenVorlagen().count { it.art == knoten.art })
     }
 
     @Test
     fun `Negationsknoten kehrt Wahr zu Lüge um`() {
         val knoten = AussagenLogikKnotenVorlagen.Negation.erzeuge(GraphPunkt.Zero)
-        val ausgabe = requireNotNull(register.finde(knoten.art)).auswerten(
+        val ausgabe = requireNotNull(register.findeNachMigration(knoten.art)).auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
                 eingänge = mapOf("aussage" to BedingterWert(WahrheitsKonstante(true))),
@@ -76,7 +76,7 @@ class AussagenLogikKnotenTest {
             dynamischErzeugt = true,
         )
         val knoten = basis.copy(anschlüsse = basis.anschlüsse + dritter)
-        val ausgabe = requireNotNull(register.finde(knoten.art)).auswerten(
+        val ausgabe = requireNotNull(register.findeNachMigration(knoten.art)).auswerten(
             KnotenAuswertungsKontext(
                 knoten = knoten,
                 eingänge = mapOf(

@@ -38,7 +38,7 @@ internal fun sinusReellDefinitionsKarte(): KartenDaten {
         von = AnschlussVerweis(knoten[i].id, knoten[i].anschlüsse.single { it.name == aus && it.richtung == AnschlussRichtung.Ausgang }.id),
         zu = AnschlussVerweis(knoten[j].id, knoten[j].anschlüsse.single { it.name == ein && it.richtung == AnschlussRichtung.Eingang }.id))
     return KartenDaten(id = KartenId(prefix), erstelltAm = 0L, name = "sin_R = sin_Grad ∘ q", knoten = knoten,
-        verbindungen = listOf(verbindung(0, "wert", 1, "wert"), verbindung(1, "ergebnis", 2, "a"), verbindung(2, "wert", 3, "wert")))
+        verbindungen = listOf(verbindung(0, "wert", 1, "wert"), verbindung(1, "ergebnis", 2, "a"), verbindung(2, "wert", 3, "wert"))).let(MathematikKartenMigrationen::nachLaden)
 }
 
 internal fun vektorUnterraumKonzept(knoten: KnotenDaten): KonzeptDefinition? {
@@ -86,7 +86,7 @@ internal fun vektorPotenzDefinitionsKarte(original: KnotenDaten): KartenDaten {
     }
     val out=add(KnotenDaten(art="mathematik.kartenAusgang",name="P$n(a)",anschlüsse=listOf(AnschlussDaten(name="wert",art=MathematikAnschlussArten.Objekt.id,richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links))),"ausgang")
     connect(result.first,result.second,out,"wert")
-    return KartenDaten(id=KartenId(prefix),name="Vektorpotenz $n",erstelltAm=0L,knoten=nodes,verbindungen=edges)
+    return KartenDaten(id=KartenId(prefix),name="Vektorpotenz $n",erstelltAm=0L,knoten=nodes,verbindungen=edges).let(MathematikKartenMigrationen::nachLaden)
 }
 
 internal fun unterraumDefinitionsKarte(original: KnotenDaten): KartenDaten {
@@ -110,7 +110,7 @@ internal fun unterraumDefinitionsKarte(original: KnotenDaten): KartenDaten {
         val koordinaten=if(c.art=="mathematik.tupel") c else add(konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),"tupel"),"stuetzpunkttupel").also { connect(c,"wert",it,"wert") }
         val singleton=add(endlicheMengeGraphVorlage().erzeuge(GraphPunkt.Zero),"einzelmenge");connect(koordinaten,if(koordinaten.art=="mathematik.tupel") "tupel" else "ergebnis",singleton,"element1")
         val out=add(KnotenDaten(art="mathematik.kartenAusgang",name="Nullpunkt / Stützpunkt",anschlüsse=listOf(AnschlussDaten(name="wert",art=MathematikAnschlussArten.Menge.id,richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links))),"ausgang");connect(singleton,"menge",out,"wert")
-        return KartenDaten(id=KartenId(prefix),name="Unterraum ohne Richtungen",erstelltAm=0L,knoten=nodes,verbindungen=edges)
+        return KartenDaten(id=KartenId(prefix),name="Unterraum ohne Richtungen",erstelltAm=0L,knoten=nodes,verbindungen=edges).let(MathematikKartenMigrationen::nachLaden)
     }
     val summanden=(1..n).map { i ->
         val input=add(KnotenDaten(art=KonzeptKnotenArten.EINGANG,name="a.$i",parameter=mapOf("rolle" to "a.$i","typ" to "mathematik.objekt"),anschlüsse=listOf(AnschlussDaten(name="wert",art=MathematikAnschlussArten.Objekt.id,richtung=AnschlussRichtung.Ausgang,kante=AnschlussKante.Rechts))),"a$i")
@@ -139,7 +139,7 @@ internal fun unterraumDefinitionsKarte(original: KnotenDaten): KartenDaten {
     }
     val bild=add(MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero),"bildmenge");connect(methode,"ergebnis",bild,"methode");connect(koeffizienten,"menge",bild,"menge")
     val out=add(KnotenDaten(art="mathematik.kartenAusgang",name="{c+Σbₖaᵏ | b∈ℝⁿ}",anschlüsse=listOf(AnschlussDaten(name="wert",art=MathematikAnschlussArten.Menge.id,richtung=AnschlussRichtung.Eingang,kante=AnschlussKante.Links))),"ausgang");connect(bild,"menge",out,"wert")
-    return KartenDaten(id=KartenId(prefix),name="Unterraum als Bild der Linearkombination",erstelltAm=0L,knoten=nodes,verbindungen=edges)
+    return KartenDaten(id=KartenId(prefix),name="Unterraum als Bild der Linearkombination",erstelltAm=0L,knoten=nodes,verbindungen=edges).let(MathematikKartenMigrationen::nachLaden)
 }
 
 internal fun gradRichtungsKonzept(knoten: KnotenDaten): KonzeptDefinition? {
@@ -192,5 +192,5 @@ internal fun gradRichtungsDefinitionsKarte(dimension: Int): KartenDaten {
         }).zuParameter()))
     val produkt = neu(MathematikKnotenVorlagen.IteriertesKartesischesProdukt, 1600f, 100f)
     verbinde(methode, "methode", produkt, "methode"); verbinde(index, "menge", produkt, "indexmenge")
-    return KartenDaten(name = "Grad-Richtungsraum · dim=$dimension", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen)
+    return KartenDaten(name = "Grad-Richtungsraum · dim=$dimension", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen).let(MathematikKartenMigrationen::nachLaden)
 }

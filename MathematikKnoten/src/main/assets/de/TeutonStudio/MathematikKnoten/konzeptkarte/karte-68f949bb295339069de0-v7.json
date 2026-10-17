@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810245,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-zaehler",
         "anschlussId": "division-kz-p-zaehler-ausgang-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-zaehler",
         "anschlussId": "division-kz-p-zaehler-ausgang-wert"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-nenner",
         "anschlussId": "division-kz-p-nenner-ausgang-wert"
@@ -35,6 +38,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-radius",
         "anschlussId": "division-kz-p-radius-ausgang-wert"
@@ -46,6 +50,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-kehrwert",
         "anschlussId": "division-kz-p-kehrwert-ausgang-wert"
@@ -57,6 +62,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-radius-quotient",
         "anschlussId": "division-kz-p-radius-quotient-ausgang-wert"
@@ -68,6 +74,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-winkel",
         "anschlussId": "division-kz-p-winkel-ausgang-wert"
@@ -79,6 +86,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-tupel",
         "anschlussId": "division-kz-p-tupel-ausgang-tupel"
@@ -90,6 +98,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-p-komplex",
         "anschlussId": "division-kz-p-komplex-ausgang-zahl"
@@ -111,20 +120,21 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "division-kz-p-zaehler-ausgang-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "division-kz-p-zaehler-ausgang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "name": "Zähler a ∈ ℂ∖ℝ"
+        "name": "Zähler a ∈ ℂ∖ℝ",
+        "schnittstelle.position": "0"
       },
       "name": "Karten-Eingang",
       "id": "division-kz-p-zaehler",
@@ -140,20 +150,21 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "division-kz-p-nenner-ausgang-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "division-kz-p-nenner-ausgang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "name": "Nenner b > 0"
+        "name": "Nenner b > 0",
+        "schnittstelle.position": "1"
       },
       "name": "Karten-Eingang",
       "id": "division-kz-p-nenner",
@@ -171,23 +182,35 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-p-radius-eingang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": ["a"],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-p-radius-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -214,23 +237,35 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-p-winkel-eingang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": ["a"],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-p-winkel-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -257,23 +292,35 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-p-kehrwert-eingang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": ["a"],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-p-kehrwert-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -300,33 +347,54 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-p-radius-quotient-eingang-a",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-p-radius-quotient-eingang-b",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-p-radius-quotient-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -355,6 +423,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": true,
@@ -362,9 +431,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "division-kz-p-tupel-eingang-a",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": true,
@@ -372,9 +443,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "division-kz-p-tupel-eingang-b",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -382,12 +455,13 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "division-kz-p-tupel-ausgang-tupel",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
-        "festeEingänge": "2",
-        "operatorAnzeige": "wert"
+        "operatorAnzeige": "wert",
+        "festeEingänge": "2"
       },
       "name": "Tupel",
       "id": "division-kz-p-tupel",
@@ -405,6 +479,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -412,36 +487,58 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "division-kz-p-komplex-eingang-tupel",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "50874b04-f315-4e97-ba0d-f0fc81b52196",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "fde69baa-bdb7-4e38-9d60-fca4bd8eddb9",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-p-komplex-ausgang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -449,8 +546,8 @@
         "variable": "x",
         "komplexEingabe": "tupel",
         "gradWinkel": "false",
-        "gradAlsBogenmassAuswerten": "true",
         "modus": "polar",
+        "gradAlsBogenmassAuswerten": "true",
         "operator": "zahl.komplexAusPolar"
       },
       "name": "Komplex aus Polarform",
@@ -467,21 +564,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "division-kz-p-ausgang-eingang-wert",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "Ergebnis"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "division-kz-p-ausgang-eingang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "Ergebnis"},
       "name": "Karten-Ausgang",
       "id": "division-kz-p-ausgang",
       "position": {
@@ -497,6 +592,6 @@
     "y": 0,
     "zoom": 0.65
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

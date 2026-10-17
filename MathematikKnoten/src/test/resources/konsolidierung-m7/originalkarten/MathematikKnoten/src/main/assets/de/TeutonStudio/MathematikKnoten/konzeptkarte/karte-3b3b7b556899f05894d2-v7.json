@@ -1,0 +1,579 @@
+{
+  "erstelltAm": 1785883810245,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "division-kz-k-zaehler",
+        "anschlussId": "division-kz-k-zaehler-ausgang-wert"
+      },
+      "id": "division-kzk1",
+      "zu": {
+        "knotenId": "division-kz-k-realteil",
+        "anschlussId": "division-kz-k-realteil-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-zaehler",
+        "anschlussId": "division-kz-k-zaehler-ausgang-wert"
+      },
+      "id": "division-kzk2",
+      "zu": {
+        "knotenId": "division-kz-k-imaginaerteil",
+        "anschlussId": "division-kz-k-imaginaerteil-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-nenner",
+        "anschlussId": "division-kz-k-nenner-ausgang-wert"
+      },
+      "id": "division-kzk3",
+      "zu": {
+        "knotenId": "division-kz-k-kehrwert",
+        "anschlussId": "division-kz-k-kehrwert-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-realteil",
+        "anschlussId": "division-kz-k-realteil-ausgang-wert"
+      },
+      "id": "division-kzk4",
+      "zu": {
+        "knotenId": "division-kz-k-real-quotient",
+        "anschlussId": "division-kz-k-real-quotient-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-kehrwert",
+        "anschlussId": "division-kz-k-kehrwert-ausgang-wert"
+      },
+      "id": "division-kzk5",
+      "zu": {
+        "knotenId": "division-kz-k-real-quotient",
+        "anschlussId": "division-kz-k-real-quotient-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-imaginaerteil",
+        "anschlussId": "division-kz-k-imaginaerteil-ausgang-wert"
+      },
+      "id": "division-kzk6",
+      "zu": {
+        "knotenId": "division-kz-k-imaginaer-quotient",
+        "anschlussId": "division-kz-k-imaginaer-quotient-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-kehrwert",
+        "anschlussId": "division-kz-k-kehrwert-ausgang-wert"
+      },
+      "id": "division-kzk7",
+      "zu": {
+        "knotenId": "division-kz-k-imaginaer-quotient",
+        "anschlussId": "division-kz-k-imaginaer-quotient-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-real-quotient",
+        "anschlussId": "division-kz-k-real-quotient-ausgang-wert"
+      },
+      "id": "division-kzk8",
+      "zu": {
+        "knotenId": "division-kz-k-tupel",
+        "anschlussId": "division-kz-k-tupel-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-imaginaer-quotient",
+        "anschlussId": "division-kz-k-imaginaer-quotient-ausgang-wert"
+      },
+      "id": "division-kzk9",
+      "zu": {
+        "knotenId": "division-kz-k-tupel",
+        "anschlussId": "division-kz-k-tupel-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-tupel",
+        "anschlussId": "division-kz-k-tupel-ausgang-tupel"
+      },
+      "id": "division-kzk10",
+      "zu": {
+        "knotenId": "division-kz-k-komplex",
+        "anschlussId": "division-kz-k-komplex-eingang-tupel"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kz-k-komplex",
+        "anschlussId": "division-kz-k-komplex-ausgang-zahl"
+      },
+      "id": "division-kzk11",
+      "zu": {
+        "knotenId": "division-kz-k-ausgang",
+        "anschlussId": "division-kz-k-ausgang-eingang-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Komplexen Zähler kartesisch zerlegen",
+  "knoten": [
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-zaehler-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Zähler a ∈ ℂ∖ℝ"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-kz-k-zaehler",
+      "position": {
+        "x": 30,
+        "y": 180
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-nenner-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Nenner b > 0"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-kz-k-nenner",
+      "position": {
+        "x": 30,
+        "y": 520
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-realteil-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-realteil-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.realteil"
+      },
+      "name": "Realteil",
+      "id": "division-kz-k-realteil",
+      "position": {
+        "x": 360,
+        "y": 100
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-imaginaerteil-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-imaginaerteil-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.imaginaerteil"
+      },
+      "name": "Imaginärteil",
+      "id": "division-kz-k-imaginaerteil",
+      "position": {
+        "x": 360,
+        "y": 300
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-kehrwert-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-kehrwert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.kehrwert"
+      },
+      "name": "Kehrwert",
+      "id": "division-kz-k-kehrwert",
+      "position": {
+        "x": 360,
+        "y": 520
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-real-quotient-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-real-quotient-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-real-quotient-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-kz-k-real-quotient",
+      "position": {
+        "x": 710,
+        "y": 100
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-imaginaer-quotient-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-imaginaer-quotient-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-imaginaer-quotient-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-kz-k-imaginaer-quotient",
+      "position": {
+        "x": 710,
+        "y": 330
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.tupel",
+      "größe": {
+        "breite": 220,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-tupel-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-tupel-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "tupel",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-tupel-ausgang-tupel",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Tupel",
+      "id": "division-kz-k-tupel",
+      "position": {
+        "x": 1050,
+        "y": 210
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 250,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "tupel",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-komplex-eingang-tupel",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "b39ce560-7054-4ef4-a73f-8f264665656e",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "86ddd4ab-f22f-4d1e-b3de-44b83018071a",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-komplex-ausgang-zahl",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "tupel",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "modus": "kartesisch",
+        "operator": "zahl.komplexAusKartesisch"
+      },
+      "name": "Komplex aus kartesischer Form",
+      "id": "division-kz-k-komplex",
+      "position": {
+        "x": 1360,
+        "y": 210
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kz-k-ausgang-eingang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Ergebnis"
+      },
+      "name": "Karten-Ausgang",
+      "id": "division-kz-k-ausgang",
+      "position": {
+        "x": 1670,
+        "y": 220
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.5d7c91ae.komplexer-zaehler",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.65
+  },
+  "formatVersion": 7,
+  "version": 1
+}

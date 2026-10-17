@@ -6,7 +6,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
 import kotlin.test.*
 
 class MethodenQuellKnotenTest {
-    private val auswerter = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister())
+    private val auswerter = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister())
     @Test fun `kanonische Joinquellen behalten binaere und konfigurierte Argumentrollen`() {
         val kandidaten = methodenKnotenQuellen()
         for (art in listOf("zahl.addition", "menge.vereinigung", "menge.schnitt")) {
@@ -22,7 +22,7 @@ class MethodenQuellKnotenTest {
                 if (art != "zahl.addition") continue
                 val methodenknoten = konfiguriereMethodenQuelle(MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt.Zero), quelle)
                 val laufzeit = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister(), normalisiereKarte = { it.normalisiereJoinEingänge() })
-                val export = laufzeit.auswerten(KartenDaten(name = "Quelle", knoten = listOf(methodenknoten))).knoten.getValue(methodenknoten.id)
+                val export = laufzeit.auswertenNachMigration(KartenDaten(name = "Quelle", knoten = listOf(methodenknoten))).knoten.getValue(methodenknoten.id)
                 assertNull(export.fehler, "$art/$anzahl")
                 val methode = assertIs<MathematischeMethode>(export.ausgaben.getValue("methode").objekt)
                 assertEquals(anzahl, methode.signatur.argumente.size)
@@ -38,7 +38,7 @@ class MethodenQuellKnotenTest {
     }
     @Test fun `Standardquelle ist Identitaet und Ausgang bleibt bei Quellenwechsel stabil`() {
         val knoten = MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt(0f, 0f))
-        val ergebnis = auswerter.auswerten(KartenDaten(name = "Test", knoten = listOf(knoten)))
+        val ergebnis = auswerter.auswertenNachMigration(KartenDaten(name = "Test", knoten = listOf(knoten)))
         assertSame(IdentitaetsMethode, ergebnis.knoten.getValue(knoten.id).ausgaben.getValue("methode").objekt)
         val neu = konfiguriereMethodenQuelle(knoten, MathematikKnotenVorlagen.Potenz.erzeuge(GraphPunkt(0f, 0f)))
         assertEquals(knoten.anschlüsse.last().id, neu.anschlüsse.single().id)
@@ -50,14 +50,14 @@ class MethodenQuellKnotenTest {
     @Test fun `einzelner Knoten exportiert Originalportidentitaeten`() {
         val quelle = MathematikKnotenVorlagen.Potenz.erzeuge(GraphPunkt(0f, 0f))
         val besitzer = MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt(0f, 0f))
-        val export = auswerter.exportiereKarteAlsMethode(methodenQuellKarte(quelle, besitzer.id))
+        val export = auswerter.exportiereKarteAlsMethode(MathematikKartenMigrationen.nachLaden(methodenQuellKarte(quelle, besitzer.id)))
         assertNull(export.fehler)
         val methode = assertIs<MathematischeMethode>(export.ausgaben.getValue("methode").objekt)
         assertEquals(quelle.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.map { it.id.wert }, methode.signatur.argumente.map { it.id })
         assertEquals(quelle.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }.map { it.id.wert }, methode.signatur.ergebnisse.map { it.id })
         assertEquals(Tupel(listOf(RationaleZahl.von(8))), methode.wendeMitBedingungenAn(Tupel(listOf(RationaleZahl.von(2), RationaleZahl.von(3)))).ergebnis)
         val source = konfiguriereMethodenQuelle(besitzer, quelle)
-        val ergebnis = auswerter.auswerten(KartenDaten(name = "Test", knoten = listOf(source)))
+        val ergebnis = auswerter.auswertenNachMigration(KartenDaten(name = "Test", knoten = listOf(source)))
         assertNull(ergebnis.knoten.getValue(source.id).fehler)
     }
     @Test fun `Kopieren und Undo erhalten die Quellkonfiguration`() {
@@ -77,7 +77,7 @@ class MethodenQuellKnotenTest {
     }
     @Test fun `dynamische Eingangsanzahl wird im Export erhalten`() {
         val quelle = konfiguriereMethodenQuellParameter(MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt(0f, 0f)), "festeEingänge", "4")
-        val export = auswerter.exportiereKarteAlsMethode(methodenQuellKarte(quelle, KnotenId("vier")))
+        val export = auswerter.exportiereKarteAlsMethode(MathematikKartenMigrationen.nachLaden(methodenQuellKarte(quelle, KnotenId("vier"))))
         assertNull(export.fehler)
         val methode = assertIs<MathematischeMethode>(export.ausgaben.getValue("methode").objekt)
         assertEquals(4, methode.signatur.argumente.size)
@@ -95,11 +95,11 @@ class MethodenQuellKnotenTest {
     @Test fun `unbekannte und widerspruechliche Quellenwahl liefern Diagnose`() {
         val standard = MethodenQuellKnotenVorlagen.Methode.erzeuge(GraphPunkt(0f, 0f))
         val ungueltig = standard.copy(eigenschaften = mapOf(METHODEN_QUELLE_ID to KnotenEigenschaft.Text("unbekannt")))
-        val ergebnis = auswerter.auswerten(KartenDaten(name = "Test", knoten = listOf(ungueltig))).knoten.getValue(ungueltig.id)
+        val ergebnis = auswerter.auswertenNachMigration(KartenDaten(name = "Test", knoten = listOf(ungueltig))).knoten.getValue(ungueltig.id)
         assertNotNull(ergebnis.fehler)
         assertTrue(ergebnis.ausgaben.isEmpty())
         val falscherTyp = standard.copy(eigenschaften = mapOf(METHODEN_QUELLE_ID to KnotenEigenschaft.Ganzzahl(3)))
-        assertNotNull(auswerter.auswerten(KartenDaten(name = "Test", knoten = listOf(falscherTyp))).knoten.getValue(falscherTyp.id).fehler)
+        assertNotNull(auswerter.auswertenNachMigration(KartenDaten(name = "Test", knoten = listOf(falscherTyp))).knoten.getValue(falscherTyp.id).fehler)
     }
     @Test fun `kanonische Potenz ist als Methode verfuegbar`() {
         val potenzen = methodenKnotenQuellen().filter { it.titel == "Potenz" }

@@ -97,7 +97,9 @@ private fun werteStrukturierteDivisionAus(
     val divisorWert = kontext.eingänge["b"]
         ?: return basisErgebnis.copy(fehler = "Der Divisoreingang b fehlt.")
     val punktweiseMethode = basisErgebnis.ausgaben["wert"]?.objekt as? Methode
-    val punktweiseDivision = punktweiseMethode?.vorschrift as? Division
+    val punktweiserFall = punktweiseMethode?.vorschrift as? ZahlFallAusdruck
+    val punktweiseDivision = (punktweiserFall?.lüge ?: punktweiseMethode?.vorschrift) as? Division
+    if (punktweiseMethode != null && punktweiseDivision == null) return basisErgebnis
     val dividend = punktweiseDivision?.dividend ?: (dividendWert.objekt as? ZahlAusdruck)
         ?: return basisErgebnis.copy(fehler = "Der Dividend ist weder eine Zahl noch Teil einer punktweisen Zahlenfunktion.")
     val divisor = punktweiseDivision?.divisor ?: (divisorWert.objekt as? ZahlAusdruck)
@@ -131,13 +133,17 @@ private fun werteStrukturierteDivisionAus(
     }
 
     val seite = divisionsSeiteOderStandard(kontext.knoten)
-    val ausdruck = strukturierteDivision(
+    val quotient = strukturierteDivision(
         dividend = dividend,
         divisor = divisor,
         seite = seite,
         kommutativitaet = kommutativitaet,
         struktur = gemeinsam.alsZahlbereichsIdOderNull(),
     )
+    val anwendung = divisionMitNullersatz(dividend,divisor,
+        punktweiserFall?.wahr ?: kontext.eingänge["c"]?.objekt as? ZahlAusdruck,
+        kontext.rechenKontext.copy(annahmen=kontext.rechenKontext.annahmen+kontext.eingänge.values.flatMap {it.annahmen}),quotient)
+    val ausdruck=anwendung.wert
     val bisher = basisErgebnis.ausgaben["wert"]
         ?: BedingterWert(objekt = ausdruck)
     val ergebnisObjekt: MathematischesObjekt = punktweiseMethode?.copy(
@@ -155,6 +161,7 @@ private fun werteStrukturierteDivisionAus(
         ausgaben = basisErgebnis.ausgaben + (
             "wert" to bisher.copy(
                 objekt = ergebnisObjekt,
+                annahmen = bisher.annahmen + if(punktweiseMethode==null) anwendung.bedingungen else emptySet(),
                 latexDarstellung = if (ergebnisObjekt is Methode) null else ausdruck.zuLatex(),
             )
         ),

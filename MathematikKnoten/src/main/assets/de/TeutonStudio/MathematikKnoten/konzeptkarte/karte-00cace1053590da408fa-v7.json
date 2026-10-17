@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810244,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-positiv-nenner",
         "anschlussId": "division-positiv-nenner-ausgang-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-positiv-zaehler",
         "anschlussId": "division-positiv-zaehler-ausgang-wert"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-positiv-kehrwert",
         "anschlussId": "division-positiv-kehrwert-ausgang-wert"
@@ -35,6 +38,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-positiv-produkt",
         "anschlussId": "division-positiv-produkt-ausgang-wert"
@@ -56,20 +60,21 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "division-positiv-zaehler-ausgang-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "division-positiv-zaehler-ausgang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "name": "Zähler a"
+        "name": "Zähler a",
+        "schnittstelle.position": "0"
       },
       "name": "Karten-Eingang",
       "id": "division-positiv-zaehler",
@@ -85,20 +90,21 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "division-positiv-nenner-ausgang-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "division-positiv-nenner-ausgang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "name": "Nenner b > 0"
+        "name": "Nenner b > 0",
+        "schnittstelle.position": "1"
       },
       "name": "Karten-Eingang",
       "id": "division-positiv-nenner",
@@ -116,23 +122,35 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-positiv-kehrwert-eingang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": ["a"],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-positiv-kehrwert-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -159,33 +177,54 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-positiv-produkt-eingang-a",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-positiv-produkt-eingang-b",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-positiv-produkt-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -212,21 +251,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "division-positiv-ausgang-eingang-wert",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "Ergebnis"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "division-positiv-ausgang-eingang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "Ergebnis"},
       "name": "Karten-Ausgang",
       "id": "division-positiv-ausgang",
       "position": {
@@ -242,6 +279,6 @@
     "y": 0,
     "zoom": 0.65
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

@@ -1,0 +1,247 @@
+{
+  "erstelltAm": 1785883810244,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "division-positiv-nenner",
+        "anschlussId": "division-positiv-nenner-ausgang-wert"
+      },
+      "id": "division-p1",
+      "zu": {
+        "knotenId": "division-positiv-kehrwert",
+        "anschlussId": "division-positiv-kehrwert-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-positiv-zaehler",
+        "anschlussId": "division-positiv-zaehler-ausgang-wert"
+      },
+      "id": "division-p2",
+      "zu": {
+        "knotenId": "division-positiv-produkt",
+        "anschlussId": "division-positiv-produkt-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-positiv-kehrwert",
+        "anschlussId": "division-positiv-kehrwert-ausgang-wert"
+      },
+      "id": "division-p3",
+      "zu": {
+        "knotenId": "division-positiv-produkt",
+        "anschlussId": "division-positiv-produkt-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-positiv-produkt",
+        "anschlussId": "division-positiv-produkt-ausgang-wert"
+      },
+      "id": "division-p4",
+      "zu": {
+        "knotenId": "division-positiv-ausgang",
+        "anschlussId": "division-positiv-ausgang-eingang-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Division bei positivem reellem Nenner",
+  "knoten": [
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-positiv-zaehler-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Zähler a"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-positiv-zaehler",
+      "position": {
+        "x": 30,
+        "y": 80
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-positiv-nenner-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Nenner b > 0"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-positiv-nenner",
+      "position": {
+        "x": 30,
+        "y": 270
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-positiv-kehrwert-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-positiv-kehrwert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.kehrwert"
+      },
+      "name": "Kehrwert",
+      "id": "division-positiv-kehrwert",
+      "position": {
+        "x": 390,
+        "y": 270
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-positiv-produkt-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-positiv-produkt-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-positiv-produkt-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-positiv-produkt",
+      "position": {
+        "x": 720,
+        "y": 150
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-positiv-ausgang-eingang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Ergebnis"
+      },
+      "name": "Karten-Ausgang",
+      "id": "division-positiv-ausgang",
+      "position": {
+        "x": 1050,
+        "y": 160
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.5d7c91ae.positiver-nenner",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.65
+  },
+  "formatVersion": 7,
+  "version": 1
+}

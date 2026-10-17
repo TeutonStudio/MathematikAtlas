@@ -1,1 +1,694 @@
-{"formatVersion":7,"id":"standard.function.multivar.paraboloid","name":"Paraboloid x² + y²","version":1,"erstelltAm":0,"archiviert":false,"ansicht":{"x":40,"y":40,"zoom":0.62},"knoten":[{"id":"standard-function-multivar-paraboloid-x","art":"mathematik.variable","name":"x","position":{"x":20,"y":110},"größe":{"breite":190,"höhe":102},"parameter":{"name":"x","werteVorrat":"R"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-x-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-y","art":"mathematik.variable","name":"y","position":{"x":20,"y":330},"größe":{"breite":190,"höhe":102},"parameter":{"name":"y","werteVorrat":"R"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-y-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-two1","art":"mathematik.zahl","name":"2","position":{"x":20,"y":500},"größe":{"breite":180,"höhe":92},"parameter":{"wert":"2"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-two1-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-two2","art":"mathematik.zahl","name":"2","position":{"x":20,"y":620},"größe":{"breite":180,"höhe":92},"parameter":{"wert":"2"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-two2-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-px","art":"mathematik.potenz","name":"Potenz","position":{"x":270,"y":100},"größe":{"breite":210,"höhe":110},"parameter":{},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-px-b","name":"basis","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false},{"id":"standard-function-multivar-paraboloid-px-x","name":"exponent","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":1,"kannSichErweitern":false,"dynamischErzeugt":false},{"id":"standard-function-multivar-paraboloid-px-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-py","art":"mathematik.potenz","name":"Potenz","position":{"x":270,"y":350},"größe":{"breite":210,"höhe":110},"parameter":{},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-py-b","name":"basis","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false},{"id":"standard-function-multivar-paraboloid-py-x","name":"exponent","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":1,"kannSichErweitern":false,"dynamischErzeugt":false},{"id":"standard-function-multivar-paraboloid-py-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-combine","art":"mathematik.addition","name":"Addition","position":{"x":540,"y":220},"größe":{"breite":220,"höhe":130},"parameter":{"festeEingänge":"2","operatorAnzeige":"wert"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-combine-i0","name":"a","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":true,"dynamischErzeugt":false},{"id":"standard-function-multivar-paraboloid-combine-i1","name":"b","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":1,"kannSichErweitern":true,"dynamischErzeugt":false},{"id":"standard-function-multivar-paraboloid-combine-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-tm","art":"mathematik.termZuMethode","name":"Term zu Methode","position":{"x":1080,"y":230},"größe":{"breite":265,"höhe":135},"parameter":{"name":"f","argumentReihenfolge":"x,y"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-tm-i","name":"term","richtung":"Eingang","kante":"Links","art":"mathematik.objekt","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false},{"id":"standard-function-multivar-paraboloid-tm-o","name":"methode","richtung":"Ausgang","kante":"Rechts","art":"mathematik.methode","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-out","art":"mathematik.kartenAusgang","name":"Karten-Ausgang","position":{"x":1380,"y":230},"größe":{"breite":210,"höhe":100},"parameter":{"name":"methode"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-multivar-paraboloid-out-i","name":"wert","richtung":"Eingang","kante":"Links","art":"mathematik.methode","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-multivar-paraboloid-note-note","art":"karte.notiz","name":"Erwartetes Ergebnis","position":{"x":1020,"y":470},"größe":{"breite":560,"höhe":220},"parameter":{"text":"Erwartetes Ergebnis\n\nf: ℝ² → ℝ\n(x,y) ↦ x² + y²","textAusrichtung":"links","schriftgrößeSp":"16"},"eigenschaften":{},"anschlüsse":[]}],"verbindungen":[{"id":"standard-function-multivar-paraboloid-e1","von":{"knotenId":"standard-function-multivar-paraboloid-x","anschlussId":"standard-function-multivar-paraboloid-x-o"},"zu":{"knotenId":"standard-function-multivar-paraboloid-px","anschlussId":"standard-function-multivar-paraboloid-px-b"}},{"id":"standard-function-multivar-paraboloid-e2","von":{"knotenId":"standard-function-multivar-paraboloid-two1","anschlussId":"standard-function-multivar-paraboloid-two1-o"},"zu":{"knotenId":"standard-function-multivar-paraboloid-px","anschlussId":"standard-function-multivar-paraboloid-px-x"}},{"id":"standard-function-multivar-paraboloid-e3","von":{"knotenId":"standard-function-multivar-paraboloid-y","anschlussId":"standard-function-multivar-paraboloid-y-o"},"zu":{"knotenId":"standard-function-multivar-paraboloid-py","anschlussId":"standard-function-multivar-paraboloid-py-b"}},{"id":"standard-function-multivar-paraboloid-e4","von":{"knotenId":"standard-function-multivar-paraboloid-two2","anschlussId":"standard-function-multivar-paraboloid-two2-o"},"zu":{"knotenId":"standard-function-multivar-paraboloid-py","anschlussId":"standard-function-multivar-paraboloid-py-x"}},{"id":"standard-function-multivar-paraboloid-e5","von":{"knotenId":"standard-function-multivar-paraboloid-px","anschlussId":"standard-function-multivar-paraboloid-px-o"},"zu":{"knotenId":"standard-function-multivar-paraboloid-combine","anschlussId":"standard-function-multivar-paraboloid-combine-i0"}},{"id":"standard-function-multivar-paraboloid-e6","von":{"knotenId":"standard-function-multivar-paraboloid-py","anschlussId":"standard-function-multivar-paraboloid-py-o"},"zu":{"knotenId":"standard-function-multivar-paraboloid-combine","anschlussId":"standard-function-multivar-paraboloid-combine-i1"}},{"id":"standard-function-multivar-paraboloid-e10","von":{"knotenId":"standard-function-multivar-paraboloid-combine","anschlussId":"standard-function-multivar-paraboloid-combine-o"},"zu":{"knotenId":"standard-function-multivar-paraboloid-tm","anschlussId":"standard-function-multivar-paraboloid-tm-i"}},{"id":"standard-function-multivar-paraboloid-e11","von":{"knotenId":"standard-function-multivar-paraboloid-tm","anschlussId":"standard-function-multivar-paraboloid-tm-o"},"zu":{"knotenId":"standard-function-multivar-paraboloid-out","anschlussId":"standard-function-multivar-paraboloid-out-i"}}],"visuelleGruppen":[]}
+{
+  "erstelltAm": 0,
+  "verbindungen": [
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-x",
+        "anschlussId": "standard-function-multivar-paraboloid-x-o"
+      },
+      "id": "standard-function-multivar-paraboloid-e1",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-px",
+        "anschlussId": "standard-function-multivar-paraboloid-px-b"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-two1",
+        "anschlussId": "standard-function-multivar-paraboloid-two1-o"
+      },
+      "id": "standard-function-multivar-paraboloid-e2",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-px",
+        "anschlussId": "standard-function-multivar-paraboloid-px-x"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-y",
+        "anschlussId": "standard-function-multivar-paraboloid-y-o"
+      },
+      "id": "standard-function-multivar-paraboloid-e3",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-py",
+        "anschlussId": "standard-function-multivar-paraboloid-py-b"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-two2",
+        "anschlussId": "standard-function-multivar-paraboloid-two2-o"
+      },
+      "id": "standard-function-multivar-paraboloid-e4",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-py",
+        "anschlussId": "standard-function-multivar-paraboloid-py-x"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-px",
+        "anschlussId": "standard-function-multivar-paraboloid-px-o"
+      },
+      "id": "standard-function-multivar-paraboloid-e5",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-combine",
+        "anschlussId": "standard-function-multivar-paraboloid-combine-i0"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-py",
+        "anschlussId": "standard-function-multivar-paraboloid-py-o"
+      },
+      "id": "standard-function-multivar-paraboloid-e6",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-combine",
+        "anschlussId": "standard-function-multivar-paraboloid-combine-i1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-combine",
+        "anschlussId": "standard-function-multivar-paraboloid-combine-o"
+      },
+      "id": "standard-function-multivar-paraboloid-e10",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-tm",
+        "anschlussId": "standard-function-multivar-paraboloid-tm-i"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-tm",
+        "anschlussId": "standard-function-multivar-paraboloid-tm-o"
+      },
+      "id": "standard-function-multivar-paraboloid-e11",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-out",
+        "anschlussId": "standard-function-multivar-paraboloid-out-i"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-x:migration-grundraum",
+        "anschlussId": "standard-function-multivar-paraboloid-x:migration-grundraum:Ausgang:menge"
+      },
+      "id": "standard-function-multivar-paraboloid-x:migration-grundraum:verbindung",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-x",
+        "anschlussId": "standard-function-multivar-paraboloid-x:grundraum"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-multivar-paraboloid-y:migration-grundraum",
+        "anschlussId": "standard-function-multivar-paraboloid-y:migration-grundraum:Ausgang:menge"
+      },
+      "id": "standard-function-multivar-paraboloid-y:migration-grundraum:verbindung",
+      "zu": {
+        "knotenId": "standard-function-multivar-paraboloid-y",
+        "anschlussId": "standard-function-multivar-paraboloid-y:grundraum"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Paraboloid x² + y²",
+  "knoten": [
+    {
+      "art": "mathematik.variable",
+      "größe": {
+        "breite": 190,
+        "höhe": 102
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "vertrag": {"typ": {
+            "art": "atom",
+            "id": "mathematik.zahl.reell"
+          }},
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-x-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "grundraum",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-x:grundraum",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "x",
+        "werteVorrat": "R"
+      },
+      "name": "x",
+      "id": "standard-function-multivar-paraboloid-x",
+      "position": {
+        "x": 20,
+        "y": 110
+      },
+      "eigenschaften": {"variable.grundraumVertrag": {
+        "wert": "1",
+        "typ": "text"
+      }}
+    },
+    {
+      "art": "mathematik.variable",
+      "größe": {
+        "breite": 190,
+        "höhe": 102
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "vertrag": {"typ": {
+            "art": "atom",
+            "id": "mathematik.zahl.reell"
+          }},
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-y-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "grundraum",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-y:grundraum",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "y",
+        "werteVorrat": "R"
+      },
+      "name": "y",
+      "id": "standard-function-multivar-paraboloid-y",
+      "position": {
+        "x": 20,
+        "y": 330
+      },
+      "eigenschaften": {"variable.grundraumVertrag": {
+        "wert": "1",
+        "typ": "text"
+      }}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "standard-function-multivar-paraboloid-two1-o",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"wert": "2"},
+      "name": "2",
+      "id": "standard-function-multivar-paraboloid-two1",
+      "position": {
+        "x": 20,
+        "y": 500
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "standard-function-multivar-paraboloid-two2-o",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"wert": "2"},
+      "name": "2",
+      "id": "standard-function-multivar-paraboloid-two2",
+      "position": {
+        "x": 20,
+        "y": 620
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-px-b",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "b",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-px-x",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
+          "id": "standard-function-multivar-paraboloid-px-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.potenz"
+      },
+      "name": "Potenz",
+      "id": "standard-function-multivar-paraboloid-px",
+      "position": {
+        "x": 270,
+        "y": 100
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-py-b",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "b",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-py-x",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
+          "id": "standard-function-multivar-paraboloid-py-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.potenz"
+      },
+      "name": "Potenz",
+      "id": "standard-function-multivar-paraboloid-py",
+      "position": {
+        "x": 270,
+        "y": 350
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-combine-i0",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-combine-i1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
+          "id": "standard-function-multivar-paraboloid-combine-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.addition"
+      },
+      "name": "Addition",
+      "id": "standard-function-multivar-paraboloid-combine",
+      "position": {
+        "x": 540,
+        "y": 220
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.termZuMethode",
+      "größe": {
+        "breite": 265,
+        "höhe": 135
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "term",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-tm-i",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-tm-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "f",
+        "argumentReihenfolge": "x,y"
+      },
+      "name": "Term zu Methode",
+      "id": "standard-function-multivar-paraboloid-tm",
+      "position": {
+        "x": 1080,
+        "y": 230
+      },
+      "eigenschaften": {"atlas.darstellungsform": {
+        "wert": "adapter",
+        "typ": "text"
+      }}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "standard-function-multivar-paraboloid-out-i",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "methode"},
+      "name": "Karten-Ausgang",
+      "id": "standard-function-multivar-paraboloid-out",
+      "position": {
+        "x": 1380,
+        "y": 230
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "karte.notiz",
+      "größe": {
+        "breite": 560,
+        "höhe": 220
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "textAusrichtung": "links",
+        "schriftgrößeSp": "16",
+        "text": "Erwartetes Ergebnis\n\nf: ℝ² → ℝ\n(x,y) ↦ x² + y²"
+      },
+      "name": "Erwartetes Ergebnis",
+      "id": "standard-function-multivar-paraboloid-note-note",
+      "position": {
+        "x": 1020,
+        "y": 470
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.menge",
+      "größe": {
+        "breite": 230,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-x:migration-grundraum:Eingang:dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-x:migration-grundraum:Ausgang:menge",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {"mengeAuswahl": "R"},
+      "name": "Grundraum · x",
+      "id": "standard-function-multivar-paraboloid-x:migration-grundraum",
+      "position": {
+        "x": -320,
+        "y": 110
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.menge",
+      "größe": {
+        "breite": 230,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-y:migration-grundraum:Eingang:dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "standard-function-multivar-paraboloid-y:migration-grundraum:Ausgang:menge",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {"mengeAuswahl": "R"},
+      "name": "Grundraum · y",
+      "id": "standard-function-multivar-paraboloid-y:migration-grundraum",
+      "position": {
+        "x": -320,
+        "y": 330
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "standard.function.multivar.paraboloid",
+  "ansicht": {
+    "x": 40,
+    "y": 40,
+    "zoom": 0.62
+  },
+  "formatVersion": 10,
+  "version": 1
+}

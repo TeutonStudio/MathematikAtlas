@@ -6,6 +6,8 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.BenannteMenge
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
 import de.TeutonStudio.MathematikRechenSystem.kern.SymmetrischeDifferenz
+import de.TeutonStudio.MathematikRechenSystem.kern.vereinige
+import de.TeutonStudio.MathematikRechenSystem.kern.mengenDifferenz
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -19,7 +21,7 @@ class SymmetrischeDifferenzKnotenTest {
         val vorlage = MengenraumKnotenVorlagen.SymmetrischeDifferenz
         assertFalse(vorlage in MengenraumKnotenVorlagen.alle)
         val knoten = vorlage.erzeuge(GraphPunkt.Zero)
-        val auswerter = assertNotNull(GesamterMathematikAuswerter.erzeugeRegister().finde(knoten.art))
+        val auswerter = assertNotNull(GesamterMathematikAuswerter.erzeugeRegister().findeNachMigration(knoten.art))
 
         val ergebnis = auswerter.auswerten(
             KnotenAuswertungsKontext(
@@ -32,8 +34,8 @@ class SymmetrischeDifferenzKnotenTest {
             ),
         )
 
-        val menge = assertIs<SymmetrischeDifferenz>(ergebnis.ausgaben.getValue("menge").objekt)
-        assertEquals("A \\triangle B", menge.zuLatex())
+        val a=BenannteMenge("A");val b=BenannteMenge("B")
+        assertEquals(vereinige(listOf(mengenDifferenz(a,b),mengenDifferenz(b,a))),ergebnis.ausgaben.getValue("menge").objekt)
     }
 
     @Test

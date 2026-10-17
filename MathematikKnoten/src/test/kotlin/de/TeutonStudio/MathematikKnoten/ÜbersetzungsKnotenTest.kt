@@ -10,7 +10,7 @@ class ÜbersetzungsKnotenTest {
     private val register = GesamterMathematikAuswerter.erzeugeRegister()
     private fun z(n: Long) = RationaleZahl.von(n)
     private fun auswerten(k: KnotenDaten, wert: BedingterWert, name: String = "wert") =
-        register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k, mapOf(name to wert), RechenKontext()))
+        register.findeNachMigration(k.art).auswerten(KnotenAuswertungsKontext(k, mapOf(name to wert), RechenKontext()))
 
     @Test fun `beide Typen registriert und Übersetzer unvermehrbar mit stabilen IDs`() {
         assertTrue(KanonischerMathematikKnotenKatalog.alle().any { it.art == ÜBERSETZER_ART })
@@ -65,7 +65,7 @@ class ÜbersetzungsKnotenTest {
         val aufruf = KnotenDaten(art = "mathematik.methodeAufrufen", name = "Aufruf", anschlüsse = listOf(
             AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Methode.id),
             AnschlussDaten(name = "argument1", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id)))
-        val angewandt = register.finde(aufruf.art)!!.auswerten(KnotenAuswertungsKontext(aufruf,
+        val angewandt = register.findeNachMigration(aufruf.art).auswerten(KnotenAuswertungsKontext(aufruf,
             mapOf("methode" to ergebnis, "argument1" to BedingterWert(z(2))), RechenKontext())).ausgaben.getValue("wert")
         // Die offene externe Zahlquelle bleibt zusätzlich an den deklarierten Ergebnisbereich gebunden.
         assertEquals(setOf(Gleichheit(z(2), y),ElementBeziehung(addition(z(2),y),ReelleZahlen)), angewandt.annahmen)

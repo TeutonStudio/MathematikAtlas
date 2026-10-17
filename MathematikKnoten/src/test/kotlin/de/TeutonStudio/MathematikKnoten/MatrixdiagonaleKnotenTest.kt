@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 
 class MatrixdiagonaleKnotenTest {
-    private val auswerter = GesamterMathematikAuswerter.erzeugeRegister().finde(MATRIXDIAGONALE_ART)!!
+    private val auswerter = GesamterMathematikAuswerter.erzeugeRegister().findeNachMigration(MATRIXDIAGONALE_ART)
 
     @Test
     fun `Vorlage ist im Erstellen-Dialog mit Matrixeingang und Tupelausgang verfuegbar`() {
@@ -51,7 +51,7 @@ class MatrixdiagonaleKnotenTest {
 
         assertEquals(listOf(zahl(1), zahl(5)), tupel.elemente)
         assertEquals(2, vertrag.laenge)
-        assertTrue(ergebnis.warnungen.any { it.contains("Nebendiagonaleinträge") })
+        assertTrue(ergebnis.warnungen.any { it.contains("Nichtdiagonaleinträge") })
     }
 
     @Test
@@ -80,7 +80,7 @@ class MatrixdiagonaleKnotenTest {
     }
 
     @Test
-    fun `Unbekannte gespeicherte Diagonalart faellt mit Diagnose zurueck`() {
+    fun `Unbekannte gespeicherte Diagonalart bleibt mit Diagnose gesperrt`() {
         val basis = MatrixdiagonaleKnotenVorlagen.Matrixdiagonale.erzeuge(GraphPunkt.Zero)
         val knoten = basis.copy(parameter = basis.parameter + (MATRIXDIAGONALE_ART_PARAMETER to "historisch"))
         val matrix = Matrix(listOf(listOf(zahl(1), zahl(2)), listOf(zahl(3), zahl(4))))
@@ -89,8 +89,8 @@ class MatrixdiagonaleKnotenTest {
             KnotenAuswertungsKontext(knoten, mapOf("matrix" to BedingterWert(matrix)), RechenKontext()),
         )
 
-        assertEquals(listOf(zahl(1), zahl(4)), assertIs<Tupel>(ergebnis.ausgaben.getValue("diagonale").objekt).elemente)
-        assertTrue(ergebnis.warnungen.any { it.contains("Unbekannte Diagonalart") })
+        assertTrue(ergebnis.ausgaben.isEmpty())
+        assertTrue(ergebnis.fehler.orEmpty().contains("Migrationsdiagnose"))
     }
 
     @Test
@@ -118,7 +118,7 @@ class MatrixdiagonaleKnotenTest {
         val matrix = Matrix(listOf(listOf(zahl(1), zahl(7)), listOf(zahl(8), zahl(2))))
         val result = auswerter.auswerten(KnotenAuswertungsKontext(k,
             mapOf("matrix" to BedingterWert(matrix)), RechenKontext()))
-        assertTrue(result.warnungen.any { it.contains("umkehrbar") })
+        assertTrue(result.warnungen.any { it.contains("Rückführung") })
     }
 
     private fun zahl(wert: Long): RationaleZahl = RationaleZahl.von(wert)

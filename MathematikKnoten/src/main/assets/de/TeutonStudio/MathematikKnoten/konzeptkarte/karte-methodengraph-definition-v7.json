@@ -2,54 +2,124 @@
   "erstelltAm": 1786176000000,
   "verbindungen": [
     {
-      "von": { "knotenId": "graph-funktion", "anschlussId": "graph-funktion-wert" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-funktion",
+        "anschlussId": "graph-funktion-wert"
+      },
       "id": "graph-v1",
-      "zu": { "knotenId": "graph-argumente", "anschlussId": "graph-argumente-methode" }
+      "zu": {
+        "knotenId": "graph-argumente",
+        "anschlussId": "graph-argumente-methode"
+      }
     },
     {
-      "von": { "knotenId": "graph-funktion", "anschlussId": "graph-funktion-wert" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-funktion",
+        "anschlussId": "graph-funktion-wert"
+      },
       "id": "graph-v2",
-      "zu": { "knotenId": "graph-aufruf", "anschlussId": "graph-aufruf-methode" }
+      "zu": {
+        "knotenId": "graph-aufruf",
+        "anschlussId": "graph-aufruf-methode"
+      }
     },
     {
-      "von": { "knotenId": "graph-funktion", "anschlussId": "graph-funktion-wert" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-funktion",
+        "anschlussId": "graph-funktion-wert"
+      },
       "id": "graph-v3",
-      "zu": { "knotenId": "graph-wertevorrat", "anschlussId": "graph-wertevorrat-methode" }
+      "zu": {
+        "knotenId": "graph-wertevorrat",
+        "anschlussId": "graph-wertevorrat-methode"
+      }
     },
     {
-      "von": { "knotenId": "graph-argumente", "anschlussId": "graph-argumente-argumente" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-argumente",
+        "anschlussId": "graph-argumente-argumente"
+      },
       "id": "graph-v4",
-      "zu": { "knotenId": "graph-aufruf", "anschlussId": "graph-aufruf-argument" }
+      "zu": {
+        "knotenId": "graph-aufruf",
+        "anschlussId": "graph-aufruf-argument"
+      }
     },
     {
-      "von": { "knotenId": "graph-argumente", "anschlussId": "graph-argumente-argumente" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-argumente",
+        "anschlussId": "graph-argumente-argumente"
+      },
       "id": "graph-v5",
-      "zu": { "knotenId": "graph-punkt", "anschlussId": "graph-punkt-tupel1" }
+      "zu": {
+        "knotenId": "graph-punkt",
+        "anschlussId": "graph-punkt-tupel1"
+      }
     },
     {
-      "von": { "knotenId": "graph-aufruf", "anschlussId": "graph-aufruf-wert" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-aufruf",
+        "anschlussId": "graph-aufruf-wert"
+      },
       "id": "graph-v6",
-      "zu": { "knotenId": "graph-punkt", "anschlussId": "graph-punkt-tupel2" }
+      "zu": {
+        "knotenId": "graph-punkt",
+        "anschlussId": "graph-punkt-tupel2"
+      }
     },
     {
-      "von": { "knotenId": "graph-punkt", "anschlussId": "graph-punkt-tupel" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-punkt",
+        "anschlussId": "graph-punkt-tupel"
+      },
       "id": "graph-v7",
-      "zu": { "knotenId": "graph-punktmethode", "anschlussId": "graph-punktmethode-term" }
+      "zu": {
+        "knotenId": "graph-punktmethode",
+        "anschlussId": "graph-punktmethode-term"
+      }
     },
     {
-      "von": { "knotenId": "graph-punktmethode", "anschlussId": "graph-punktmethode-methode" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-punktmethode",
+        "anschlussId": "graph-punktmethode-methode"
+      },
       "id": "graph-v8",
-      "zu": { "knotenId": "graph-bildmenge", "anschlussId": "graph-bildmenge-methode" }
+      "zu": {
+        "knotenId": "graph-bildmenge",
+        "anschlussId": "graph-bildmenge-methode"
+      }
     },
     {
-      "von": { "knotenId": "graph-wertevorrat", "anschlussId": "graph-wertevorrat-menge" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-wertevorrat",
+        "anschlussId": "graph-wertevorrat-menge"
+      },
       "id": "graph-v9",
-      "zu": { "knotenId": "graph-bildmenge", "anschlussId": "graph-bildmenge-menge" }
+      "zu": {
+        "knotenId": "graph-bildmenge",
+        "anschlussId": "graph-bildmenge-menge"
+      }
     },
     {
-      "von": { "knotenId": "graph-bildmenge", "anschlussId": "graph-bildmenge-ausgang" },
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "graph-bildmenge",
+        "anschlussId": "graph-bildmenge-ausgang"
+      },
       "id": "graph-v10",
-      "zu": { "knotenId": "graph-ausgang", "anschlussId": "graph-ausgang-menge" }
+      "zu": {
+        "knotenId": "graph-ausgang",
+        "anschlussId": "graph-ausgang-menge"
+      }
     }
   ],
   "visuelleGruppen": [],
@@ -58,34 +128,44 @@
   "knoten": [
     {
       "art": "mathematik.kartenEingang",
-      "größe": { "breite": 230, "höhe": 105 },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.methode",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "graph-funktion-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "größe": {
+        "breite": 230,
+        "höhe": 105
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "graph-funktion-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "name": "funktion",
-        "methodenAusgang.wert.argumentprojektion": "tupel",
-        "methodenAusgang.wert.ergebnisprojektion": "tupel"
+        "methodenAusgang.wert.ergebnisprojektion": "tupel",
+        "methodenAusgang.wert.argumentprojektion": "tupel"
       },
       "name": "Karten-Eingang",
       "id": "graph-funktion",
-      "position": { "x": 40, "y": 210 },
+      "position": {
+        "x": 40,
+        "y": 210
+      },
       "eigenschaften": {}
     },
     {
       "art": "mathematik.methodenArgumente",
-      "größe": { "breite": 280, "höhe": 115 },
+      "größe": {
+        "breite": 280,
+        "höhe": 115
+      },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -93,9 +173,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-argumente-methode",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -103,20 +185,28 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "graph-argumente-argumente",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
-      "parameter": { "methodenArgumente.projektion": "tupel" },
+      "parameter": {"methodenArgumente.projektion": "tupel"},
       "name": "Methodenargumente",
       "id": "graph-argumente",
-      "position": { "x": 350, "y": 40 },
+      "position": {
+        "x": 350,
+        "y": 40
+      },
       "eigenschaften": {}
     },
     {
       "art": "mathematik.methodeAufrufen",
-      "größe": { "breite": 285, "höhe": 135 },
+      "größe": {
+        "breite": 285,
+        "höhe": 135
+      },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -124,9 +214,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-aufruf-methode",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -134,9 +226,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-aufruf-argument",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -144,6 +238,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "graph-aufruf-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -155,14 +250,21 @@
       },
       "name": "Methode aufrufen",
       "id": "graph-aufruf",
-      "position": { "x": 700, "y": 120 },
+      "position": {
+        "x": 700,
+        "y": 120
+      },
       "eigenschaften": {}
     },
     {
       "art": "mathematik.methodenWertevorrat",
-      "größe": { "breite": 250, "höhe": 105 },
+      "größe": {
+        "breite": 250,
+        "höhe": 105
+      },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -170,9 +272,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-wertevorrat-methode",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -180,20 +284,28 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "graph-wertevorrat-menge",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {},
       "name": "Methoden-Wertevorrat",
       "id": "graph-wertevorrat",
-      "position": { "x": 700, "y": 360 },
+      "position": {
+        "x": 700,
+        "y": 360
+      },
       "eigenschaften": {}
     },
     {
       "art": "mathematik.tupelErgänzen",
-      "größe": { "breite": 270, "höhe": 125 },
+      "größe": {
+        "breite": 270,
+        "höhe": 125
+      },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.tupel",
           "kannSichErweitern": true,
@@ -201,9 +313,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-punkt-tupel1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.tupel",
           "kannSichErweitern": true,
@@ -211,9 +325,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-punkt-tupel2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -221,24 +337,32 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "graph-punkt-tupel",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
-        "modus": "tupelErgänzen",
+        "operatorAnzeige": "wert",
         "festeEingänge": "2",
-        "operatorAnzeige": "wert"
+        "modus": "tupelErgänzen"
       },
       "name": "Tupel ergänzen",
       "id": "graph-punkt",
-      "position": { "x": 1040, "y": 95 },
+      "position": {
+        "x": 1040,
+        "y": 95
+      },
       "eigenschaften": {}
     },
     {
       "art": "mathematik.termZuMethode",
-      "größe": { "breite": 265, "höhe": 135 },
+      "größe": {
+        "breite": 265,
+        "höhe": 135
+      },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
@@ -246,9 +370,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-punktmethode-term",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -256,20 +382,34 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "graph-punktmethode-methode",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
-      "parameter": { "name": "f", "argumentReihenfolge": "" },
+      "parameter": {
+        "name": "f",
+        "argumentReihenfolge": ""
+      },
       "name": "Term zu Methode",
       "id": "graph-punktmethode",
-      "position": { "x": 1370, "y": 100 },
-      "eigenschaften": {}
+      "position": {
+        "x": 1370,
+        "y": 100
+      },
+      "eigenschaften": {"atlas.darstellungsform": {
+        "wert": "adapter",
+        "typ": "text"
+      }}
     },
     {
       "art": "mathematik.abbild",
-      "größe": { "breite": 255, "höhe": 115 },
+      "größe": {
+        "breite": 255,
+        "höhe": 115
+      },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -277,9 +417,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-bildmenge-menge",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -287,9 +429,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "graph-bildmenge-methode",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -297,39 +441,53 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "graph-bildmenge-ausgang",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {},
       "name": "Bildmenge",
       "id": "graph-bildmenge",
-      "position": { "x": 1690, "y": 190 },
+      "position": {
+        "x": 1690,
+        "y": 190
+      },
       "eigenschaften": {}
     },
     {
       "art": "mathematik.kartenAusgang",
-      "größe": { "breite": 220, "höhe": 100 },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "graph-ausgang-menge",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": { "name": "Graph" },
+      "größe": {
+        "breite": 220,
+        "höhe": 100
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "graph-ausgang-menge",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "Graph"},
       "name": "Karten-Ausgang",
       "id": "graph-ausgang",
-      "position": { "x": 2010, "y": 200 },
+      "position": {
+        "x": 2010,
+        "y": 200
+      },
       "eigenschaften": {}
     }
   ],
   "id": "mathematik.methodenGraph|Graph|.definition",
-  "ansicht": { "x": -20, "y": -20, "zoom": 0.55 },
-  "formatVersion": 7,
+  "ansicht": {
+    "x": -20,
+    "y": -20,
+    "zoom": 0.55
+  },
+  "formatVersion": 10,
   "version": 1
 }

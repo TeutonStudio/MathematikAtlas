@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810233,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "spur-definition-0-matrix",
         "anschlussId": "spur-definition-0-matrix-ausgang-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "spur-definition-0-diagonale",
         "anschlussId": "spur-definition-0-diagonale-ausgang-diagonale"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "spur-definition-0-summe",
         "anschlussId": "spur-definition-0-summe-ausgang-wert"
@@ -45,21 +48,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.matrix",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "spur-definition-0-matrix-ausgang-wert",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "Quadratische Matrix A"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.matrix",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "spur-definition-0-matrix-ausgang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "Quadratische Matrix A"},
       "name": "Karten-Eingang",
       "id": "spur-definition-0-matrix",
       "position": {
@@ -69,35 +70,49 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.matrixdiagonale",
+      "art": "mathematik.matrixrechner",
       "größe": {
         "breite": 270,
         "höhe": 115
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.matrix",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "matrix",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.matrix",
+            "mathematik.methode",
+            "mathematik.tensor"
+          ],
           "dynamischErzeugt": false,
           "id": "spur-definition-0-diagonale-eingang-matrix",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
-          "name": "diagonale",
+          "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": ["matrix"],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "spur-definition-0-diagonale-ausgang-diagonale",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
-        "diagonalArt": "hauptdiagonale"
+        "diagonalArt": "hauptdiagonale",
+        "operator": "matrix.hauptdiagonale"
       },
       "name": "Matrixdiagonale",
       "id": "spur-definition-0-diagonale",
@@ -115,6 +130,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -122,9 +138,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "spur-definition-0-summe-eingang-tupel",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -132,6 +150,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "spur-definition-0-summe-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -153,21 +172,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "spur-definition-0-ausgang-eingang-wert",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "Spur von A"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "spur-definition-0-ausgang-eingang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "Spur von A"},
       "name": "Karten-Ausgang",
       "id": "spur-definition-0-ausgang",
       "position": {
@@ -183,6 +200,6 @@
     "y": 0,
     "zoom": 0.75
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

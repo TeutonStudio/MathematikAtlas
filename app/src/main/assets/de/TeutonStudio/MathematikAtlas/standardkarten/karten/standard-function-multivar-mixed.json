@@ -1,1 +1,823 @@
-{"formatVersion":7,"id":"standard.function.multivar.mixed","name":"Gemischte quadratische Form","version":1,"erstelltAm":0,"ansicht":{"x":40,"y":40,"zoom":0.62},"knoten":[{"id":"n1","art":"mathematik.variable","name":"x","position":{"x":20,"y":110},"größe":{"breite":190,"höhe":102},"parameter":{"name":"x","werteVorrat":"R"},"anschlüsse":[{"id":"h1","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl"}]},{"id":"n2","art":"mathematik.variable","name":"y","position":{"x":20,"y":330},"größe":{"breite":190,"höhe":102},"parameter":{"name":"y","werteVorrat":"R"},"anschlüsse":[{"id":"h1","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl"}]},{"id":"n3","art":"mathematik.zahl","name":"2","position":{"x":20,"y":500},"größe":{"breite":180,"höhe":92},"parameter":{"wert":"2"},"anschlüsse":[{"id":"h1","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl"}]},{"id":"n4","art":"mathematik.zahl","name":"2","position":{"x":20,"y":620},"größe":{"breite":180,"höhe":92},"parameter":{"wert":"2"},"anschlüsse":[{"id":"h1","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl"}]},{"id":"n5","art":"mathematik.potenz","name":"Potenz","position":{"x":270,"y":100},"größe":{"breite":210,"höhe":110},"anschlüsse":[{"id":"h1","name":"basis","richtung":"Eingang","kante":"Links","art":"mathematik.zahl"},{"id":"h2","name":"exponent","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":1},{"id":"h3","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl"}]},{"id":"n6","art":"mathematik.potenz","name":"Potenz","position":{"x":270,"y":350},"größe":{"breite":210,"höhe":110},"anschlüsse":[{"id":"h1","name":"basis","richtung":"Eingang","kante":"Links","art":"mathematik.zahl"},{"id":"h2","name":"exponent","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":1},{"id":"h3","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl"}]},{"id":"n7","art":"mathematik.multiplikation","name":"Multiplikation","position":{"x":520,"y":520},"größe":{"breite":220,"höhe":130},"parameter":{"festeEingänge":"2","operatorAnzeige":"wert"},"anschlüsse":[{"id":"h1","name":"a","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","kannSichErweitern":true},{"id":"h2","name":"b","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":1,"kannSichErweitern":true},{"id":"h3","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl"}]},{"id":"n8","art":"mathematik.addition","name":"Addition","position":{"x":800,"y":240},"größe":{"breite":220,"höhe":130},"parameter":{"festeEingänge":"3","operatorAnzeige":"wert"},"anschlüsse":[{"id":"h1","name":"a","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","kannSichErweitern":true},{"id":"h2","name":"b","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":1,"kannSichErweitern":true},{"id":"h3","name":"c","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":2,"kannSichErweitern":true},{"id":"h4","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl"}]},{"id":"n9","art":"mathematik.termZuMethode","name":"Term zu Methode","position":{"x":1080,"y":230},"größe":{"breite":265,"höhe":135},"parameter":{"name":"f","argumentReihenfolge":"x,y"},"anschlüsse":[{"id":"h1","name":"term","richtung":"Eingang","kante":"Links","art":"mathematik.objekt"},{"id":"h2","name":"methode","richtung":"Ausgang","kante":"Rechts","art":"mathematik.methode"}]},{"id":"n10","art":"mathematik.kartenAusgang","name":"Karten-Ausgang","position":{"x":1380,"y":230},"größe":{"breite":210,"höhe":100},"parameter":{"name":"methode"},"anschlüsse":[{"id":"h1","name":"wert","richtung":"Eingang","kante":"Links","art":"mathematik.methode"}]},{"id":"n11","art":"karte.notiz","name":"Erwartetes Ergebnis","position":{"x":1020,"y":470},"größe":{"breite":560,"höhe":220},"parameter":{"text":"Erwartetes Ergebnis\n\nf: ℝ² → ℝ\n(x,y) ↦ x² + xy + y²","textAusrichtung":"links","schriftgrößeSp":"16"},"anschlüsse":[]}],"verbindungen":[{"id":"e1","von":{"knotenId":"n1","anschlussId":"h1"},"zu":{"knotenId":"n5","anschlussId":"h1"}},{"id":"e2","von":{"knotenId":"n3","anschlussId":"h1"},"zu":{"knotenId":"n5","anschlussId":"h2"}},{"id":"e3","von":{"knotenId":"n2","anschlussId":"h1"},"zu":{"knotenId":"n6","anschlussId":"h1"}},{"id":"e4","von":{"knotenId":"n4","anschlussId":"h1"},"zu":{"knotenId":"n6","anschlussId":"h2"}},{"id":"e5","von":{"knotenId":"n1","anschlussId":"h1"},"zu":{"knotenId":"n7","anschlussId":"h1"}},{"id":"e6","von":{"knotenId":"n2","anschlussId":"h1"},"zu":{"knotenId":"n7","anschlussId":"h2"}},{"id":"e7","von":{"knotenId":"n5","anschlussId":"h3"},"zu":{"knotenId":"n8","anschlussId":"h1"}},{"id":"e8","von":{"knotenId":"n7","anschlussId":"h3"},"zu":{"knotenId":"n8","anschlussId":"h2"}},{"id":"e9","von":{"knotenId":"n6","anschlussId":"h3"},"zu":{"knotenId":"n8","anschlussId":"h3"}},{"id":"e10","von":{"knotenId":"n8","anschlussId":"h4"},"zu":{"knotenId":"n9","anschlussId":"h1"}},{"id":"e11","von":{"knotenId":"n9","anschlussId":"h2"},"zu":{"knotenId":"n10","anschlussId":"h1"}}]}
+{
+  "erstelltAm": 0,
+  "verbindungen": [
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n1",
+        "anschlussId": "h1"
+      },
+      "id": "e1",
+      "zu": {
+        "knotenId": "n5",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n3",
+        "anschlussId": "h1"
+      },
+      "id": "e2",
+      "zu": {
+        "knotenId": "n5",
+        "anschlussId": "h2"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n2",
+        "anschlussId": "h1"
+      },
+      "id": "e3",
+      "zu": {
+        "knotenId": "n6",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n4",
+        "anschlussId": "h1"
+      },
+      "id": "e4",
+      "zu": {
+        "knotenId": "n6",
+        "anschlussId": "h2"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n1",
+        "anschlussId": "h1"
+      },
+      "id": "e5",
+      "zu": {
+        "knotenId": "n7",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n2",
+        "anschlussId": "h1"
+      },
+      "id": "e6",
+      "zu": {
+        "knotenId": "n7",
+        "anschlussId": "h2"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n5",
+        "anschlussId": "h3"
+      },
+      "id": "e7",
+      "zu": {
+        "knotenId": "n8",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n7",
+        "anschlussId": "h3"
+      },
+      "id": "e8",
+      "zu": {
+        "knotenId": "n8",
+        "anschlussId": "h2"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n6",
+        "anschlussId": "h3"
+      },
+      "id": "e9",
+      "zu": {
+        "knotenId": "n8",
+        "anschlussId": "h3"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n8",
+        "anschlussId": "h4"
+      },
+      "id": "e10",
+      "zu": {
+        "knotenId": "n9",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n9",
+        "anschlussId": "h2"
+      },
+      "id": "e11",
+      "zu": {
+        "knotenId": "n10",
+        "anschlussId": "h1"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n1:migration-grundraum",
+        "anschlussId": "n1:migration-grundraum:Ausgang:menge"
+      },
+      "id": "n1:migration-grundraum:verbindung",
+      "zu": {
+        "knotenId": "n1",
+        "anschlussId": "n1:grundraum"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "n2:migration-grundraum",
+        "anschlussId": "n2:migration-grundraum:Ausgang:menge"
+      },
+      "id": "n2:migration-grundraum:verbindung",
+      "zu": {
+        "knotenId": "n2",
+        "anschlussId": "n2:grundraum"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Gemischte quadratische Form",
+  "knoten": [
+    {
+      "art": "mathematik.variable",
+      "größe": {
+        "breite": 190,
+        "höhe": 102
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "vertrag": {"typ": {
+            "art": "atom",
+            "id": "mathematik.zahl.reell"
+          }},
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "grundraum",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "n1:grundraum",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "x",
+        "werteVorrat": "R"
+      },
+      "name": "x",
+      "id": "n1",
+      "position": {
+        "x": 20,
+        "y": 110
+      },
+      "eigenschaften": {"variable.grundraumVertrag": {
+        "wert": "1",
+        "typ": "text"
+      }}
+    },
+    {
+      "art": "mathematik.variable",
+      "größe": {
+        "breite": 190,
+        "höhe": 102
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "vertrag": {"typ": {
+            "art": "atom",
+            "id": "mathematik.zahl.reell"
+          }},
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "grundraum",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "n2:grundraum",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "y",
+        "werteVorrat": "R"
+      },
+      "name": "y",
+      "id": "n2",
+      "position": {
+        "x": 20,
+        "y": 330
+      },
+      "eigenschaften": {"variable.grundraumVertrag": {
+        "wert": "1",
+        "typ": "text"
+      }}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "h1",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"wert": "2"},
+      "name": "2",
+      "id": "n3",
+      "position": {
+        "x": 20,
+        "y": 500
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "h1",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"wert": "2"},
+      "name": "2",
+      "id": "n4",
+      "position": {
+        "x": 20,
+        "y": 620
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "b",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
+          "id": "h3",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.potenz"
+      },
+      "name": "Potenz",
+      "id": "n5",
+      "position": {
+        "x": 270,
+        "y": 100
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "b",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
+          "id": "h3",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.potenz"
+      },
+      "name": "Potenz",
+      "id": "n6",
+      "position": {
+        "x": 270,
+        "y": 350
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
+          "id": "h3",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "n7",
+      "position": {
+        "x": 520,
+        "y": 520
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": true,
+          "name": "c",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "h3",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 2
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b",
+              "c"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
+          "id": "h4",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "3",
+        "operator": "zahl.addition"
+      },
+      "name": "Addition",
+      "id": "n8",
+      "position": {
+        "x": 800,
+        "y": 240
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.termZuMethode",
+      "größe": {
+        "breite": 265,
+        "höhe": 135
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "term",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "h1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "h2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "f",
+        "argumentReihenfolge": "x,y"
+      },
+      "name": "Term zu Methode",
+      "id": "n9",
+      "position": {
+        "x": 1080,
+        "y": 230
+      },
+      "eigenschaften": {"atlas.darstellungsform": {
+        "wert": "adapter",
+        "typ": "text"
+      }}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "h1",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "methode"},
+      "name": "Karten-Ausgang",
+      "id": "n10",
+      "position": {
+        "x": 1380,
+        "y": 230
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "karte.notiz",
+      "größe": {
+        "breite": 560,
+        "höhe": 220
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "textAusrichtung": "links",
+        "schriftgrößeSp": "16",
+        "text": "Erwartetes Ergebnis\n\nf: ℝ² → ℝ\n(x,y) ↦ x² + xy + y²"
+      },
+      "name": "Erwartetes Ergebnis",
+      "id": "n11",
+      "position": {
+        "x": 1020,
+        "y": 470
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.menge",
+      "größe": {
+        "breite": 230,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "n1:migration-grundraum:Eingang:dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "n1:migration-grundraum:Ausgang:menge",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {"mengeAuswahl": "R"},
+      "name": "Grundraum · x",
+      "id": "n1:migration-grundraum",
+      "position": {
+        "x": -320,
+        "y": 110
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.menge",
+      "größe": {
+        "breite": 230,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "n2:migration-grundraum:Eingang:dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "n2:migration-grundraum:Ausgang:menge",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {"mengeAuswahl": "R"},
+      "name": "Grundraum · y",
+      "id": "n2:migration-grundraum",
+      "position": {
+        "x": -320,
+        "y": 330
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "standard.function.multivar.mixed",
+  "ansicht": {
+    "x": 40,
+    "y": 40,
+    "zoom": 0.62
+  },
+  "formatVersion": 10,
+  "version": 1
+}

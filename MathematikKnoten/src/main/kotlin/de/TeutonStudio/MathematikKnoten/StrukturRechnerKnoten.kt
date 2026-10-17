@@ -131,34 +131,7 @@ object StrukturRechnerKnotenVorlagen {
 }
 
 internal fun MathematikAuswerterRegister.registriereStrukturRechnerKnoten() {
-    registriere(SKALARPRODUKT_ART) { kontext ->
-        val links = kontext.mathematischerEingang("links", "Linker Skalarproduktoperand")
-        val rechts = kontext.mathematischerEingang("rechts", "Rechter Skalarproduktoperand")
-        val linearitaet = runCatching {
-            SkalarproduktLinearitaet.valueOf(
-                kontext.knoten.parameter["linearitaet"] ?: SkalarproduktLinearitaet.RECHTSLINEAR.name,
-            )
-        }.getOrDefault(SkalarproduktLinearitaet.RECHTSLINEAR)
-        val wert = when (
-            val ergebnis = standardSkalarprodukt(
-                links,
-                rechts,
-                SkalarproduktSpezifikation(
-                    linearitaet = linearitaet,
-                    konjugiert = kontext.knoten.parameter["konjugiert"]?.toBooleanStrictOrNull() ?: true,
-                ),
-            )
-        ) {
-            is StrukturPruefung.Gueltig -> ergebnis.wert
-            is StrukturPruefung.Bedingt -> ergebnis.wert ?: error(ergebnis.bedingungen.joinToString())
-            is StrukturPruefung.Ungueltig -> error(ergebnis.grund)
-            is StrukturPruefung.Unentscheidbar -> error(ergebnis.grund)
-        }
-        KnotenAuswertungsErgebnis(
-            ausgaben = mapOf("wert" to BedingterWert(wert, kontext.annahmen())),
-            eingänge = kontext.eingänge,
-        )
-    }
+
 
     registriere(TENSORPRODUKT_ART) { kontext ->
         val links = kontext.mathematischerEingang("links", "Linker Tensorproduktoperand")

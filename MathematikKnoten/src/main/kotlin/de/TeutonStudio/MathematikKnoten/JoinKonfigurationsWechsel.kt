@@ -11,7 +11,7 @@ private data class WechselBeitrag(val position: Int, val verbindung: VerbindungD
 internal fun bereiteJoinWechselVor(bisher: KartenDaten, kandidat: KnotenDaten): JoinWechsel {
     val alt = bisher.knoten.firstOrNull { it.id == kandidat.id } ?: return JoinWechsel(bisher, kandidat)
     if (istJoinRechnerOperator(joinOperatorId(kandidat).orEmpty())) {
-        val normalisiert = bisher.copy(knoten = bisher.knoten.map { if (it.id == kandidat.id) kandidat else it }).normalisiereJoinEingänge()
+        val normalisiert = bisher.copy(knoten = bisher.knoten.map { if (it.id == kandidat.id) kandidat else it }).normalisiereJoinEingänge(überführeEinzelAnschlüsse = (alt.anschlüsse+kandidat.anschlüsse).any {it.belegung==AnschlussBelegung.Mehrfach})
         return JoinWechsel(bisher.copy(verbindungen = normalisiert.verbindungen), normalisiert.knoten.single { it.id == kandidat.id })
     }
     val join = alt.anschlüsse.singleOrNull { it.belegung == AnschlussBelegung.Mehrfach } ?: return JoinWechsel(bisher, kandidat)

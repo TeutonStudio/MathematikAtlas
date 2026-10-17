@@ -5,6 +5,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDatenJson
 import org.json.JSONObject
 import de.TeutonStudio.MathematikKartenAdapter.normalisiereSchnittstellenReihenfolge
 import de.TeutonStudio.MathematikKartenAdapter.METHODEN_QUELLE_KNOTEN
+import de.TeutonStudio.MathematikKartenAdapter.METHODEN_QUELLE_ID
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
 
 /**
@@ -48,6 +49,7 @@ object MathematikKartenMigrationen {
         .diagnostiziereQuellenBereiche()
         .diagnostiziereHistorischeGraphMehrdeutigkeiten()
         .migriereKonsolidierteKnoten()
+        .migriereZeilenQuellen()
         .let {it.normalisiereSchnittstellenReihenfolge(it.knoten.filter {k -> RECHNER_MIGRATION_DIAGNOSE in k.parameter}.mapTo(hashSetOf()) {k -> k.id})}
         .migriereGradmengenDimension()
         .migriereVariablenGrundraum()
@@ -58,6 +60,7 @@ object MathematikKartenMigrationen {
         .migriereMengenKonsolidierung()
         .migriereRechnerEinzeloperationen()
         .let(::migriereTranspositionsKnoten)
+        .migrierePolynomKompatibilität()
         .migriereUniversellenZahlenRechner()
         .migriereMengenOperatorKnoten()
         .migriereVektorRechnerKonfiguration()
@@ -84,6 +87,7 @@ object MathematikKartenMigrationen {
         .diagnostiziereQuellenBereiche()
         .diagnostiziereHistorischeGraphMehrdeutigkeiten()
         .migriereKonsolidierteKnoten()
+        .migriereZeilenQuellen()
         .migriereHistorischeVariablenGrundräume()
         .let {it.normalisiereSchnittstellenReihenfolge(it.knoten.filter {k -> RECHNER_MIGRATION_DIAGNOSE in k.parameter}.mapTo(hashSetOf()) {k -> k.id})}
         .migriereGradmengenDimension()
@@ -95,6 +99,7 @@ object MathematikKartenMigrationen {
         .migriereMengenKonsolidierung()
         .migriereRechnerEinzeloperationen()
         .let(::migriereTranspositionsKnoten)
+        .migrierePolynomKompatibilität()
         .migriereUniversellenZahlenRechner()
         .migriereMengenOperatorKnoten()
         .migriereVektorRechnerKonfiguration()
@@ -120,6 +125,7 @@ object MathematikKartenMigrationen {
         .diagnostiziereQuellenBereiche()
         .diagnostiziereHistorischeGraphMehrdeutigkeiten()
         .migriereKonsolidierteKnoten()
+        .migriereZeilenQuellen()
         .migriereHistorischeVariablenGrundräume()
         .let {it.normalisiereSchnittstellenReihenfolge(it.knoten.filter {k -> RECHNER_MIGRATION_DIAGNOSE in k.parameter}.mapTo(hashSetOf()) {k -> k.id})}
         .migriereGradmengenDimension()
@@ -131,6 +137,7 @@ object MathematikKartenMigrationen {
         .migriereMengenKonsolidierung()
         .migriereRechnerEinzeloperationen()
         .let(::migriereTranspositionsKnoten)
+        .migrierePolynomKompatibilität()
         .migriereUniversellenZahlenRechner()
         .migriereMengenOperatorKnoten()
         .migriereVektorRechnerKonfiguration()
@@ -157,7 +164,15 @@ object MathematikKartenMigrationen {
             val text = (quelle as? KnotenEigenschaft.Text)?.wert ?: error("Die eingebettete Knotenquelle ist kein Kartentext.")
             val alt = KartenDatenJson.lese(text)
             val neu = migration(alt)
-            if (neu == alt) k else k.copy(eigenschaften = k.eigenschaften + (METHODEN_QUELLE_KNOTEN to KnotenEigenschaft.Text(KartenDatenJson.schreibe(neu))))
+            if (neu == alt) k else {
+                val vorher=alt.knoten.singleOrNull()
+                val nachher=neu.knoten.singleOrNull()
+                val id=(k.eigenschaften[METHODEN_QUELLE_ID] as? KnotenEigenschaft.Text)?.wert
+                val auswahl=if(vorher!=null && nachher!=null && RECHNER_MIGRATION_DIAGNOSE !in nachher.parameter &&
+                    id?.startsWith("knoten:${vorher.art}:")==true)
+                    mapOf(METHODEN_QUELLE_ID to KnotenEigenschaft.Text("knoten:${nachher.art}:"+id.removePrefix("knoten:${vorher.art}:"))) else emptyMap()
+                k.copy(eigenschaften = k.eigenschaften + auswahl + (METHODEN_QUELLE_KNOTEN to KnotenEigenschaft.Text(KartenDatenJson.schreibe(neu))))
+            }
         }.getOrElse { fehler -> k.copy(parameter = k.parameter + (RECHNER_MIGRATION_DIAGNOSE to "Eingebettete Methodenquelle bleibt erhalten: ${fehler.message}")) }
     })
 

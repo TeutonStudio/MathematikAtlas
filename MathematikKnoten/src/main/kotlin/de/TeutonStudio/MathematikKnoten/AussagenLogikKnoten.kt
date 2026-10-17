@@ -211,17 +211,6 @@ class Wahrheitstabelle(
     }
 }
 
-internal fun MathematikAuswerterRegister.registriereAussagenLogikKnoten() {
-    registriere("mathematik.negation") { kontext ->
-        val aussage = kontext.eingänge["aussage"]?.objekt as? Aussage ?: error("Aussage fehlt.")
-        KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(NegationsAussage(aussage), kontext.annahmen())))
-    }
-    registriere("mathematik.adjunktion") { kontext ->
-        val aussagen = kontext.operatorEingänge { _, index -> UnentscheidbareAussage("A_$index", "unverbunden") }
-            .map { it.objekt as? Aussage ?: error("Aussageneingang ist ungültig.") }
-        require(aussagen.size >= 2) { "Adjunktion benötigt mindestens zwei Aussageeingänge." }
-        KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(adjunktion(aussagen), kontext.annahmen())))
-    }
-}
+
 
 private fun KnotenAuswertungsKontext.annahmen() = eingänge.values.flatMap { it.annahmen }.toSet()

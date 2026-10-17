@@ -8,7 +8,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.halbesIntervall|Halbes Intervall|richtung=aufwaerts.untergrenze.definition",
             datei = "karte-halbes-intervall-untergrenze-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -20,7 +20,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.halbesIntervall|Halbes Intervall|richtung=abwaerts.obergrenze.definition",
             datei = "karte-halbes-intervall-obergrenze-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -29,7 +29,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.abbild|Abbild|.da631bb3.definition",
             datei = "karte-fafa3200b486525ac49c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -38,7 +38,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.adjunktion|Adjunktion|festeEingänge=2;logikSemantik=xor;operatorAnzeige=wert.a411be3e.definition",
             datei = "karte-39dd5cfaa3646cfc8dca-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -47,7 +47,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.allgemeinerParameter|Allgemeiner Parameter|name=a.9f016b18.definition",
             datei = "karte-1d719b373c41ea163d86-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -56,7 +56,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.aussagensatz|Aussagesatz|operator=aussage.negation.ac0a2d08.definition",
             datei = "karte-ffba168a886d77f2d035-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition: \\neg A",
@@ -65,7 +65,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.auswerten|Auswerten|.88323b2b.definition",
             datei = "karte-8cc257de0958bea64d38-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -74,7 +74,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.begriff.lineareAbbildung|Lineare Abbildung überprüfen|.e51be48c.definition",
             datei = "karte-dec10aaa5a2c6868892b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -83,7 +83,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.begriff.skalarprodukt|Skalarprodukt überprüfen|skalarprodukt.linearitaet=RECHTSLINEAR;skalarprodukt.nachweis.linearitaet=;skalarprodukt.nachweis.positiv=;skalarprodukt.nachweis.symmetrie=;skalarprodukt.zahlbereich=R;skalarprodukt.zertifikatVersion=1.13c95e10.definition",
             datei = "karte-f1c31c6468ca332d22de-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -92,7 +92,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.begriff.vektorraum|Vektorraum überprüfen|.4f5a6988.definition",
             datei = "karte-5b4d102c4fee0c5f5be2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -101,7 +101,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.cauchy|Cauchy|.3ac33913.definition",
             datei = "karte-00747f20baad12debe6d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -110,7 +110,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.darstellungsoptimierung|Darstellungsoptimierung|latex=u.527ce9f.definition",
             datei = "karte-3e75a04482e0cce088a9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -119,7 +119,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.differenz|Differenz|.fee02b79.definition",
             datei = "karte-94551ba911ec47b93f46-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -128,7 +128,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.dimensionen|Dimensionen|.105f33d9.definition",
             datei = "karte-dd3b31aaebf29c1bb57f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -137,7 +137,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.disjunktion|Disjunktion|festeEingänge=2;operatorAnzeige=wert.5768f908.definition",
             datei = "karte-f99b07f5eb98875c6e8f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -146,7 +146,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.disjunkt|Disjunkt|.d3ad3ef3.definition",
             datei = "karte-5650bd40ac45437ccbb9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -155,7 +155,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.einheitsSpalte|Einheitsvektor (Spalte)|standardwert.dimension=3;standardwert.position=0.6994f065.definition",
             datei = "karte-b5bbf5d40dbf849c23d3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -164,7 +164,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.einheitsZeile|Einheitsvektor (Zeile)|standardwert.dimension=3;standardwert.position=0.6bce0f47.definition",
             datei = "karte-e6f88b9777fb244ef61a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -173,7 +173,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.einzelmenge|Einzelmenge|.675680b5.definition",
             datei = "karte-a5df822b43d3537b2012-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -182,7 +182,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.element|Element|.cc957c33.definition",
             datei = "karte-5f986d02aba843d9848a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -191,7 +191,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.endlicheMenge|Endliche Menge|elementKonfiguration=v2:bWF0aGVtYXRpay56YWhs|z:c3RhbmRhcmQtMQ:bWF0aGVtYXRpay56YWhs:MQ|z:c3RhbmRhcmQtMg:bWF0aGVtYXRpay56YWhs:Mg|z:c3RhbmRhcmQtMw:bWF0aGVtYXRpay56YWhs:Mw.73ff3420.definition",
             datei = "karte-c2ad53b26949d7b83266-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -200,7 +200,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.fall|Fallunterscheidung|.8a4346b1.definition",
             datei = "karte-5e0c79bd9484f9bf2210-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -209,7 +209,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.gleichheit|Gleichheit|.a7e508f3.definition",
             datei = "karte-886a0c215ae37be4d518-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -218,7 +218,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.gleichungLösen|Auflösen|variable=x.61aad944.definition",
             datei = "karte-0743e9535a108829de22-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -227,7 +227,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.implikation|Implikation|.1aac66a1.definition",
             datei = "karte-04af952929bb4d6a558c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -236,7 +236,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iteration|Iteration|.16583b35.definition",
             datei = "karte-0fed4002de847ab2cf13-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -245,7 +245,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.definition",
             datei = "karte-5d477585f54b3316d802-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Iterierte Konjunktion: Definition",
@@ -254,7 +254,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-konjunktion-leere-indexmenge-0",
             datei = "karte-40065560d61032f2fc4f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Konjunktion: Leere Indexmenge",
@@ -263,7 +263,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-konjunktion-endlicher-spezialfall-0",
             datei = "karte-fbe144ed93759b009c27-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Konjunktion: Endlicher Spezialfall",
@@ -272,7 +272,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.definition-iterierte-disjunktion-1",
             datei = "karte-21c831ca8a25b631612a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Disjunktion: Definition",
@@ -281,7 +281,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-disjunktion-leere-indexmenge-1",
             datei = "karte-810877aac4787eef12d8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Disjunktion: Leere Indexmenge",
@@ -290,7 +290,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-disjunktion-endlicher-spezialfall-1",
             datei = "karte-63525e53145bb76aea48-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Disjunktion: Endlicher Spezialfall",
@@ -299,7 +299,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.definition-iterierte-adjunktion-2",
             datei = "karte-9f2380d4ea50652c57c2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Adjunktion: Definition",
@@ -308,7 +308,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-adjunktion-leere-indexmenge-2",
             datei = "karte-dffd9d7825af7aa6a403-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Adjunktion: Leere Indexmenge",
@@ -317,7 +317,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-adjunktion-endlicher-spezialfall-2",
             datei = "karte-8d3271da5356c778c9c0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Adjunktion: Endlicher Spezialfall",
@@ -326,7 +326,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.definition",
             datei = "karte-57785da1ea69d70e5025-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Iterierte Konjunktion: Definition",
@@ -335,7 +335,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-konjunktion-leere-indexmenge-0",
             datei = "karte-1f30f94a8aac01f59b45-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Konjunktion: Leere Indexmenge",
@@ -344,7 +344,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-konjunktion-endlicher-spezialfall-0",
             datei = "karte-cb676a161af411143689-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Konjunktion: Endlicher Spezialfall",
@@ -353,7 +353,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.definition-iterierte-disjunktion-1",
             datei = "karte-64964a120b63d0a42170-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Disjunktion: Definition",
@@ -362,7 +362,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-disjunktion-leere-indexmenge-1",
             datei = "karte-0795b021c6e87b913bb1-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Disjunktion: Leere Indexmenge",
@@ -371,7 +371,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-disjunktion-endlicher-spezialfall-1",
             datei = "karte-6da82ee4da8558f60dba-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Disjunktion: Endlicher Spezialfall",
@@ -380,7 +380,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.definition-iterierte-adjunktion-2",
             datei = "karte-6b4c55494313f82a7d99-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Adjunktion: Definition",
@@ -389,7 +389,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-adjunktion-leere-indexmenge-2",
             datei = "karte-8fd376b1e2dee2205746-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Adjunktion: Leere Indexmenge",
@@ -398,7 +398,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Disjunktion|operator=disjunktion.48758571.iterierte-adjunktion-endlicher-spezialfall-2",
             datei = "karte-4ffe9c30618324d89b4b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Adjunktion: Endlicher Spezialfall",
@@ -407,7 +407,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.definition",
             datei = "karte-bf9f7a1210ecc545cc04-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Iterierte Konjunktion: Definition",
@@ -416,7 +416,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-konjunktion-leere-indexmenge-0",
             datei = "karte-1356706e03673f3fe054-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Konjunktion: Leere Indexmenge",
@@ -425,7 +425,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-konjunktion-endlicher-spezialfall-0",
             datei = "karte-309812b3c641f1555e34-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Konjunktion: Endlicher Spezialfall",
@@ -434,7 +434,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.definition-iterierte-disjunktion-1",
             datei = "karte-b79ed68ed1aa5a70983c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Disjunktion: Definition",
@@ -443,7 +443,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-disjunktion-leere-indexmenge-1",
             datei = "karte-d2c244ce3139e36ad382-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Disjunktion: Leere Indexmenge",
@@ -452,7 +452,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-disjunktion-endlicher-spezialfall-1",
             datei = "karte-a8eb1f1dba6ab96c88e5-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Disjunktion: Endlicher Spezialfall",
@@ -461,7 +461,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.definition-iterierte-adjunktion-2",
             datei = "karte-d0a6218f2e1500db2236-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Adjunktion: Definition",
@@ -470,7 +470,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-adjunktion-leere-indexmenge-2",
             datei = "karte-4d778fcc862af13a84be-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Iterierte Adjunktion: Leere Indexmenge",
@@ -479,7 +479,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteAussagenverknüpfung|Iterierte Konjunktion|operator=konjunktion.68949e69.iterierte-adjunktion-endlicher-spezialfall-2",
             datei = "karte-bb5ce970f206ae8d85c1-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Iterierte Adjunktion: Endlicher Spezialfall",
@@ -488,7 +488,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteVereinigung|Iterierte Vereinigung|.b199fdbf.definition",
             datei = "karte-37967a2c2dac95ccca31-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -497,7 +497,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteVereinigung|Iterierte Vereinigung|.b199fdbf.iterierte-vereinigung-leere-indexmenge-0",
             datei = "karte-517452e3e52fe41f153c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Leere Indexmenge",
@@ -506,7 +506,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierteVereinigung|Iterierte Vereinigung|.b199fdbf.iterierte-vereinigung-endlicher-spezialfall-0",
             datei = "karte-43232719f298b65892b4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Endlicher Spezialfall",
@@ -515,7 +515,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierterSchnitt|Iterierter Schnitt|.8fe9b12b.definition",
             datei = "karte-6f153f45b11d0f82022b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -524,7 +524,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierterSchnitt|Iterierter Schnitt|.8fe9b12b.iterierter-schnitt-leere-indexmenge-0",
             datei = "karte-252747030d6f807047dc-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Leere Indexmenge",
@@ -533,7 +533,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iterierterSchnitt|Iterierter Schnitt|.8fe9b12b.iterierter-schnitt-endlicher-spezialfall-0",
             datei = "karte-d36b9749e73f91df40e1-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Endlicher Spezialfall",
@@ -542,7 +542,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iteriertesKartesischesProdukt|Iteriertes kartesisches Produkt|.5b5ca7c1.definition",
             datei = "karte-74cd55853a62bde54812-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -551,7 +551,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iteriertesKartesischesProdukt|Iteriertes kartesisches Produkt|.5b5ca7c1.iteriertes-kartesisches-produkt-leere-indexmenge-0",
             datei = "karte-1c62c5fb8fe05c0b5658-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Leere Indexmenge",
@@ -560,7 +560,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.iteriertesKartesischesProdukt|Iteriertes kartesisches Produkt|.5b5ca7c1.iteriertes-kartesisches-produkt-endlicher-spezialfall-0",
             datei = "karte-f05b1aa68468d07795cb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Endlicher Spezialfall",
@@ -569,7 +569,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.kartenAusgang|Karten-Ausgang|name=ergebnis.e4039123.definition",
             datei = "karte-a51eea58aba378ce8a26-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -578,7 +578,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.kartenEingang|Karten-Eingang|name=x.91bb599e.definition",
             datei = "karte-35d96d437bc5b35dc46f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -587,7 +587,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.kartesischesProdukt|Kartesisches Produkt|festeEingänge=2;operatorAnzeige=wert.6850b846.definition",
             datei = "karte-48a9d138be7a412e36f9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -596,7 +596,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.komposition|Komposition|festeEingänge=2;operatorAnzeige=wert.99856208.definition",
             datei = "karte-929aba3eb090cf9ca3b6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -605,7 +605,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.konjunktion|Konjunktion|festeEingänge=2;operatorAnzeige=wert.bc84088.definition",
             datei = "karte-b8777e1d8ccd4408ef37-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -614,7 +614,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.kreuzproduktSpalte|Kreuzprodukt (Spalten)|.6b6c7bd6.definition",
             datei = "karte-6564c437bf54f22af70a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -623,7 +623,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.kreuzproduktZeile|Kreuzprodukt (Zeilen)|.32a41194.definition",
             datei = "karte-8725244ac6546c3999ce-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -632,7 +632,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.lösungsmenge|Lösungsmenge|automatisch=true;grundmengen=R;variablen=.80502346.definition",
             datei = "karte-66e5f9c3e1054c10eb82-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -641,7 +641,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.lüge|Lüge|.6116eef3.definition",
             datei = "karte-825141cadbf5632dc987-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -650,7 +650,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.matrixInvertieren|Matrix invertieren|.63685f47.definition",
             datei = "karte-9366a99de5b21264601a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -659,7 +659,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.matrixProdukt|Matrixprodukt|.4c459827.definition",
             datei = "karte-9f0f44b2de3d25ad1592-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -668,7 +668,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.matrixProdukt|Matrixprodukt|.4c459827.falksches-schema",
             datei = "karte-f8360f02a0dfa3c7c91e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Falksches Schema",
@@ -677,7 +677,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.matrixdiagonale|Matrixdiagonale|diagonalArt=hauptdiagonale.95ac8848.definition",
             datei = "karte-cc29d2d432b1a991658b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -686,7 +686,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.matrixrechner|Matrixrechner|operator=matrix.addition.6210e779.definition",
             datei = "karte-e9c72f207033af8d0b76-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition: (A+B)_{ij}=a_{ij}+b_{ij}",
@@ -695,7 +695,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.matrix|Matrix|breite=2;erzeugungsArt=einzelEingaben;höhe=2.9cf70c78.definition",
             datei = "karte-a3675d233bb3752f068b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -704,7 +704,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.mengenfilter|Mengenfilter|.a28a3173.definition",
             datei = "karte-45ae22b2e09c6ec590e2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -713,7 +713,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodeAufrufen|Methode aufrufen|festeEingänge=2;methodenAnwendung.ergebnisArt=mathematik.objekt.b3610dac.definition",
             datei = "karte-8b934439d0942c14acca-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -722,7 +722,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.definition",
             datei = "karte-d5e047915fc6ad607357-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zahlmethode anwenden",
@@ -731,7 +731,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-aussagenmethode-anwenden-1",
             datei = "karte-4bd2eff119c444633453-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussagenmethode anwenden",
@@ -740,7 +740,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-mengenmethode-anwenden-2",
             datei = "karte-4e8179350e608b8a463c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Mengenmethode anwenden",
@@ -749,7 +749,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Aussagenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.aussage.97f7e6ab.variante-methode-allgemein-anwenden-3",
             datei = "karte-10305a3f7c4429b68bcd-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Methode allgemein anwenden",
@@ -758,7 +758,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.definition",
             datei = "karte-03adaec7413779a5e2f6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zahlmethode anwenden",
@@ -767,7 +767,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-aussagenmethode-anwenden-1",
             datei = "karte-20fdc5520cc2bb31b444-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussagenmethode anwenden",
@@ -776,7 +776,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-mengenmethode-anwenden-2",
             datei = "karte-3f53c3d1fc46875cafdf-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Mengenmethode anwenden",
@@ -785,7 +785,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Mengenmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.menge.8f8943d9.variante-methode-allgemein-anwenden-3",
             datei = "karte-dce365d1d8b52e53c540-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Methode allgemein anwenden",
@@ -794,7 +794,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.definition",
             datei = "karte-bfc5e69c63c1eb940851-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zahlmethode anwenden",
@@ -803,7 +803,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-aussagenmethode-anwenden-1",
             datei = "karte-3ce868145ba91b3e1baf-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussagenmethode anwenden",
@@ -812,7 +812,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-mengenmethode-anwenden-2",
             datei = "karte-3af37be8431f519f96d7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Mengenmethode anwenden",
@@ -821,7 +821,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Methode allgemein anwenden|methodenAnwendung.ergebnisArt=mathematik.objekt.33076abe.variante-methode-allgemein-anwenden-3",
             datei = "karte-9919d43a39dc45d7e0dc-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Methode allgemein anwenden",
@@ -830,7 +830,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.definition",
             datei = "karte-c9391b0a41bfe80c1e94-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zahlmethode anwenden",
@@ -839,7 +839,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-aussagenmethode-anwenden-1",
             datei = "karte-b8c5924b8d71a0bcaf6d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussagenmethode anwenden",
@@ -848,7 +848,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-mengenmethode-anwenden-2",
             datei = "karte-d92c5fe3d44f85abd770-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Mengenmethode anwenden",
@@ -857,7 +857,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenAnwendung|Zahlmethode anwenden|methodenAnwendung.ergebnisArt=mathematik.zahl.2906d711.variante-methode-allgemein-anwenden-3",
             datei = "karte-69df5d4fd0e35f15521a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Methode allgemein anwenden",
@@ -866,7 +866,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenDifferentieren|Methode differentieren|.1b94f5c5.definition",
             datei = "karte-77a2885743e4dbdfa74d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -875,7 +875,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenIntegrieren|Methode integrieren|.f3871cd1.definition",
             datei = "karte-90fb7246b651f25e3fac-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -884,7 +884,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.methodenZielmenge|Methoden-Zielmenge|.de27246c.definition",
             datei = "karte-5b555a2fbd73411381be-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -893,7 +893,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.mächtigkeit|Mächtigkeit|.ae4e9f71.definition",
             datei = "karte-a7122b4206cb8bcb1dac-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -902,7 +902,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.negation|Negation|.f80b96d3.definition",
             datei = "karte-5e61f383e8dcd5aa5855-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -911,7 +911,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.ordnungsrelation|Größer oder gleich|relation=größerGleich.d4746c5e.definition",
             datei = "karte-226435b0d0f6bad99dc2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -920,7 +920,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.ordnungsrelation|Größer|relation=größer.9eec3900.definition",
             datei = "karte-d375f9d1ffd9d08a0a46-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -929,7 +929,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.ordnungsrelation|Kleiner oder gleich|relation=kleinerGleich.b457e5ce.definition",
             datei = "karte-181047a2d4822cb338e4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -938,7 +938,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.ordnungsrelation|Kleiner|relation=kleiner.96e04cd4.definition",
             datei = "karte-971091cb78c4a08729bd-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -947,7 +947,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.reellesIntervall|Reelles Intervall|.f0cea39b.definition",
             datei = "karte-cc55c8efe6b70e20cba2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -956,7 +956,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.schnitt|Schnitt|festeEingänge=2;operatorAnzeige=wert.e854328.definition",
             datei = "karte-1526b73df5f11ddfd40a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -965,7 +965,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.spaltenMethodeDifferentieren|Spaltenmethode differentieren|.fb047c39.definition",
             datei = "karte-6b92985076090e84ea49-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -974,7 +974,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.spaltenMethodeIntegrieren|Spaltenmethode integrieren|.51248d63.definition",
             datei = "karte-fc1e96be888a58fc518d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -983,7 +983,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.spur|Spur|.9a98ce73.definition",
             datei = "karte-6d89cd01ce6bfb286f09-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -992,7 +992,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.teilOderGleichmenge|Teil- oder Gleichmenge|.4ea2b164.definition",
             datei = "karte-c99fe5ccd8eee2123777-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1001,7 +1001,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.teilmenge|Teilmenge|.9d59a27b.definition",
             datei = "karte-e900fc3edf79cd85f582-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1010,7 +1010,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.tensorprodukt|Tensorprodukt|.16849317.definition",
             datei = "karte-42b026d1a82c132a46b2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1019,7 +1019,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.tensorrechner.85b782e1.definition",
             datei = "karte-6beb387a19dc335c2f78-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition: (A+B)_{i_1\\ldots i_n}=a_{i_1\\ldots i_n}+b_{i_1\\ldots i_n}",
@@ -1028,7 +1028,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.term-zu-methode.e7cd10b2.definition",
             datei = "karte-eb03749beea762f731c4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Term zu Methode",
@@ -1037,7 +1037,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.term-zu-methode.e7cd10b2.variante-aussage-zu-methode-1",
             datei = "karte-518ca0e5430a9fd43713-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussage zu Methode",
@@ -1046,7 +1046,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.term-zu-methode.1f18afeb.definition",
             datei = "karte-81f46bbc018ff99dd68c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Term zu Methode",
@@ -1055,7 +1055,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.term-zu-methode.1f18afeb.variante-aussage-zu-methode-1",
             datei = "karte-ddd9853fec379d1653d6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aussage zu Methode",
@@ -1064,7 +1064,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.transponieren|Transponieren|achsenPermutation=1,0.a4020bd7.definition",
             datei = "karte-0ac43fca4b1dbd697db6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1073,7 +1073,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.tupelZuSpalte|Tupel zu Spalte|.565ca999.definition",
             datei = "karte-c92bef93fa90b03501e2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1082,7 +1082,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.tupelZuZeile|Tupel zu Zeile|.d6e735a9.definition",
             datei = "karte-7b897a266b06e78c0d5a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1091,7 +1091,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.tupel|Tupel|erzeugungsArt=einzelEingaben;festeEingänge=2;operatorAnzeige=wert.f3bf42c8.definition",
             datei = "karte-7ffb820d0986b769a5da-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1100,7 +1100,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.ungleichheit|Ungleichheit|.d9d55493.definition",
             datei = "karte-128be1b2f9108aef2da3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1109,7 +1109,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.variable|Variable|name=x;werteVorrat=R.b6fb9e1.definition",
             datei = "karte-b8967d9e3ee1788713eb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1118,7 +1118,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.vektorRadiusSpalte|Radius (Spalte)|.ba1f5d09.definition",
             datei = "karte-42a29b0e7c8be6992c76-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1127,7 +1127,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.vektorRadiusZeile|Radius (Zeile)|.ea5e427.definition",
             datei = "karte-c99930f257854b714c9d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1136,7 +1136,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.vektorZuPolynom|Vektor zu Polynom|variable=x.e81f2cf6.definition",
             datei = "karte-d2f941f3e736a6e3128f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1145,7 +1145,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.vektorrechner|Vektorrechner|operator=vektor.addition.c71caeff.definition",
             datei = "karte-e2267fa013e1dbaf68a3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition: (u_i)+(v_i)=(u_i+v_i)",
@@ -1154,7 +1154,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.vektor|Spaltenvektor|festeEingänge=2;operatorAnzeige=wert.2a89ecb.definition",
             datei = "karte-a172fff23cc90f2899b6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1163,7 +1163,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.vereinigung|Vereinigung|festeEingänge=2;operatorAnzeige=wert.a0974ae8.definition",
             datei = "karte-e9fb80e6e2fcc43bfd65-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1172,7 +1172,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.visualisierung|Visualisierung|.e59f5973.definition",
             datei = "karte-d32a60576557d70ec352-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1181,7 +1181,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.wahr|Wahr|.25c97eb3.definition",
             datei = "karte-48b80ef40beb227b5dd7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -1190,7 +1190,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definition",
             datei = "karte-15b48507f03e2daa38cc-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Addition: +\\vert_{\\mathbb N}",
@@ -1199,7 +1199,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definition-n0",
             datei = "karte-56a992d32eaf4fbfd08f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Addition: +\\vert_{\\mathbb N_0}",
@@ -1208,7 +1208,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definition-z",
             datei = "karte-690a75c108411610d082-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Addition: +\\vert_{\\mathbb Z}",
@@ -1217,7 +1217,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definition-q",
             datei = "karte-c1dc6ee51a1856d3a43e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Addition: +\\vert_{\\mathbb Q}",
@@ -1226,7 +1226,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definition-r",
             datei = "karte-1ab8299852d1fbbd305f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Addition: +\\vert_{\\mathbb R}",
@@ -1235,7 +1235,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definition-c",
             datei = "karte-6f0f91c666fed2f102be-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Addition: +\\vert_{\\mathbb C}",
@@ -1244,7 +1244,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definition-hyperr",
             datei = "karte-ad9aecd8b11f56b59010-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Addition: +\\vert_{{}^*\\mathbb R}",
@@ -1253,7 +1253,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definition-h",
             datei = "karte-9515b02bbd3f97fb5999-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Addition: +\\vert_{\\mathbb H}",
@@ -1262,7 +1262,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definitionsbereich",
             datei = "karte-835f9d2bbbb51f5c5cbe-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1271,7 +1271,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.definitionsluecken",
             datei = "karte-480fd615502b7c1f7c4b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1280,7 +1280,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.a1db3db9.aequivalente",
             datei = "karte-ee8d8b013342fe4b2817-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1289,7 +1289,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.definition",
             datei = "karte-12462bb9b7a063da6781-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Maximum: \\max\\vert_{\\mathbb N}",
@@ -1298,7 +1298,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.definition-n0",
             datei = "karte-6501c9722f69de7d4d25-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Maximum: \\max\\vert_{\\mathbb N_0}",
@@ -1307,7 +1307,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.definition-z",
             datei = "karte-0efbd94843923e08cf55-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Maximum: \\max\\vert_{\\mathbb Z}",
@@ -1316,7 +1316,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.definition-q",
             datei = "karte-46ea35979b0aaaf62eeb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Maximum: \\max\\vert_{\\mathbb Q}",
@@ -1325,7 +1325,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.definition-r",
             datei = "karte-a76a05355581fec40e2d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Maximum: \\max\\vert_{\\mathbb R}",
@@ -1334,7 +1334,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.definition-hyperr",
             datei = "karte-ab7de1889415894f6ce8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Maximum: \\max\\vert_{{}^*\\mathbb R}",
@@ -1343,7 +1343,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.definitionsbereich",
             datei = "karte-98a1d718385a98be7257-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1352,7 +1352,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.definitionsluecken",
             datei = "karte-b8d02cb959e068fd1d94-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1361,7 +1361,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7a37e9cb.aequivalente",
             datei = "karte-4a8d7804923ea2f9ce16-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1370,7 +1370,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.definition",
             datei = "karte-37cc134af2076eaa943d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Minimum: \\min\\vert_{\\mathbb N}",
@@ -1379,7 +1379,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.definition-n0",
             datei = "karte-8f1dd946efa71998a148-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Minimum: \\min\\vert_{\\mathbb N_0}",
@@ -1388,7 +1388,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.definition-z",
             datei = "karte-443dec7a1f5e5ce16657-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Minimum: \\min\\vert_{\\mathbb Z}",
@@ -1397,7 +1397,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.definition-q",
             datei = "karte-5f4f4e7440c6bf0827fc-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Minimum: \\min\\vert_{\\mathbb Q}",
@@ -1406,7 +1406,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.definition-r",
             datei = "karte-0c182410501b82e1fe9f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Minimum: \\min\\vert_{\\mathbb R}",
@@ -1415,7 +1415,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.definition-hyperr",
             datei = "karte-dd7ce45a74b053dfcd96-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Minimum: \\min\\vert_{{}^*\\mathbb R}",
@@ -1424,7 +1424,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.definitionsbereich",
             datei = "karte-a010d2ac3e639cf6bee7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1433,7 +1433,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.definitionsluecken",
             datei = "karte-cf7e51150659c17d4b9e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1442,7 +1442,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.48c697a7.aequivalente",
             datei = "karte-b27f16d1f67a45706e73-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1451,7 +1451,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definition",
             datei = "karte-a526a670e8b943abaf3e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Multiplikation: \\cdot\\vert_{\\mathbb N}",
@@ -1460,7 +1460,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definition-n0",
             datei = "karte-ff48e17ad46f4b56b683-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Multiplikation: \\cdot\\vert_{\\mathbb N_0}",
@@ -1469,7 +1469,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definition-z",
             datei = "karte-1be65ef86261cb301006-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Multiplikation: \\cdot\\vert_{\\mathbb Z}",
@@ -1478,7 +1478,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definition-q",
             datei = "karte-0da711ba0a4ad60bf866-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Multiplikation: \\cdot\\vert_{\\mathbb Q}",
@@ -1487,7 +1487,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definition-r",
             datei = "karte-7c5454684c9895b3657d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Multiplikation: \\cdot\\vert_{\\mathbb R}",
@@ -1496,7 +1496,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definition-c",
             datei = "karte-375be8d4db38a294c377-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Multiplikation: \\cdot\\vert_{\\mathbb C}",
@@ -1505,7 +1505,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definition-hyperr",
             datei = "karte-7679a4f65063030cf428-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Multiplikation: \\cdot\\vert_{{}^*\\mathbb R}",
@@ -1514,7 +1514,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definition-h",
             datei = "karte-0cc34a8d122223d5d7a5-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Multiplikation: \\cdot\\vert_{\\mathbb H}",
@@ -1523,7 +1523,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definitionsbereich",
             datei = "karte-ef41a1ea47f657cea491-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1532,7 +1532,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.definitionsluecken",
             datei = "karte-a8d350fa3754770e723c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1541,7 +1541,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.25805a39.aequivalente",
             datei = "karte-66244bf8bbef9c68d5e6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1550,7 +1550,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.83bd162.definition",
             datei = "karte-89b8bf62b0d14f5d83a8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Abrundung: \\lfloor\\cdot\\rfloor\\vert_{\\mathbb Q}",
@@ -1559,7 +1559,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.83bd162.definition-r",
             datei = "karte-bbb2ec77e3aab5575c83-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Abrundung: \\lfloor\\cdot\\rfloor\\vert_{\\mathbb R}",
@@ -1568,7 +1568,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.83bd162.definition-hyperr",
             datei = "karte-5852817b7974c75888ca-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Abrundung: \\lfloor\\cdot\\rfloor\\vert_{{}^*\\mathbb R}",
@@ -1577,7 +1577,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.83bd162.definitionsbereich",
             datei = "karte-18ae60355dd575b18095-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1586,7 +1586,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.83bd162.definitionsluecken",
             datei = "karte-cd1f64105a7caca5f38e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1595,7 +1595,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.83bd162.aequivalente",
             datei = "karte-4eac91b400f12c16cab2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1604,7 +1604,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definition",
             datei = "karte-5232ea4cdc6fc6da1005-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Arcus Cosinus: \\arccos\\vert_{\\mathbb N}",
@@ -1613,7 +1613,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definition-n0",
             datei = "karte-415b3526685b3f716a47-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Cosinus: \\arccos\\vert_{\\mathbb N_0}",
@@ -1622,7 +1622,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definition-z",
             datei = "karte-afae0b3e357ef223bd1e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Cosinus: \\arccos\\vert_{\\mathbb Z}",
@@ -1631,7 +1631,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definition-q",
             datei = "karte-b542fa9b6befd82fa6c4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Cosinus: \\arccos\\vert_{\\mathbb Q}",
@@ -1640,7 +1640,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definition-r",
             datei = "karte-67ed7c0779e6429dca2f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Cosinus: \\arccos\\vert_{\\mathbb R}",
@@ -1649,7 +1649,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definition-c",
             datei = "karte-3348cb8036fca3421348-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Cosinus: \\arccos\\vert_{\\mathbb C}",
@@ -1658,7 +1658,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definition-hyperr",
             datei = "karte-5e957dbc83a01e322ac3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Cosinus: \\arccos\\vert_{{}^*\\mathbb R}",
@@ -1667,7 +1667,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definition-h",
             datei = "karte-c6ebd451fece02c422c2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Cosinus: \\arccos\\vert_{\\mathbb H}",
@@ -1676,7 +1676,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definitionsbereich",
             datei = "karte-523dce74f1a22ee480f6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1685,7 +1685,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.definitionsluecken",
             datei = "karte-0d03418d21d460cb835e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1694,7 +1694,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d325151.aequivalente",
             datei = "karte-d49140a0e230591cb5ce-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1703,7 +1703,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definition",
             datei = "karte-f2f3bc7b0e9ff06afaf7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Arcus Sinus: \\arcsin\\vert_{\\mathbb N}",
@@ -1712,7 +1712,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definition-n0",
             datei = "karte-e234d6bbec66b7f0d2f3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Sinus: \\arcsin\\vert_{\\mathbb N_0}",
@@ -1721,7 +1721,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definition-z",
             datei = "karte-cf0a5d2cd2314f18d201-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Sinus: \\arcsin\\vert_{\\mathbb Z}",
@@ -1730,7 +1730,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definition-q",
             datei = "karte-fb9bbe7e7274e33a5939-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Sinus: \\arcsin\\vert_{\\mathbb Q}",
@@ -1739,7 +1739,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definition-r",
             datei = "karte-91dca88498e2714f475c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Sinus: \\arcsin\\vert_{\\mathbb R}",
@@ -1748,7 +1748,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definition-c",
             datei = "karte-d6d6ed1bdfa73f198646-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Sinus: \\arcsin\\vert_{\\mathbb C}",
@@ -1757,7 +1757,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definition-hyperr",
             datei = "karte-492a20830020850ca24a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Sinus: \\arcsin\\vert_{{}^*\\mathbb R}",
@@ -1766,7 +1766,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definition-h",
             datei = "karte-c72626cea673fe913213-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Arcus Sinus: \\arcsin\\vert_{\\mathbb H}",
@@ -1775,7 +1775,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definitionsbereich",
             datei = "karte-4203fd29f92fb66679f0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1784,7 +1784,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.definitionsluecken",
             datei = "karte-84b93c4bb7b5d1af4de7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1793,7 +1793,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.1f83998c.aequivalente",
             datei = "karte-a3a6e49334136ba1646a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1802,7 +1802,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3066291a.definition",
             datei = "karte-f1bdb89e776a451d29b6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Aufrundung: \\lceil\\cdot\\rceil\\vert_{\\mathbb Q}",
@@ -1811,7 +1811,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3066291a.definition-r",
             datei = "karte-e7504cec0652f5f69ec7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aufrundung: \\lceil\\cdot\\rceil\\vert_{\\mathbb R}",
@@ -1820,7 +1820,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3066291a.definition-hyperr",
             datei = "karte-3c854f58d1526cd68eca-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Aufrundung: \\lceil\\cdot\\rceil\\vert_{{}^*\\mathbb R}",
@@ -1829,7 +1829,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3066291a.definitionsbereich",
             datei = "karte-e2b32c8f8bf8ad0c0a6d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1838,7 +1838,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3066291a.definitionsluecken",
             datei = "karte-d50c668b2e11c1b2c2ef-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1847,7 +1847,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3066291a.aequivalente",
             datei = "karte-69404a5d8deabf169608-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1856,7 +1856,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definition",
             datei = "karte-06f695c08a04c2d633fc-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Betrag: |\\cdot|\\vert_{\\mathbb N}",
@@ -1865,7 +1865,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definition-n0",
             datei = "karte-d154da589d7ec7821f0f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Betrag: |\\cdot|\\vert_{\\mathbb N_0}",
@@ -1874,7 +1874,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definition-z",
             datei = "karte-3c481aeef15c0f22375a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Betrag: |\\cdot|\\vert_{\\mathbb Z}",
@@ -1883,7 +1883,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definition-q",
             datei = "karte-eaf2c7c62dfbd08caa0c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Betrag: |\\cdot|\\vert_{\\mathbb Q}",
@@ -1892,7 +1892,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definition-r",
             datei = "karte-9024ba503b2774228328-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Betrag: |\\cdot|\\vert_{\\mathbb R}",
@@ -1901,7 +1901,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definition-c",
             datei = "karte-168843806be00e383631-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Betrag: |\\cdot|\\vert_{\\mathbb C}",
@@ -1910,7 +1910,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definition-hyperr",
             datei = "karte-6d40d0b7f18ecade1c07-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Betrag: |\\cdot|\\vert_{{}^*\\mathbb R}",
@@ -1919,7 +1919,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definition-h",
             datei = "karte-1e6790547351f865f558-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Betrag: |\\cdot|\\vert_{\\mathbb H}",
@@ -1928,7 +1928,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definitionsbereich",
             datei = "karte-04de618d5f101634ea16-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -1937,7 +1937,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.definitionsluecken",
             datei = "karte-cf5e525f69e03fa9a0cf-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -1946,7 +1946,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.92484ca2.aequivalente",
             datei = "karte-de5b500e59f6b06ee6f8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -1955,7 +1955,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definition",
             datei = "karte-c506ee40acf85f1ecb9c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Cosinus: \\cos\\vert_{\\mathbb N}",
@@ -1964,7 +1964,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definition-n0",
             datei = "karte-bdd4851647351e511296-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Cosinus: \\cos\\vert_{\\mathbb N_0}",
@@ -1973,7 +1973,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definition-z",
             datei = "karte-ec01109f6f23e1979c9a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Cosinus: \\cos\\vert_{\\mathbb Z}",
@@ -1982,7 +1982,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definition-q",
             datei = "karte-62cd902f3ab5296abf58-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Cosinus: \\cos\\vert_{\\mathbb Q}",
@@ -1991,7 +1991,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definition-r",
             datei = "karte-f7f2820484df3b7be6f8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Cosinus: \\cos\\vert_{\\mathbb R}",
@@ -2000,7 +2000,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definition-c",
             datei = "karte-bf731c843d2b2725f0be-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Cosinus: \\cos\\vert_{\\mathbb C}",
@@ -2009,7 +2009,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definition-hyperr",
             datei = "karte-20a59e4c71b509dacb9b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Cosinus: \\cos\\vert_{{}^*\\mathbb R}",
@@ -2018,7 +2018,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definition-h",
             datei = "karte-761fcfc7894645e0f34c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Cosinus: \\cos\\vert_{\\mathbb H}",
@@ -2027,7 +2027,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definitionsbereich",
             datei = "karte-57589dbdd54bc5191d6a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2036,7 +2036,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.definitionsluecken",
             datei = "karte-1ab6f375c4ad9c611301-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2045,7 +2045,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.aaa7c945.aequivalente",
             datei = "karte-abc5ada5e799377cac62-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2054,7 +2054,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definition",
             datei = "karte-5353bad8370d6535408a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Differential: \\frac{d}{d x}\\vert_{\\mathbb N}",
@@ -2063,7 +2063,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definition-n0",
             datei = "karte-ec35e0526c7180bc9c9e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Differential: \\frac{d}{d x}\\vert_{\\mathbb N_0}",
@@ -2072,7 +2072,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definition-z",
             datei = "karte-87b4747e39b7c3024a61-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Differential: \\frac{d}{d x}\\vert_{\\mathbb Z}",
@@ -2081,7 +2081,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definition-q",
             datei = "karte-671e776496ad5293fda7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Differential: \\frac{d}{d x}\\vert_{\\mathbb Q}",
@@ -2090,7 +2090,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definition-r",
             datei = "karte-7acdfc228367094beb2d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Differential: \\frac{d}{d x}\\vert_{\\mathbb R}",
@@ -2099,7 +2099,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definition-c",
             datei = "karte-2a3851e15c1832af9ca1-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Differential: \\frac{d}{d x}\\vert_{\\mathbb C}",
@@ -2108,7 +2108,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definition-hyperr",
             datei = "karte-c55426a7746026be81cb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Differential: \\frac{d}{d x}\\vert_{{}^*\\mathbb R}",
@@ -2117,7 +2117,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definition-h",
             datei = "karte-763be7fa5bbdc8f42677-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Differential: \\frac{d}{d x}\\vert_{\\mathbb H}",
@@ -2126,7 +2126,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definitionsbereich",
             datei = "karte-c175d6fa32d7ff8edd24-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2135,7 +2135,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.definitionsluecken",
             datei = "karte-b7fc1617e0404b408cdb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2144,7 +2144,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f8270f4a.aequivalente",
             datei = "karte-224981af27b1d332587e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2153,7 +2153,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.definition",
             datei = "karte-105da6bc304b9785bd9e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -2162,7 +2162,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.positiver-nenner",
             datei = "karte-00cace1053590da408fa-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Nenner > 0",
@@ -2171,7 +2171,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.negativer-nenner",
             datei = "karte-6fff2abdabd85401dd13-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Nenner < 0",
@@ -2180,7 +2180,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.komplexer-nenner",
             datei = "karte-c2512ba84f7dc0540e63-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplexer Nenner",
@@ -2190,7 +2190,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.komplexer-nenner.polar",
             datei = "karte-7ea7869e82150b06148b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplexer Nenner",
@@ -2201,7 +2201,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.komplexer-zaehler",
             datei = "karte-3b3b7b556899f05894d2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplexer Zähler",
@@ -2211,7 +2211,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.komplexer-zaehler.polar",
             datei = "karte-68f949bb295339069de0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplexer Zähler",
@@ -2222,7 +2222,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.definitionsbereich",
             datei = "karte-9451f3e8e026317c981b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2231,7 +2231,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.definitionsluecken",
             datei = "karte-2e0d8d72bff7eca789c3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2240,7 +2240,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5d7c91ae.aequivalente",
             datei = "karte-7b2f922416b59d8d7e76-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2249,7 +2249,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definition",
             datei = "karte-16e34e7f7b4e21c39c45-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Exponentialfunktion: \\exp\\vert_{\\mathbb N}",
@@ -2258,7 +2258,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definition-n0",
             datei = "karte-c2bf06ede27ac354aeb0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Exponentialfunktion: \\exp\\vert_{\\mathbb N_0}",
@@ -2267,7 +2267,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definition-z",
             datei = "karte-38c07bd6b0006e7b1541-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Exponentialfunktion: \\exp\\vert_{\\mathbb Z}",
@@ -2276,7 +2276,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definition-q",
             datei = "karte-40b87e0acf58685c874e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Exponentialfunktion: \\exp\\vert_{\\mathbb Q}",
@@ -2285,7 +2285,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definition-r",
             datei = "karte-b252730a361e003a2ab4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Exponentialfunktion: \\exp\\vert_{\\mathbb R}",
@@ -2294,7 +2294,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definition-c",
             datei = "karte-4bb74e03741ee96ac60d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Exponentialfunktion: \\exp\\vert_{\\mathbb C}",
@@ -2303,7 +2303,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definition-hyperr",
             datei = "karte-ad987a05b7c606b68ff4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Exponentialfunktion: \\exp\\vert_{{}^*\\mathbb R}",
@@ -2312,7 +2312,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definition-h",
             datei = "karte-96fe5412964b839effab-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Exponentialfunktion: \\exp\\vert_{\\mathbb H}",
@@ -2321,7 +2321,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definitionsbereich",
             datei = "karte-40cccf3dccfde6bb18ca-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2330,7 +2330,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.definitionsluecken",
             datei = "karte-e640370c2e872df6ba3f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2339,7 +2339,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.730e250a.aequivalente",
             datei = "karte-0157017cf1c2eb62fc50-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2348,7 +2348,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bdceefc2.definition",
             datei = "karte-1412a32528a181c75fcc-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Imaginärteil: \\operatorname{Im}\\vert_{\\mathbb R}",
@@ -2357,7 +2357,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bdceefc2.definition-c",
             datei = "karte-09b31b9c4b8c77e3b3a2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Imaginärteil: \\operatorname{Im}\\vert_{\\mathbb C}",
@@ -2366,7 +2366,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bdceefc2.definition-h",
             datei = "karte-48013160af057b878201-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Imaginärteil: \\operatorname{Im}\\vert_{\\mathbb H}",
@@ -2375,7 +2375,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bdceefc2.definitionsbereich",
             datei = "karte-34b5ff024fe8ea4223f6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2384,7 +2384,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bdceefc2.definitionsluecken",
             datei = "karte-d2d7235e6293644c6c49-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2393,7 +2393,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bdceefc2.aequivalente",
             datei = "karte-d4e0d428cbcef7d255fd-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2402,7 +2402,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definition",
             datei = "karte-861d7b04dd4e07916b7c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Integral: \\int\\vert_{\\mathbb N}",
@@ -2411,7 +2411,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definition-n0",
             datei = "karte-2e6adbde6a7f44ca4b0d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Integral: \\int\\vert_{\\mathbb N_0}",
@@ -2420,7 +2420,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definition-z",
             datei = "karte-7e7d4a39d33e763855a4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Integral: \\int\\vert_{\\mathbb Z}",
@@ -2429,7 +2429,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definition-q",
             datei = "karte-434f5d1ba06fa59644a1-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Integral: \\int\\vert_{\\mathbb Q}",
@@ -2438,7 +2438,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definition-r",
             datei = "karte-e16ec9cadc28021441f8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Integral: \\int\\vert_{\\mathbb R}",
@@ -2447,7 +2447,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definition-c",
             datei = "karte-2f4abaff45bca6354222-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Integral: \\int\\vert_{\\mathbb C}",
@@ -2456,7 +2456,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definition-hyperr",
             datei = "karte-078654b2de2454a0cf53-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Integral: \\int\\vert_{{}^*\\mathbb R}",
@@ -2465,7 +2465,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definition-h",
             datei = "karte-2e7a55bb9685168c62d0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Integral: \\int\\vert_{\\mathbb H}",
@@ -2474,7 +2474,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definitionsbereich",
             datei = "karte-e85c1b967e5d127c6ec9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2483,7 +2483,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.definitionsluecken",
             datei = "karte-9ea40de2566b3e43a24e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2492,7 +2492,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7f1a662c.aequivalente",
             datei = "karte-6a9f440d37d6666b5607-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2501,7 +2501,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1199b0a.definition",
             datei = "karte-2aea3366b7dd5a96b397-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -2510,7 +2510,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1199b0a.iterierte-summe-leere-indexmenge-0",
             datei = "karte-432d4de6e5bf6131d158-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Leere Indexmenge",
@@ -2519,7 +2519,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1199b0a.iterierte-summe-endlicher-spezialfall-0",
             datei = "karte-e371e3f2f02917dee75c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Endlicher Spezialfall",
@@ -2528,7 +2528,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1199b0a.definitionsbereich",
             datei = "karte-d10f04b2c01f5c7cc7b0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2537,7 +2537,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1199b0a.definitionsluecken",
             datei = "karte-46baf5d2614b9f1ef310-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2546,7 +2546,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1199b0a.aequivalente",
             datei = "karte-6ab64e1c5d63ed6627a9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2555,7 +2555,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3087b80c.definition",
             datei = "karte-f0de4f60bef75805204f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -2564,7 +2564,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3087b80c.iteriertes-produkt-leere-indexmenge-0",
             datei = "karte-e6314a4a20e96e0c66c9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Leere Indexmenge",
@@ -2573,7 +2573,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3087b80c.iteriertes-produkt-endlicher-spezialfall-0",
             datei = "karte-e8c40eee9b3eb0a67122-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Beispiel,
             primär = false,
             titel = "Endlicher Spezialfall",
@@ -2582,7 +2582,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3087b80c.definitionsbereich",
             datei = "karte-d4ce6fb8299e0dcfc920-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2591,7 +2591,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3087b80c.definitionsluecken",
             datei = "karte-1ce03c48a708c3b798a1-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2600,7 +2600,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.3087b80c.aequivalente",
             datei = "karte-3b272c6c44cccc3b80ab-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2609,7 +2609,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definition",
             datei = "karte-952584e706df00465f18-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Kehrwert: ^{-1}\\vert_{\\mathbb N}",
@@ -2618,7 +2618,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definition-n0",
             datei = "karte-15b395cd84136e8fc4a1-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kehrwert: ^{-1}\\vert_{\\mathbb N_0}",
@@ -2627,7 +2627,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definition-z",
             datei = "karte-5eaf7ec094cf582a7aef-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kehrwert: ^{-1}\\vert_{\\mathbb Z}",
@@ -2636,7 +2636,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definition-q",
             datei = "karte-12b8e9318498ff2f2511-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kehrwert: ^{-1}\\vert_{\\mathbb Q}",
@@ -2645,7 +2645,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definition-r",
             datei = "karte-8e25ef1cb57c386cdcd0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kehrwert: ^{-1}\\vert_{\\mathbb R}",
@@ -2654,7 +2654,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definition-c",
             datei = "karte-62cc7d9b9519bffdd6ee-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kehrwert: ^{-1}\\vert_{\\mathbb C}",
@@ -2663,7 +2663,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definition-hyperr",
             datei = "karte-156a025c24b1357681ec-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kehrwert: ^{-1}\\vert_{{}^*\\mathbb R}",
@@ -2672,7 +2672,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definition-h",
             datei = "karte-dcb1cf0f66b2844449b3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kehrwert: ^{-1}\\vert_{\\mathbb H}",
@@ -2681,7 +2681,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definitionsbereich",
             datei = "karte-0fec63e9979808308345-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2690,7 +2690,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.definitionsluecken",
             datei = "karte-a365c17d0abd15555f5c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2699,7 +2699,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2c527dbc.aequivalente",
             datei = "karte-633ad3fe7cfd0a207418-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2708,7 +2708,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2edaee09.definition",
             datei = "karte-fd30171673426139d237-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Komplex aus kartesischer Form: a+b i\\vert_{\\mathbb R}",
@@ -2717,7 +2717,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2edaee09.definition-c",
             datei = "karte-f218be94fa60a8b79a2c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplex aus kartesischer Form: a+b i\\vert_{\\mathbb C}",
@@ -2726,7 +2726,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2edaee09.definition-h",
             datei = "karte-d80c40bc1f15f4cc45f2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplex aus kartesischer Form: a+b i\\vert_{\\mathbb H}",
@@ -2735,7 +2735,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2edaee09.definitionsbereich",
             datei = "karte-43626304bad183908e66-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2744,7 +2744,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2edaee09.definitionsluecken",
             datei = "karte-ab815a526f4cf0ede62c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2753,7 +2753,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.2edaee09.aequivalente",
             datei = "karte-9f1bafb96920d1fd776a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2762,7 +2762,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18cb9f44.definition",
             datei = "karte-0672c74045ad7afbe6c9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Komplex aus Polarform: r e^{i\\varphi}\\vert_{\\mathbb R}",
@@ -2771,7 +2771,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18cb9f44.definition-c",
             datei = "karte-e6a63bdeb56ce4c195db-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplex aus Polarform: r e^{i\\varphi}\\vert_{\\mathbb C}",
@@ -2780,7 +2780,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18cb9f44.definition-h",
             datei = "karte-2d04bdc9852381c89839-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplex aus Polarform: r e^{i\\varphi}\\vert_{\\mathbb H}",
@@ -2789,7 +2789,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18cb9f44.definitionsbereich",
             datei = "karte-12e9e577bd13500047c7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2798,7 +2798,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18cb9f44.definitionsluecken",
             datei = "karte-9e068e6e992f1806f662-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2807,7 +2807,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18cb9f44.aequivalente",
             datei = "karte-b15b2f160e5ad97f6364-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2816,7 +2816,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.db4412c2.definition",
             datei = "karte-611856703862b30222ad-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Komplexer Radius: |\\cdot|\\vert_{\\mathbb R}",
@@ -2825,7 +2825,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.db4412c2.definition-c",
             datei = "karte-cd4616995af1d742846e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplexer Radius: |\\cdot|\\vert_{\\mathbb C}",
@@ -2834,7 +2834,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.db4412c2.definition-h",
             datei = "karte-7024a49a20890647b25d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplexer Radius: |\\cdot|\\vert_{\\mathbb H}",
@@ -2843,7 +2843,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.db4412c2.definitionsbereich",
             datei = "karte-8d555b6ef7b7cf79c5d8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2852,7 +2852,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.db4412c2.definitionsluecken",
             datei = "karte-0c07302da8fde23b06df-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2861,7 +2861,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.db4412c2.aequivalente",
             datei = "karte-32abdb7e7e093f151869-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2870,7 +2870,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5458658a.definition",
             datei = "karte-5bc6ad9b713faecd14b0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Komplexer Winkel: \\arg\\vert_{\\mathbb R}",
@@ -2879,7 +2879,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5458658a.definition-c",
             datei = "karte-b136aeb2048b46f53b61-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplexer Winkel: \\arg\\vert_{\\mathbb C}",
@@ -2888,7 +2888,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5458658a.definition-h",
             datei = "karte-7255dd2500e7ce53be99-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Komplexer Winkel: \\arg\\vert_{\\mathbb H}",
@@ -2897,7 +2897,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5458658a.definitionsbereich",
             datei = "karte-79e4ec50d9fd59a66c93-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2906,7 +2906,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5458658a.definitionsluecken",
             datei = "karte-633e2f7df137393d8b77-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2915,7 +2915,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.5458658a.aequivalente",
             datei = "karte-2005d9bbf20a3dbbee50-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2924,7 +2924,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.73598602.definition",
             datei = "karte-4ceec25b7e0b87002ee9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Konjugierte: \\overline{\\cdot}\\vert_{\\mathbb R}",
@@ -2933,7 +2933,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.73598602.definition-c",
             datei = "karte-2f38167f6e2c752dce83-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Konjugierte: \\overline{\\cdot}\\vert_{\\mathbb C}",
@@ -2942,7 +2942,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.73598602.definition-h",
             datei = "karte-a95a1e4ebf4db23bb8e7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Konjugierte: \\overline{\\cdot}\\vert_{\\mathbb H}",
@@ -2951,7 +2951,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.73598602.definitionsbereich",
             datei = "karte-fdc55124ab53574688e8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -2960,7 +2960,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.73598602.definitionsluecken",
             datei = "karte-0625d8512f72152a4b1d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -2969,7 +2969,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.73598602.aequivalente",
             datei = "karte-4b8c281ace8d78125ee0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -2978,7 +2978,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definition",
             datei = "karte-4e88e18e70ba9a5890fb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Kubikwurzel: \\sqrt[3]{}\\vert_{\\mathbb N}",
@@ -2987,7 +2987,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definition-n0",
             datei = "karte-0452c701aca71e88d5d0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubikwurzel: \\sqrt[3]{}\\vert_{\\mathbb N_0}",
@@ -2996,7 +2996,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definition-z",
             datei = "karte-f6e33ad424a07c8cfbbc-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubikwurzel: \\sqrt[3]{}\\vert_{\\mathbb Z}",
@@ -3005,7 +3005,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definition-q",
             datei = "karte-839f78d2bc6df8fab939-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubikwurzel: \\sqrt[3]{}\\vert_{\\mathbb Q}",
@@ -3014,7 +3014,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definition-r",
             datei = "karte-d7c7ef09ee4f79e745d5-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubikwurzel: \\sqrt[3]{}\\vert_{\\mathbb R}",
@@ -3023,7 +3023,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definition-c",
             datei = "karte-bc74a10b950e4e43c294-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubikwurzel: \\sqrt[3]{}\\vert_{\\mathbb C}",
@@ -3032,7 +3032,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definition-hyperr",
             datei = "karte-1c0bf2bcabcc60f0b575-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubikwurzel: \\sqrt[3]{}\\vert_{{}^*\\mathbb R}",
@@ -3041,7 +3041,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definition-h",
             datei = "karte-7a0fe153348bae18b25b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubikwurzel: \\sqrt[3]{}\\vert_{\\mathbb H}",
@@ -3050,7 +3050,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definitionsbereich",
             datei = "karte-0ddccf38282dda6e5d28-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3059,7 +3059,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.definitionsluecken",
             datei = "karte-7319d1fa717fb3f5a8ce-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3068,7 +3068,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4e0789c2.aequivalente",
             datei = "karte-50b00d41d1e8017610ce-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3077,7 +3077,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definition",
             datei = "karte-127ba7aab5637858e74a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Kubik: ^3\\vert_{\\mathbb N}",
@@ -3086,7 +3086,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definition-n0",
             datei = "karte-80f32af96a30cf2a737b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubik: ^3\\vert_{\\mathbb N_0}",
@@ -3095,7 +3095,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definition-z",
             datei = "karte-b7d96dacec924dadbbf9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubik: ^3\\vert_{\\mathbb Z}",
@@ -3104,7 +3104,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definition-q",
             datei = "karte-8dd9daee8e89243221f3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubik: ^3\\vert_{\\mathbb Q}",
@@ -3113,7 +3113,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definition-r",
             datei = "karte-3b93356045d90dc5b0f8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubik: ^3\\vert_{\\mathbb R}",
@@ -3122,7 +3122,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definition-c",
             datei = "karte-e9af6049e1d2465f93ec-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubik: ^3\\vert_{\\mathbb C}",
@@ -3131,7 +3131,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definition-hyperr",
             datei = "karte-765836a2c220adb3415c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubik: ^3\\vert_{{}^*\\mathbb R}",
@@ -3140,7 +3140,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definition-h",
             datei = "karte-7f1d13270ce372034852-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Kubik: ^3\\vert_{\\mathbb H}",
@@ -3149,7 +3149,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definitionsbereich",
             datei = "karte-c4806a48a6a84c0fbc23-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3158,7 +3158,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.definitionsluecken",
             datei = "karte-47b262f0ad3291539523-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3167,7 +3167,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.dc072a2.aequivalente",
             datei = "karte-25eb2dd6f90b4fb5501f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3176,7 +3176,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definition",
             datei = "karte-7774004706c2a468d6c7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Binärer Logarithmus: \\operatorname{lb}\\vert_{\\mathbb N}",
@@ -3185,7 +3185,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definition-n0",
             datei = "karte-d3cb9e16adaff4786e20-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Binärer Logarithmus: \\operatorname{lb}\\vert_{\\mathbb N_0}",
@@ -3194,7 +3194,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definition-z",
             datei = "karte-cbe15d364cee57bcc4eb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Binärer Logarithmus: \\operatorname{lb}\\vert_{\\mathbb Z}",
@@ -3203,7 +3203,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definition-q",
             datei = "karte-b2526af4d17f95e5d1c6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Binärer Logarithmus: \\operatorname{lb}\\vert_{\\mathbb Q}",
@@ -3212,7 +3212,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definition-r",
             datei = "karte-c56c59e2468a6a2f6d57-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Binärer Logarithmus: \\operatorname{lb}\\vert_{\\mathbb R}",
@@ -3221,7 +3221,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definition-c",
             datei = "karte-bfedb5f327b69c528655-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Binärer Logarithmus: \\operatorname{lb}\\vert_{\\mathbb C}",
@@ -3230,7 +3230,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definition-hyperr",
             datei = "karte-425b0da6d00246311247-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Binärer Logarithmus: \\operatorname{lb}\\vert_{{}^*\\mathbb R}",
@@ -3239,7 +3239,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definition-h",
             datei = "karte-f3847962e2ff863dd290-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Binärer Logarithmus: \\operatorname{lb}\\vert_{\\mathbb H}",
@@ -3248,7 +3248,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definitionsbereich",
             datei = "karte-e4ac72e8de8d57696cf4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3257,7 +3257,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.definitionsluecken",
             datei = "karte-40ed6f98e7167f4f012e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3266,7 +3266,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.4bdc9a7b.aequivalente",
             datei = "karte-f31402f3790ac1d92811-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3275,7 +3275,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definition",
             datei = "karte-620cfe5c9c3bf960f12e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Limes: \\lim\\vert_{\\mathbb N}",
@@ -3284,7 +3284,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definition-n0",
             datei = "karte-039823ee567ad78bbe19-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Limes: \\lim\\vert_{\\mathbb N_0}",
@@ -3293,7 +3293,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definition-z",
             datei = "karte-6d364ed3762c8eca1092-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Limes: \\lim\\vert_{\\mathbb Z}",
@@ -3302,7 +3302,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definition-q",
             datei = "karte-d7d5ffb9747973302a6d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Limes: \\lim\\vert_{\\mathbb Q}",
@@ -3311,7 +3311,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definition-r",
             datei = "karte-32f5ffc07e065b6ffaa8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Limes: \\lim\\vert_{\\mathbb R}",
@@ -3320,7 +3320,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definition-c",
             datei = "karte-631d768ae6a320c7ed40-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Limes: \\lim\\vert_{\\mathbb C}",
@@ -3329,7 +3329,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definition-hyperr",
             datei = "karte-b34ea5c1949e0c313c1f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Limes: \\lim\\vert_{{}^*\\mathbb R}",
@@ -3338,7 +3338,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definition-h",
             datei = "karte-2d5f9bfbc720a333a453-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Limes: \\lim\\vert_{\\mathbb H}",
@@ -3347,7 +3347,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definitionsbereich",
             datei = "karte-26014946415b01b8a2cb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3356,7 +3356,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.definitionsluecken",
             datei = "karte-b4c04f96a6d31681e61a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3365,7 +3365,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.defd3722.aequivalente",
             datei = "karte-0440f0746537f7bc9f70-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3374,7 +3374,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definition",
             datei = "karte-3f0a395afb2b0ce2b3f5-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Natürlicher Logarithmus: \\ln\\vert_{\\mathbb N}",
@@ -3383,7 +3383,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definition-n0",
             datei = "karte-8ae142f2dd28d905a00a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Natürlicher Logarithmus: \\ln\\vert_{\\mathbb N_0}",
@@ -3392,7 +3392,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definition-z",
             datei = "karte-b2fa098eb9547734bdce-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Natürlicher Logarithmus: \\ln\\vert_{\\mathbb Z}",
@@ -3401,7 +3401,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definition-q",
             datei = "karte-641eeade9b557d511c8f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Natürlicher Logarithmus: \\ln\\vert_{\\mathbb Q}",
@@ -3410,7 +3410,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definition-r",
             datei = "karte-2a2301d61038983b9c74-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Natürlicher Logarithmus: \\ln\\vert_{\\mathbb R}",
@@ -3419,7 +3419,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definition-c",
             datei = "karte-efe3a1500a7d0670f3b1-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Natürlicher Logarithmus: \\ln\\vert_{\\mathbb C}",
@@ -3428,7 +3428,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definition-hyperr",
             datei = "karte-37297abed137962762d9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Natürlicher Logarithmus: \\ln\\vert_{{}^*\\mathbb R}",
@@ -3437,7 +3437,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definition-h",
             datei = "karte-63e492651518a529eeb7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Natürlicher Logarithmus: \\ln\\vert_{\\mathbb H}",
@@ -3446,7 +3446,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definitionsbereich",
             datei = "karte-c271383d79bca6e577c9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3455,7 +3455,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.definitionsluecken",
             datei = "karte-9030e29caf9c668f1a81-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3464,7 +3464,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.50188093.aequivalente",
             datei = "karte-5b2c28333b25368ca112-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3473,7 +3473,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definition",
             datei = "karte-4798442c9866ef279c08-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Zehnerlogarithmus: \\log\\vert_{\\mathbb N}",
@@ -3482,7 +3482,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definition-n0",
             datei = "karte-cad5b8b9cda10c63ce94-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Zehnerlogarithmus: \\log\\vert_{\\mathbb N_0}",
@@ -3491,7 +3491,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definition-z",
             datei = "karte-9d36282aa8c05138aa05-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Zehnerlogarithmus: \\log\\vert_{\\mathbb Z}",
@@ -3500,7 +3500,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definition-q",
             datei = "karte-cbba2a2e777f182519f9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Zehnerlogarithmus: \\log\\vert_{\\mathbb Q}",
@@ -3509,7 +3509,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definition-r",
             datei = "karte-f32f3cb27e85c325a554-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Zehnerlogarithmus: \\log\\vert_{\\mathbb R}",
@@ -3518,7 +3518,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definition-c",
             datei = "karte-48741c097c9b064f007c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Zehnerlogarithmus: \\log\\vert_{\\mathbb C}",
@@ -3527,7 +3527,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definition-hyperr",
             datei = "karte-e594cf595ba7ce71fad0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Zehnerlogarithmus: \\log\\vert_{{}^*\\mathbb R}",
@@ -3536,7 +3536,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definition-h",
             datei = "karte-7ca675736ee009a58d05-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Zehnerlogarithmus: \\log\\vert_{\\mathbb H}",
@@ -3545,7 +3545,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definitionsbereich",
             datei = "karte-bbde525cb7c3ba2babe6-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3554,7 +3554,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.definitionsluecken",
             datei = "karte-58b49d0d8d429c5b0838-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3563,7 +3563,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f1a8cf04.aequivalente",
             datei = "karte-2728bb16bc5097a95cc5-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3572,7 +3572,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definition",
             datei = "karte-0ca7fc01f6ff003ddcac-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Logarithmus: \\log_{}\\vert_{\\mathbb N}",
@@ -3581,7 +3581,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definition-n0",
             datei = "karte-ae190dfca6b9d0ecee1f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Logarithmus: \\log_{}\\vert_{\\mathbb N_0}",
@@ -3590,7 +3590,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definition-z",
             datei = "karte-2601c679410f04929f19-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Logarithmus: \\log_{}\\vert_{\\mathbb Z}",
@@ -3599,7 +3599,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definition-q",
             datei = "karte-fe2f52f6b182d0c7da91-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Logarithmus: \\log_{}\\vert_{\\mathbb Q}",
@@ -3608,7 +3608,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definition-r",
             datei = "karte-283faf3a763adcffa026-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Logarithmus: \\log_{}\\vert_{\\mathbb R}",
@@ -3617,7 +3617,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definition-c",
             datei = "karte-f3bcc8ac64b27da81fad-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Logarithmus: \\log_{}\\vert_{\\mathbb C}",
@@ -3626,7 +3626,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definition-hyperr",
             datei = "karte-91646a2bbf2214059282-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Logarithmus: \\log_{}\\vert_{{}^*\\mathbb R}",
@@ -3635,7 +3635,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definition-h",
             datei = "karte-deeec80345c42491aacd-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Logarithmus: \\log_{}\\vert_{\\mathbb H}",
@@ -3644,7 +3644,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definitionsbereich",
             datei = "karte-6fb03ca220ae83ac309a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3653,7 +3653,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.definitionsluecken",
             datei = "karte-4f1e19a789b2cb2381a8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3662,7 +3662,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.18f6aa42.aequivalente",
             datei = "karte-a988ba4e7bafbf0749f8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3671,7 +3671,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7e4ae800.definition",
             datei = "karte-f9af93e4b3fd61d11ebd-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Modulo: \\bmod\\vert_{\\mathbb Z}",
@@ -3680,7 +3680,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7e4ae800.definition-zn",
             datei = "karte-9f73df41debd12c8f908-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Modulo: \\bmod\\vert_{\\mathbb Z/n\\mathbb Z}",
@@ -3689,7 +3689,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7e4ae800.definitionsbereich",
             datei = "karte-936b54a16344e1d4f667-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3698,7 +3698,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7e4ae800.definitionsluecken",
             datei = "karte-9303ba585b9ce1488a2e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3707,7 +3707,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.7e4ae800.aequivalente",
             datei = "karte-3b3722081d151b1abe7d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3716,7 +3716,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definition",
             datei = "karte-37c5970329b8e57d4619-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Norm: \\lVert\\cdot\\rVert\\vert_{\\mathbb N}",
@@ -3725,7 +3725,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definition-n0",
             datei = "karte-806ba2d5e09399ac1e62-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Norm: \\lVert\\cdot\\rVert\\vert_{\\mathbb N_0}",
@@ -3734,7 +3734,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definition-z",
             datei = "karte-4b923b3dfff4c0815640-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Norm: \\lVert\\cdot\\rVert\\vert_{\\mathbb Z}",
@@ -3743,7 +3743,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definition-q",
             datei = "karte-7d24901b7b5c896afa9a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Norm: \\lVert\\cdot\\rVert\\vert_{\\mathbb Q}",
@@ -3752,7 +3752,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definition-r",
             datei = "karte-4bf3c2f924e7b49ef17a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Norm: \\lVert\\cdot\\rVert\\vert_{\\mathbb R}",
@@ -3761,7 +3761,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definition-c",
             datei = "karte-63c04e2ed6557544712c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Norm: \\lVert\\cdot\\rVert\\vert_{\\mathbb C}",
@@ -3770,7 +3770,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definition-hyperr",
             datei = "karte-6a04b690ed6a005efe2f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Norm: \\lVert\\cdot\\rVert\\vert_{{}^*\\mathbb R}",
@@ -3779,7 +3779,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definition-h",
             datei = "karte-27b292d0883647c6f0f3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Norm: \\lVert\\cdot\\rVert\\vert_{\\mathbb H}",
@@ -3788,7 +3788,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definitionsbereich",
             datei = "karte-9f90b11386dbcb6607fe-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3797,7 +3797,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.definitionsluecken",
             datei = "karte-c2d198925b8a5e06f955-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3806,7 +3806,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.c19787cc.aequivalente",
             datei = "karte-20c63fbff3f51f580f2d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3815,7 +3815,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definition",
             datei = "karte-5339cc24ad488d5b2c02-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Potenz: ^\\vert_{\\mathbb N}",
@@ -3824,7 +3824,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definition-n0",
             datei = "karte-c3209c0a431dc74919fc-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Potenz: ^\\vert_{\\mathbb N_0}",
@@ -3833,7 +3833,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definition-z",
             datei = "karte-201d0b5b7d8fc248c7c2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Potenz: ^\\vert_{\\mathbb Z}",
@@ -3842,7 +3842,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definition-q",
             datei = "karte-b624085631899462ec9f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Potenz: ^\\vert_{\\mathbb Q}",
@@ -3851,7 +3851,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definition-r",
             datei = "karte-4c515b71278e4380bf70-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Potenz: ^\\vert_{\\mathbb R}",
@@ -3860,7 +3860,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definition-c",
             datei = "karte-059f2c1eee0750435c56-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Potenz: ^\\vert_{\\mathbb C}",
@@ -3869,7 +3869,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definition-hyperr",
             datei = "karte-e3aa075962528743c9d4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Potenz: ^\\vert_{{}^*\\mathbb R}",
@@ -3878,7 +3878,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definition-h",
             datei = "karte-e2d86d36b4fb38a71ce5-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Potenz: ^\\vert_{\\mathbb H}",
@@ -3887,7 +3887,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definitionsbereich",
             datei = "karte-fb3abe25a45d03ab5b6e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3896,7 +3896,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.definitionsluecken",
             datei = "karte-9390fc8b52252f062b4b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -3905,7 +3905,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bbd75a8c.aequivalente",
             datei = "karte-3aa9f3503377987bca81-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -3914,7 +3914,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definition",
             datei = "karte-1ebea59ca1c46197de9c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Quadratwurzel: \\sqrt{}\\vert_{\\mathbb N}",
@@ -3923,7 +3923,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definition-n0",
             datei = "karte-438da619a887652c281a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadratwurzel: \\sqrt{}\\vert_{\\mathbb N_0}",
@@ -3932,7 +3932,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definition-z",
             datei = "karte-4913f5410dceadd9cbf2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadratwurzel: \\sqrt{}\\vert_{\\mathbb Z}",
@@ -3941,7 +3941,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definition-q",
             datei = "karte-930f74f730ef66a35a65-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadratwurzel: \\sqrt{}\\vert_{\\mathbb Q}",
@@ -3950,7 +3950,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definition-r",
             datei = "karte-94a2e59ecf644bcf3fb9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadratwurzel: \\sqrt{}\\vert_{\\mathbb R}",
@@ -3959,7 +3959,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definition-c",
             datei = "karte-6a995a24a6c68f0334c7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadratwurzel: \\sqrt{}\\vert_{\\mathbb C}",
@@ -3968,7 +3968,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definition-hyperr",
             datei = "karte-fe681cf863ea5dec51e9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadratwurzel: \\sqrt{}\\vert_{{}^*\\mathbb R}",
@@ -3977,7 +3977,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definition-h",
             datei = "karte-643768d4433ac6a14259-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadratwurzel: \\sqrt{}\\vert_{\\mathbb H}",
@@ -3986,7 +3986,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definitionsbereich",
             datei = "karte-3b3a78ec58b76f5ffbf9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -3995,7 +3995,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.definitionsluecken",
             datei = "karte-16aca56cb46f9cdefa54-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -4004,7 +4004,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.f96040c2.aequivalente",
             datei = "karte-28de8d94f8cb0f81b50d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -4013,7 +4013,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definition",
             datei = "karte-5e3f96154d4407b0631e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Quadrat: ^2\\vert_{\\mathbb N}",
@@ -4022,7 +4022,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definition-n0",
             datei = "karte-111fd77241a9c6dfb7c8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadrat: ^2\\vert_{\\mathbb N_0}",
@@ -4031,7 +4031,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definition-z",
             datei = "karte-1b95fc6556a26df72a8e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadrat: ^2\\vert_{\\mathbb Z}",
@@ -4040,7 +4040,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definition-q",
             datei = "karte-0ca74e03181c1215f336-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadrat: ^2\\vert_{\\mathbb Q}",
@@ -4049,7 +4049,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definition-r",
             datei = "karte-40c9650ba46927a6215b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadrat: ^2\\vert_{\\mathbb R}",
@@ -4058,7 +4058,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definition-c",
             datei = "karte-aa8ca1f2c0dddb3dd208-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadrat: ^2\\vert_{\\mathbb C}",
@@ -4067,7 +4067,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definition-hyperr",
             datei = "karte-75471aa9c4063ceee380-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadrat: ^2\\vert_{{}^*\\mathbb R}",
@@ -4076,7 +4076,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definition-h",
             datei = "karte-ffa8f01897bb5db7f04f-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Quadrat: ^2\\vert_{\\mathbb H}",
@@ -4085,7 +4085,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definitionsbereich",
             datei = "karte-5ebb46f73923300de622-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -4094,7 +4094,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.definitionsluecken",
             datei = "karte-06e1055b7a2df64e0017-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -4103,7 +4103,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.87a68762.aequivalente",
             datei = "karte-04bd62dd8af86a598f2b-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -4112,7 +4112,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.535717b8.definition",
             datei = "karte-f79db1876d4ebf122b38-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Realteil: \\operatorname{Re}\\vert_{\\mathbb R}",
@@ -4121,7 +4121,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.535717b8.definition-c",
             datei = "karte-a8c865176aee22f223b3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Realteil: \\operatorname{Re}\\vert_{\\mathbb C}",
@@ -4130,7 +4130,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.535717b8.definition-h",
             datei = "karte-1dc5332f6c1f3de3bf25-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Realteil: \\operatorname{Re}\\vert_{\\mathbb H}",
@@ -4139,7 +4139,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.535717b8.definitionsbereich",
             datei = "karte-a45bbde2c428971f16f7-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -4148,7 +4148,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.535717b8.definitionsluecken",
             datei = "karte-e60305a441e95f4e7351-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -4157,7 +4157,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.535717b8.aequivalente",
             datei = "karte-4f372f837ff8930de3f9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -4166,7 +4166,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.ff4f5a02.definition",
             datei = "karte-3becee7589ee8532cdd5-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Rundung: \\lfloor\\cdot\\rceil\\vert_{\\mathbb Q}",
@@ -4175,7 +4175,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.ff4f5a02.definition-r",
             datei = "karte-bc25b6f9e7eeb16bf811-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Rundung: \\lfloor\\cdot\\rceil\\vert_{\\mathbb R}",
@@ -4184,7 +4184,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.ff4f5a02.definition-hyperr",
             datei = "karte-a18f0e3fa06916cd2f73-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Rundung: \\lfloor\\cdot\\rceil\\vert_{{}^*\\mathbb R}",
@@ -4193,7 +4193,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.ff4f5a02.definitionsbereich",
             datei = "karte-8c4166deb59d66e0baa9-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -4202,7 +4202,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.ff4f5a02.definitionsluecken",
             datei = "karte-5ebea5dcef4f01bf04e0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -4211,7 +4211,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.ff4f5a02.aequivalente",
             datei = "karte-7be7422d308a492f0c15-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -4220,7 +4220,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definition",
             datei = "karte-040c9e62f79927926c8e-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Sinus: \\sin\\vert_{\\mathbb N}",
@@ -4229,7 +4229,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definition-n0",
             datei = "karte-f6c5534f11f4e2498ff8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Sinus: \\sin\\vert_{\\mathbb N_0}",
@@ -4238,7 +4238,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definition-z",
             datei = "karte-e6e9498196cfaa706a99-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Sinus: \\sin\\vert_{\\mathbb Z}",
@@ -4247,7 +4247,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definition-q",
             datei = "karte-7434b6d1d40839ea2c01-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Sinus: \\sin\\vert_{\\mathbb Q}",
@@ -4256,7 +4256,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definition-r",
             datei = "karte-b37ca6923890ee3865a2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Sinus: \\sin\\vert_{\\mathbb R}",
@@ -4265,7 +4265,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definition-c",
             datei = "karte-12ea20a7075ac2a6fff4-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Sinus: \\sin\\vert_{\\mathbb C}",
@@ -4274,7 +4274,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definition-hyperr",
             datei = "karte-72645a8a36b361c7eafb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Sinus: \\sin\\vert_{{}^*\\mathbb R}",
@@ -4283,7 +4283,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definition-h",
             datei = "karte-8869fb63dbc0e1722489-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Sinus: \\sin\\vert_{\\mathbb H}",
@@ -4292,7 +4292,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definitionsbereich",
             datei = "karte-7955f0c96436e141e488-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -4301,7 +4301,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.definitionsluecken",
             datei = "karte-0078907744dc40910b2c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -4310,7 +4310,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.e0f895c0.aequivalente",
             datei = "karte-8dddae336ecd6b9d107d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -4319,7 +4319,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definition",
             datei = "karte-74094d5675d0bf956f1d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Subtraktion: -\\vert_{\\mathbb N}",
@@ -4328,7 +4328,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definition-n0",
             datei = "karte-866f0b2c211beb1edf64-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Subtraktion: -\\vert_{\\mathbb N_0}",
@@ -4337,7 +4337,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definition-z",
             datei = "karte-01bbd3c9917ddfec6478-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Subtraktion: -\\vert_{\\mathbb Z}",
@@ -4346,7 +4346,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definition-q",
             datei = "karte-49160ec7ad6656e99304-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Subtraktion: -\\vert_{\\mathbb Q}",
@@ -4355,7 +4355,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definition-r",
             datei = "karte-c00035c350aa26a5d8d2-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Subtraktion: -\\vert_{\\mathbb R}",
@@ -4364,7 +4364,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definition-c",
             datei = "karte-b2e0bab9e11e38bc1011-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Subtraktion: -\\vert_{\\mathbb C}",
@@ -4373,7 +4373,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definition-hyperr",
             datei = "karte-15a7ee9db72271194f93-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Subtraktion: -\\vert_{{}^*\\mathbb R}",
@@ -4382,7 +4382,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definition-h",
             datei = "karte-cf2f15a6f8e1a0a3d976-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Subtraktion: -\\vert_{\\mathbb H}",
@@ -4391,7 +4391,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definitionsbereich",
             datei = "karte-76bbb0c4fcb2bb539a6d-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -4400,7 +4400,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.definitionsluecken",
             datei = "karte-0ee424b147ea99bcf2a0-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -4409,7 +4409,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.bd80a22.aequivalente",
             datei = "karte-92139e89ddb6ff7be428-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -4418,7 +4418,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definition",
             datei = "karte-e44ade82aade8fe0cffb-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Wurzel: \\sqrt[{}]{}\\vert_{\\mathbb N}",
@@ -4427,7 +4427,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definition-n0",
             datei = "karte-4d53ffe084a5c9c5dca8-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Wurzel: \\sqrt[{}]{}\\vert_{\\mathbb N_0}",
@@ -4436,7 +4436,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definition-z",
             datei = "karte-1dfa6a5c2212e8d16a33-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Wurzel: \\sqrt[{}]{}\\vert_{\\mathbb Z}",
@@ -4445,7 +4445,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definition-q",
             datei = "karte-75219fb35a3db709b4ba-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Wurzel: \\sqrt[{}]{}\\vert_{\\mathbb Q}",
@@ -4454,7 +4454,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definition-r",
             datei = "karte-0952f1b56aac3e7cc401-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Wurzel: \\sqrt[{}]{}\\vert_{\\mathbb R}",
@@ -4463,7 +4463,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definition-c",
             datei = "karte-0a4f42b61d67fe44c68a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Wurzel: \\sqrt[{}]{}\\vert_{\\mathbb C}",
@@ -4472,7 +4472,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definition-hyperr",
             datei = "karte-66513ee79ff7d5811555-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Wurzel: \\sqrt[{}]{}\\vert_{{}^*\\mathbb R}",
@@ -4481,7 +4481,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definition-h",
             datei = "karte-e1e78f8d1d5cf6289449-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Wurzel: \\sqrt[{}]{}\\vert_{\\mathbb H}",
@@ -4490,7 +4490,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definitionsbereich",
             datei = "karte-d18f013a539b14dd4f21-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionsbereich",
@@ -4499,7 +4499,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.definitionsluecken",
             datei = "karte-834bd56fe5ea20f60e9a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Spezialfall,
             primär = false,
             titel = "Definitionslücken",
@@ -4508,7 +4508,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlenrechner.d084ee.aequivalente",
             datei = "karte-f9114fd57789f9b572aa-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Äquivalenz,
             primär = false,
             titel = "Äquivalente",
@@ -4517,7 +4517,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "konzept.zahlkonstante.f999937a.definition",
             datei = "karte-b77cee479c195d6f7d7a-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -4526,7 +4526,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.zeilenMethodeDifferentieren|Zeilenmethode differentieren|.9de9f42b.definition",
             datei = "karte-11b85a0dffa677cefade-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -4535,7 +4535,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.zeilenMethodeIntegrieren|Zeilenmethode integrieren|.64fa65e9.definition",
             datei = "karte-54e30bbf322ee24c92a3-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -4544,7 +4544,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.zeilenVektor|Zeilenvektor|festeEingänge=2;operatorAnzeige=wert.d383feee.definition",
             datei = "karte-63775e90c56824172eef-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -4553,7 +4553,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.äquivalenz|Äquivalenz|.a79be13.definition",
             datei = "karte-cd8dde822cfb7b99fc5c-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -4562,7 +4562,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.überOderGleichmenge|Über- oder Gleichmenge|.74cba5e2.definition",
             datei = "karte-f5b02e5a9e636fddfa13-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
@@ -4571,7 +4571,7 @@ object StatischeKonzeptKarten {
         WissensKartenReferenz.Asset(
             id = "mathematik.übermenge|Übermenge|.5c473e7d.definition",
             datei = "karte-9cce144e4c968f2af230-v7.json",
-            formatVersion = 7,
+            formatVersion = 10,
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",

@@ -3,9 +3,9 @@ package de.TeutonStudio.MathematikKnoten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 
 /** Verlorene Graphrollen werden erst in der gemeinsamen, bestätigbaren Vorschau bereinigt. */
-internal fun bereiteEndlicheMengeWechselVor(wechsel: JoinWechsel): JoinWechsel {
+internal fun bereiteEingangsRollenWechselVor(wechsel: JoinWechsel): JoinWechsel {
     val kandidat=wechsel.kandidat
-    if(kandidat.art!=ENDLICHE_MENGE_ART) return wechsel
+    if(kandidat.art!=ENDLICHE_MENGE_ART && !(kandidat.art==ZAHLENRECHNER_ART && kandidat.parameter[ZAHLENRECHNER_OPERATOR]==ErweiterterZahlenOperator.POLYNOM.stabileId)) return wechsel
     val alt=wechsel.karte.knoten.singleOrNull {it.id==kandidat.id} ?: return wechsel
     val neuRollen=kandidat.anschlüsse.filter {it.richtung==AnschlussRichtung.Eingang}.map {it.name}.toSet()
     val entfernt=alt.anschlüsse.filter {it.richtung==AnschlussRichtung.Eingang && it.name !in neuRollen}.map {it.name}.toSet()

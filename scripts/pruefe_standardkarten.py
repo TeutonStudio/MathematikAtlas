@@ -25,8 +25,8 @@ if not PACKAGE.is_file():
 data = json.loads(PACKAGE.read_text(encoding="utf-8"))
 if data.get("standardKartenFormatVersion") != 1:
     fail("standardKartenFormatVersion muss 1 sein")
-if data.get("targetCardFormatVersion") != 7:
-    fail("targetCardFormatVersion muss dem Kartenformat 7 entsprechen")
+if data.get("targetCardFormatVersion") != 10:
+    fail("targetCardFormatVersion muss dem Kartenformat 10 entsprechen")
 
 entries = data.get("entries", [])
 if not entries:
@@ -56,8 +56,8 @@ for entry in entries:
     source_id = entry["sourceId"]
     card_id = entry["cardId"]
     card = card_by_id[card_id]
-    if card.get("formatVersion") != 7:
-        fail(f"{source_id}: Kartenformat ist nicht 7")
+    if card.get("formatVersion") != 10:
+        fail(f"{source_id}: Kartenformat ist nicht 10")
     if card.get("version") != 1 or card.get("erstelltAm") != 0:
         fail(f"{source_id}: Quellkarte muss deterministisch als Version 1 mit erstelltAm=0 vorliegen")
     if entry.get("sourceHash") != canonical_hash(card):

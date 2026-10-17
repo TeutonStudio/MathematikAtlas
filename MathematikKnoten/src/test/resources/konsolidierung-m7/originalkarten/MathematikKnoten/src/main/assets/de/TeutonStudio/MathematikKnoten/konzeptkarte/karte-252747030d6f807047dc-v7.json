@@ -1,0 +1,444 @@
+{
+  "erstelltAm": 1785883810224,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-eingang-methode",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-eingang-methode-wert"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-methode-anwendung",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-eingang-indexmenge",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-eingang-indexmenge-wert"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-indexmenge-konstruktor",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor-anschluss-2"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-index-anwendung",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-eingang-methode",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-eingang-methode-wert"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-methode-zielmenge",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-methoden-zielmenge",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-methoden-zielmenge-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-methoden-zielmenge",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-methoden-zielmenge-anschluss-1"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-zielmenge-konstruktor",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor-anschluss-3"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-akkumulator-verknuepfung",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-verknuepfung",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-verknuepfung-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung-anschluss-2"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-anwendung-verknuepfung",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-verknuepfung",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-verknuepfung-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-verknuepfung",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-verknuepfung-anschluss-2"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-verknuepfung-definator",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-faltungsdefinator",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-faltungsdefinator-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-faltungsdefinator",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-faltungsdefinator-anschluss-1"
+      },
+      "id": "definition-iterierterSchnitt-schnitt-1-definator-ausgang",
+      "zu": {
+        "knotenId": "definition-iterierterSchnitt-schnitt-1-karten-ausgang",
+        "anschlussId": "definition-iterierterSchnitt-schnitt-1-karten-ausgang-anschluss-0"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Leere Indexmenge von Iterierter Schnitt",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 250,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-eingang-methode-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.methode",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "A",
+      "id": "definition-iterierterSchnitt-schnitt-1-eingang-methode",
+      "position": {
+        "x": 20,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.leereMenge",
+      "größe": {
+        "breite": 250,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-eingang-indexmenge-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Leere Menge",
+      "id": "definition-iterierterSchnitt-schnitt-1-eingang-indexmenge",
+      "position": {
+        "x": 20,
+        "y": 430
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.methodenZielmenge",
+      "größe": {
+        "breite": 250,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-methoden-zielmenge-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-methoden-zielmenge-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Methoden-Zielmenge",
+      "id": "definition-iterierterSchnitt-schnitt-1-methoden-zielmenge",
+      "position": {
+        "x": 310,
+        "y": 610
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.faltungskonstruktor",
+      "größe": {
+        "breite": 285,
+        "höhe": 145
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "indexmenge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "neutral",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "index",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor-anschluss-2",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "akkumulator",
+          "kante": "Rechts",
+          "artFolgtEingang": "neutral",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor-anschluss-3",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "faltung.paar": "definition-iterierterSchnitt-schnitt-1-faltung",
+        "faltung.akkumulatorName": "a",
+        "faltung.operator": "schnitt",
+        "faltung.indexName": "i"
+      },
+      "name": "Faltungskonstruktor",
+      "id": "definition-iterierterSchnitt-schnitt-1-faltungskonstruktor",
+      "position": {
+        "x": 590,
+        "y": 330
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.methodenAnwendung",
+      "größe": {
+        "breite": 265,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "argument",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "methodenAnwendung.ergebnisArt": "mathematik.menge"
+      },
+      "name": "Mengenmethode anwenden",
+      "id": "definition-iterierterSchnitt-schnitt-1-methoden-anwendung",
+      "position": {
+        "x": 920,
+        "y": 95
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.schnitt",
+      "größe": {
+        "breite": 230,
+        "höhe": 120
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-verknuepfung-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-verknuepfung-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-verknuepfung-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Schnitt",
+      "id": "definition-iterierterSchnitt-schnitt-1-verknuepfung",
+      "position": {
+        "x": 1260,
+        "y": 315
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.faltungsdefinator",
+      "größe": {
+        "breite": 285,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "nächsterAkkumulator",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-faltungsdefinator-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "artFolgtEingang": "nächsterAkkumulator",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-faltungsdefinator-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "faltung.paar": "definition-iterierterSchnitt-schnitt-1-faltung",
+        "faltung.operator": "schnitt"
+      },
+      "name": "Faltungsdefinator",
+      "id": "definition-iterierterSchnitt-schnitt-1-faltungsdefinator",
+      "position": {
+        "x": 1590,
+        "y": 315
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierterSchnitt-schnitt-1-karten-ausgang-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "menge"
+      },
+      "name": "Karten-Ausgang",
+      "id": "definition-iterierterSchnitt-schnitt-1-karten-ausgang",
+      "position": {
+        "x": 1920,
+        "y": 315
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.iterierterSchnitt|Iterierter Schnitt|.8fe9b12b.iterierter-schnitt-leere-indexmenge-0",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

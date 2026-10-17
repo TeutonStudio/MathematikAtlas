@@ -63,12 +63,11 @@ class KatalogMigrationSicherheitTest {
         assertNotNull(gesperrt.parameter[RECHNER_MIGRATION_DIAGNOSE])
         assertEquals(neu, neu.migrierePraedikatKnoten())
         val register = GesamterMathematikAuswerter.erzeugeRegister()
-        val direkt = assertNotNull(register.finde(gesperrt.art)).auswerten(
-            KnotenAuswertungsKontext(gesperrt, emptyMap(), RechenKontext()))
-        assertTrue(direkt.ausgaben.isEmpty())
-        assertTrue(direkt.fehler.orEmpty().startsWith("Migrationsdiagnose:"))
+        assertNull(register.finde(gesperrt.art))
+        val diagnose=assertNotNull(register.auswertungssperre(gesperrt))
+        assertTrue(diagnose.startsWith("Migrationsdiagnose:"))
         val graph = KartenAuswerter(register).auswerten(neu).knoten.getValue(gesperrt.id)
-        assertEquals(direkt.fehler, graph.fehler)
+        assertEquals(diagnose, graph.fehler)
         assertEquals(neu, MathematikKartenCodec.importiere(MathematikKartenCodec.schreibe(neu)))
     }
 

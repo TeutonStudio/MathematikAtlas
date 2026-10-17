@@ -41,6 +41,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.VektorRechnerOperator
 import de.TeutonStudio.MathematikRechenSystem.kern.ZahlAusdruck
 import de.TeutonStudio.MathematikRechenSystem.kern.ZeilenVektor
 import de.TeutonStudio.MathematikRechenSystem.kern.KartesischerKoordinatenVertrag
+import de.TeutonStudio.MathematikRechenSystem.kern.einheitsVektorWerte
 import java.math.BigInteger
 
 const val MENGEN_KNOTEN_ART = "mathematik.menge"
@@ -213,31 +214,10 @@ internal fun MathematikAuswerterRegister.registriereKonsolidierteKnoten() {
             eingänge = kontext.eingänge,
         )
     }
-    EinheitsvektorKnotenVorlagen.alle.forEach { vorlage ->
-        registriere(vorlage.art) { kontext -> einheitsvektorErgebnis(kontext, vorlage.art.endsWith("Zeile")) }
-    }
-    registriere(VektorRechner.KNOTEN_ART) { kontext ->
-        val operator = VektorRechnerOperator.entries.firstOrNull {
-            it.stabileId == kontext.knoten.parameter[VEKTOR_RECHNER_OPERATOR]
-        } ?: VektorRechnerOperator.SKALARPRODUKT
-        val quellen = listOf("links", "rechts").mapNotNull { name ->
-            kontext.eingänge[name]?.let { wert ->
-                vektorQuelle(wert.mathematischesObjekt("Vektorrechner-Eingang '$name'"))
-            }
-        }
-        val ergebnis = VektorRechner.erzeuge(VektorRechnerAnfrage(operator = operator, vektoren = quellen))
-        val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
-        when (ergebnis) {
-            is VektorRechnerErgebnis.ZahlWert -> KnotenAuswertungsErgebnis(
-                ausgaben = mapOf(VEKTOR_RECHNER_AUSGANG to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen)),
-                eingänge = kontext.eingänge,
-            )
-            is VektorRechnerErgebnis.VektorWert -> KnotenAuswertungsErgebnis(
-                ausgaben = mapOf(VEKTOR_RECHNER_AUSGANG to BedingterWert(ergebnis.wert, annahmen + ergebnis.bedingungen)),
-                eingänge = kontext.eingänge,
-            )
-            is VektorRechnerErgebnis.Ungueltig -> error(ergebnis.nachricht)
-        }
+    registriere("mathematik.einheitsSpalte") { kontext ->
+        val orientierung=kontext.knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: VEKTOR_ORIENTIERUNG_SPALTE
+        require(orientierung in setOf(VEKTOR_ORIENTIERUNG_SPALTE,VEKTOR_ORIENTIERUNG_ZEILE)) { "Ungültige Basisvektororientierung." }
+        einheitsvektorErgebnis(kontext,orientierung==VEKTOR_ORIENTIERUNG_ZEILE)
     }
 }
 
@@ -249,7 +229,7 @@ private fun einheitsvektorErgebnis(
     val dimension = kontext.natuerlicheGanzzahl(EINHEITSVEKTOR_DIMENSION, nullErlaubt = false)
     require(dimension > 0) { "Die Dimension muss positiv sein." }
     require(position < dimension) { "Die Dimension muss größer als die Position sein." }
-    val werte = List(dimension) { index -> if (index == position) RationaleZahl.Eins else RationaleZahl.Null }
+    val werte = einheitsVektorWerte(dimension, position + 1)
     val vektor: MathematischesObjekt = if (zeile) ZeilenVektor(werte) else SpaltenVektor(werte)
     return KnotenAuswertungsErgebnis(
         ausgaben = mapOf("vektor" to BedingterWert(vektor, kontext.eingänge.values.flatMap { it.annahmen }.toSet())),
@@ -267,38 +247,7 @@ private fun KnotenAuswertungsKontext.natuerlicheGanzzahl(name: String, nullErlau
     return wert
 }
 
-private fun vektorQuelle(objekt: MathematischesObjekt): VektorQuelle {
-    val werte: List<ZahlAusdruck>
-    val quelle: (KartesischerKoordinatenVertrag) -> VektorQuelle
-    when (objekt) {
-        is OrientierterVektor -> {
-            werte = objekt.werte
-            quelle = { vertrag -> VektorQuelle.Vektor(objekt, vertrag) }
-        }
-        is Tupel -> {
-            werte = objekt.elemente.mapIndexed { index, element ->
-                element as? ZahlAusdruck ?: error("Tupelkomponente ${index + 1} ist keine Zahl.")
-            }
-            quelle = { vertrag -> VektorQuelle.Koordinaten(objekt, vertrag) }
-        }
-        else -> error("Der Vektorrechner erwartet einen Vektor oder ein kartesisches Zahlentupel.")
-    }
-    require(werte.isNotEmpty()) { "Ein leerer Vektor ist für diese Operation nicht zulässig." }
-    val bereich = when {
-        werte.any { it is KomplexeZahl } -> FundamentalerZahlbereich.KOMPLEX
-        werte.all { it is RationaleZahl } -> FundamentalerZahlbereich.RATIONAL
-        else -> FundamentalerZahlbereich.REELL
-    }
-    return quelle(
-        KartesischerKoordinatenVertrag(
-            dimension = werte.size,
-            zahlbereich = bereich,
-            basisId = "standard",
-            koordinatensystemId = "kartesisch",
-            standardBasis = true,
-        ),
-    )
-}
+
 
 fun KartenDaten.migriereKonsolidierteKnoten(): KartenDaten = migriereHistorischeKnotenRollen { alt ->
     migriereMengenKnoten(alt) ?: migriereEinheitsvektor(alt) ?: migriereSkalarprodukt(alt) ?: alt
@@ -328,11 +277,14 @@ private fun migriereMengenKnoten(alt: KnotenDaten): KnotenDaten? {
 }
 
 private fun migriereEinheitsvektor(alt: KnotenDaten): KnotenDaten? {
-    val zeile = when (alt.art) {
+    val historischeZeile = when (alt.art) {
         "mathematik.einheitsZeile" -> true
         "mathematik.einheitsSpalte" -> false
         else -> return null
     }
+    val orientierung=alt.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: if(historischeZeile) VEKTOR_ORIENTIERUNG_ZEILE else VEKTOR_ORIENTIERUNG_SPALTE
+    require(orientierung in setOf(VEKTOR_ORIENTIERUNG_SPALTE,VEKTOR_ORIENTIERUNG_ZEILE)) { "Unbekannte Basisvektororientierung." }
+    val zeile=orientierung==VEKTOR_ORIENTIERUNG_ZEILE
     if (alt.anschlüsse.any { it.name == EINHEITSVEKTOR_POSITION } && alt.anschlüsse.any { it.name == EINHEITSVEKTOR_DIMENSION }) {
         return alt
     }
@@ -366,11 +318,13 @@ private fun migriereEinheitsvektor(alt: KnotenDaten): KnotenDaten? {
 private fun migriereSkalarprodukt(alt: KnotenDaten): KnotenDaten? {
     if (alt.art !in historischeSkalarproduktArten) return null
     prüfeHistorischeAnschlussForm(alt)
-    val rollen=mapOf("a" to "links","b" to "rechts")
     val eingänge=alt.anschlüsse.filter {it.richtung==AnschlussRichtung.Eingang}
+    val rollen=if(eingänge.map {it.name}.toSet()==setOf("links","rechts")) mapOf("links" to "links","rechts" to "rechts") else mapOf("a" to "links","b" to "rechts")
     require(eingänge.map {it.name}.toSet()==rollen.keys && eingänge.none {it.belegung==AnschlussBelegung.Mehrfach}) {"Die Skalarproduktrollen sind nicht eindeutig."}
     val ausgang=alt.anschlüsse.single {it.richtung==AnschlussRichtung.Ausgang}
-    eingänge.forEach {prüfeHistorischenPortTyp(it,setOf(MathematikAnschlussArten.Vektor.id))}
+    eingänge.forEach {prüfeHistorischenPortTyp(it,
+        if(rollen.keys==setOf("links","rechts")) setOf(MathematikAnschlussArten.Objekt.id,MathematikAnschlussArten.Vektor.id,MathematikAnschlussArten.Tupel.id)
+        else setOf(MathematikAnschlussArten.Vektor.id))}
     prüfeHistorischenPortTyp(ausgang,setOf(MathematikAnschlussArten.Zahl.id))
     require(ausgang.name=="wert") {"Unbekannte Skalarproduktausgangsrolle."}
     return alt.copy(art=VektorRechner.KNOTEN_ART,

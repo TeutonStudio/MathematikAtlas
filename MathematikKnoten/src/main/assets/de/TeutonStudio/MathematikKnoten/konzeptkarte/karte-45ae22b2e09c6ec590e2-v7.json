@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810214,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-0",
         "anschlussId": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-0-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-1",
         "anschlussId": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-1-wert"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-mathematik-mengenfilter-mengenfilter-0-regel",
         "anschlussId": "definition-mathematik-mengenfilter-mengenfilter-0-regel-2"
@@ -45,22 +48,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.menge",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "menge",
       "id": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-0",
@@ -76,22 +79,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.methode",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-1-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-1-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.methode",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "methode",
       "id": "definition-mathematik-mengenfilter-mengenfilter-0-eingang-1",
@@ -109,6 +112,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -116,9 +120,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-mathematik-mengenfilter-mengenfilter-0-regel-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -126,9 +132,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-mathematik-mengenfilter-mengenfilter-0-regel-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -136,6 +144,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-mathematik-mengenfilter-mengenfilter-0-regel-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -158,22 +167,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-mengenfilter-mengenfilter-0-ausgang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-mengenfilter-mengenfilter-0-ausgang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.menge",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "menge",
       "id": "definition-mathematik-mengenfilter-mengenfilter-0-ausgang-0",
@@ -190,6 +199,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

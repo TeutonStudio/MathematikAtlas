@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810245,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-zaehler",
         "anschlussId": "division-kz-k-zaehler-ausgang-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-zaehler",
         "anschlussId": "division-kz-k-zaehler-ausgang-wert"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-nenner",
         "anschlussId": "division-kz-k-nenner-ausgang-wert"
@@ -35,6 +38,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-realteil",
         "anschlussId": "division-kz-k-realteil-ausgang-wert"
@@ -46,6 +50,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-kehrwert",
         "anschlussId": "division-kz-k-kehrwert-ausgang-wert"
@@ -57,6 +62,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-imaginaerteil",
         "anschlussId": "division-kz-k-imaginaerteil-ausgang-wert"
@@ -68,6 +74,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-kehrwert",
         "anschlussId": "division-kz-k-kehrwert-ausgang-wert"
@@ -79,6 +86,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-real-quotient",
         "anschlussId": "division-kz-k-real-quotient-ausgang-wert"
@@ -90,6 +98,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-imaginaer-quotient",
         "anschlussId": "division-kz-k-imaginaer-quotient-ausgang-wert"
@@ -101,6 +110,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-tupel",
         "anschlussId": "division-kz-k-tupel-ausgang-tupel"
@@ -112,6 +122,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "division-kz-k-komplex",
         "anschlussId": "division-kz-k-komplex-ausgang-zahl"
@@ -133,20 +144,21 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "division-kz-k-zaehler-ausgang-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "division-kz-k-zaehler-ausgang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "name": "Zähler a ∈ ℂ∖ℝ"
+        "name": "Zähler a ∈ ℂ∖ℝ",
+        "schnittstelle.position": "0"
       },
       "name": "Karten-Eingang",
       "id": "division-kz-k-zaehler",
@@ -162,20 +174,21 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "division-kz-k-nenner-ausgang-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "division-kz-k-nenner-ausgang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "name": "Nenner b > 0"
+        "name": "Nenner b > 0",
+        "schnittstelle.position": "1"
       },
       "name": "Karten-Eingang",
       "id": "division-kz-k-nenner",
@@ -193,23 +206,35 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-k-realteil-eingang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": ["a"],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-k-realteil-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -236,23 +261,35 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-k-imaginaerteil-eingang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": ["a"],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-k-imaginaerteil-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -279,23 +316,35 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-k-kehrwert-eingang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": ["a"],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-k-kehrwert-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -322,33 +371,54 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-k-real-quotient-eingang-a",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-k-real-quotient-eingang-b",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-k-real-quotient-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -377,33 +447,54 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-k-imaginaer-quotient-eingang-a",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "division-kz-k-imaginaer-quotient-eingang-b",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-k-imaginaer-quotient-ausgang-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -432,6 +523,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": true,
@@ -439,9 +531,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "division-kz-k-tupel-eingang-a",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": true,
@@ -449,9 +543,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "division-kz-k-tupel-eingang-b",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -459,12 +555,13 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "division-kz-k-tupel-ausgang-tupel",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
-        "festeEingänge": "2",
-        "operatorAnzeige": "wert"
+        "operatorAnzeige": "wert",
+        "festeEingänge": "2"
       },
       "name": "Tupel",
       "id": "division-kz-k-tupel",
@@ -482,6 +579,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -489,36 +587,58 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "division-kz-k-komplex-eingang-tupel",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "b39ce560-7054-4ef4-a73f-8f264665656e",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": false,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "86ddd4ab-f22f-4d1e-b3de-44b83018071a",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "division-kz-k-komplex-ausgang-zahl",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -526,8 +646,8 @@
         "variable": "x",
         "komplexEingabe": "tupel",
         "gradWinkel": "false",
-        "gradAlsBogenmassAuswerten": "true",
         "modus": "kartesisch",
+        "gradAlsBogenmassAuswerten": "true",
         "operator": "zahl.komplexAusKartesisch"
       },
       "name": "Komplex aus kartesischer Form",
@@ -544,21 +664,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "division-kz-k-ausgang-eingang-wert",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "Ergebnis"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "division-kz-k-ausgang-eingang-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "Ergebnis"},
       "name": "Karten-Ausgang",
       "id": "division-kz-k-ausgang",
       "position": {
@@ -574,6 +692,6 @@
     "y": 0,
     "zoom": 0.65
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

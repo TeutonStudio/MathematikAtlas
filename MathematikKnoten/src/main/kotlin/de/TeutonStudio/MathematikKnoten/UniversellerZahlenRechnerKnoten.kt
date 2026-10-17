@@ -246,7 +246,7 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = migriereHisto
         alt.art==ZAHLENRECHNER_ART && alt.parameter.keys.any {it.startsWith("indexmethode.")}) return@migriereHistorischeKnotenRollen alt
     if (alt.art==ZAHLENRECHNER_ART) {
         val id=alt.parameter[ZAHLENRECHNER_OPERATOR]
-        require(UniversellerZahlenOperator.entries.any {it.stabileId==id}) {"Die Zahlenoperator-ID fehlt oder ist unbekannt: $id"}
+        require(id != null && RechnerOperatorRegistry.finde(RechnerFamilie.ZAHL,id) is RechnerOperatorAuflösung.Bekannt) {"Die Zahlenoperator-ID fehlt oder ist unbekannt: $id"}
         return@migriereHistorischeKnotenRollen alt
     }
     if (alt.art !in historischeZahlenRechnerArten) return@migriereHistorischeKnotenRollen alt
@@ -259,7 +259,7 @@ fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = migriereHisto
     val rollen:Map<String,String> = when {
         variadisch -> {
             require((eingänge.size>=2 || eingänge.singleOrNull()?.belegung==AnschlussBelegung.Mehrfach) && eingänge.map {it.reihenfolge}.distinct().size==eingänge.size) {"Die Operandenreihenfolge ist nicht eindeutig."}
-            require(eingänge.all {it.name.matches(Regex("[a-z]")) || it.dynamischErzeugt && it.name.isNotBlank()}) {"Unbekannte historische Operandenrolle."}
+            require(eingänge.withIndex().all {(index,p) -> p.name.matches(Regex("[a-z]")) || p.dynamischErzeugt && p.name.isNotBlank() || p.name=="input${index+1}" && p.kannSichErweitern && (alt.parameter["festeEingänge"]?.toIntOrNull() ?: 2)>=index+1}) {"Unbekannte historische Operandenrolle."}
             eingänge.mapIndexed {i,p->p.name to ('a'.code+i).toChar().toString()}.toMap()
         }
         alt.art=="mathematik.logarithmus" -> mapOf("basis" to "a","argument" to "b")
@@ -308,7 +308,7 @@ internal val universellerZahlenFachauswerter = de.TeutonStudio.MathematikKartenA
         val ausgabe = if (istGradSinus) UniverselleZahlenAusgabe(
             SinusGrad(kontext.eingänge["a"]?.objekt as? WinkelAusdruck ?: error("Sinus auf Grad erwartet einen Winkel.")),
             ZahlenRechnerBereich.REELL) else universellAuswerten(kontext, operator)
-        val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
+        val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet() + ausgabe.bedingungen
         val reelle = reelleVariablen(kontext.eingänge.values)
         val definition = ZahlenRechnerDefinition(operator, ausgabe.bereich)
         val methode = ausgabe.objekt as? Methode
@@ -341,6 +341,7 @@ private data class UniverselleZahlenAusgabe(
     val latex: String? = null,
     val schritte: List<UmformungsSchritt> = emptyList(),
     val hinweise: List<String> = emptyList(),
+    val bedingungen: Set<Aussage> = emptySet(),
 )
 
 private fun universellAuswerten(
@@ -389,16 +390,17 @@ private fun universellAuswerten(
     val skalar = universellSkalarAuswerten(k.copy(eingänge = skalarEingänge), operator)
     val vorschrift = skalar.objekt as? ZahlAusdruck
         ?: error("Der punktweise Operator '${operator.titel}' lieferte keine Zahlvorschrift.")
-    val bedingungen = punktweiseDefinitionsBedingungen(operator, vorbereitung.operanden, skalar.bereich)
+    val bedingungen = punktweiseDefinitionsBedingungen(operator, vorbereitung.operanden, skalar.bereich, "c" in k.eingänge)
     val methode = vorbereitung.erzeugeMethode(
         name = punktweiserMethodenName(operator, punktweiseOperanden),
         vorschrift = vorschrift,
         zielMenge = skalar.bereich.alsMenge(),
-        definitionsBedingungen = bedingungen,
+        definitionsBedingungen = (bedingungen + skalar.bedingungen).distinct(),
     )
     return skalar.copy(
         objekt = methode,
         latex = null,
+        bedingungen = emptySet(),
         hinweise = buildList {
             add("Signatur: ${methode.mathematischeMethodenSignatur().definitionsRaum.zuLatex()} → ${methode.zielMenge.zuLatex()}")
             add("Gemeinsamer Wertevorrat: ${methode.mathematischeMethodenSignatur().definitionsRaum.zuLatex()}")
@@ -467,33 +469,20 @@ private fun universellSkalarAuswerten(
         UniversellerZahlenOperator.DIVISION -> {
             val zaehler = zahl("a")
             val nenner = zahl("b")
-            if (nenner == RationaleZahl.Null) {
-                val ersatz = k.eingänge["c"]?.objekt as? ZahlAusdruck
-                    ?: error("Division durch null ist ohne verbundenen Ersatzwert nicht definiert.")
-                return UniverselleZahlenAusgabe(
-                    ersatz,
-                    inferiereZahlenRechnerBereich(ersatz, k.eingänge["c"]?.werteVorrat),
-                )
-            }
             val ziel = if (gemeinsam.rang < ZahlenRechnerBereich.RATIONAL.rang) {
                 ZahlenRechnerBereich.RATIONAL
             } else {
                 gemeinsam
             }
-            UniverselleZahlenAusgabe(
-                Division(zaehler, nenner),
-                ziel,
-                intelligenteDivisionLatex(zaehler, nenner),
-            )
+            val anwendung=divisionMitNullersatz(zaehler,nenner,k.eingänge["c"]?.objekt as? ZahlAusdruck,
+                k.rechenKontext.copy(annahmen=k.rechenKontext.annahmen+k.eingänge.values.flatMap {it.annahmen}))
+            UniverselleZahlenAusgabe(anwendung.wert,ziel,bedingungen=anwendung.bedingungen)
         }
         UniversellerZahlenOperator.KEHRWERT -> {
             val argument = zahl("a")
             require(argument != RationaleZahl.Null) { "Der Kehrwert von null ist nicht definiert." }
-            UniverselleZahlenAusgabe(
-                Division(RationaleZahl.Eins, argument),
-                gemeinsam,
-                intelligenteDivisionLatex(RationaleZahl.Eins, argument),
-            )
+            val anwendung=divisionMitNullersatz(RationaleZahl.Eins,argument,null,k.rechenKontext)
+            UniverselleZahlenAusgabe(anwendung.wert,gemeinsam,bedingungen=anwendung.bedingungen)
         }
         UniversellerZahlenOperator.POTENZ -> UniverselleZahlenAusgabe(
             Potenz(zahl("a"), zahl("b")),
@@ -751,8 +740,9 @@ private fun punktweiseDefinitionsBedingungen(
     operator: UniversellerZahlenOperator,
     operanden: Map<String, ZahlAusdruck>,
     zielBereich: ZahlenRechnerBereich,
+    hatNullersatz: Boolean,
 ): List<Aussage> = when (operator) {
-    UniversellerZahlenOperator.DIVISION -> listOf(
+    UniversellerZahlenOperator.DIVISION -> if(hatNullersatz) emptyList() else listOf(
         Ungleichheit(operanden.getValue("b"), RationaleZahl.Null),
     )
     UniversellerZahlenOperator.KEHRWERT -> listOf(

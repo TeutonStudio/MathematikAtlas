@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810216,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-mathematik-visualisierung-visualisierung-0-eingang-0",
         "anschlussId": "definition-mathematik-visualisierung-visualisierung-0-eingang-0-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-mathematik-visualisierung-visualisierung-0-regel",
         "anschlussId": "definition-mathematik-visualisierung-visualisierung-0-regel-1"
@@ -34,22 +36,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-visualisierung-visualisierung-0-eingang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-visualisierung-visualisierung-0-eingang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.menge",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "menge",
       "id": "definition-mathematik-visualisierung-visualisierung-0-eingang-0",
@@ -67,6 +69,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -74,9 +77,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-mathematik-visualisierung-visualisierung-0-regel-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -84,6 +89,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-mathematik-visualisierung-visualisierung-0-regel-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -106,22 +112,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-visualisierung-visualisierung-0-ausgang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-visualisierung-visualisierung-0-ausgang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.menge",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "menge",
       "id": "definition-mathematik-visualisierung-visualisierung-0-ausgang-0",
@@ -138,6 +144,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

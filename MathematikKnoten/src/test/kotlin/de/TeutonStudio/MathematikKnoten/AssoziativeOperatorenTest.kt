@@ -23,28 +23,10 @@ import kotlin.test.assertTrue
 
 class AssoziativeOperatorenTest {
     @Test
-    fun `unverbundene Additionsanschluesse werden zu eindeutigen Unbekannten`() {
-        val addition = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero)
-        val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(addition.art)!!
-
-        val ergebnis = auswerter.auswerten(KnotenAuswertungsKontext(addition, emptyMap(), RechenKontext()))
-
-        assertEquals(
-            "\\mathrm{Addition}_{\\mathrm{eingabe}_{1}} + \\mathrm{Addition}_{\\mathrm{eingabe}_{2}}",
-            ergebnis.ausgaben.getValue("wert").objekt.zuLatex(),
-        )
-    }
-
-    @Test
-    fun `gleiche Anschlusspositionen unterschiedlicher Knoten bleiben verschiedene Unbekannte`() {
-        val erster = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero)
-        val zweiter = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero)
-        val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(erster.art)!!
-
-        val erstesErgebnis = auswerter.auswerten(KnotenAuswertungsKontext(erster, emptyMap(), RechenKontext()))
-        val zweitesErgebnis = auswerter.auswerten(KnotenAuswertungsKontext(zweiter, emptyMap(), RechenKontext()))
-
-        check(erstesErgebnis.ausgaben.getValue("wert").objekt != zweitesErgebnis.ausgaben.getValue("wert").objekt)
+    fun `unvollstaendige Altaddition erfindet keine mathematischen Symbolquellen`() {
+        val addition=MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero)
+        val auswerter=GesamterMathematikAuswerter.erzeugeRegister().findeNachMigration(addition.art)
+        assertFailsWith<IllegalArgumentException> {auswerter.auswerten(KnotenAuswertungsKontext(addition,emptyMap(),RechenKontext()))}
     }
 
     @Test
@@ -63,7 +45,7 @@ class AssoziativeOperatorenTest {
     @Test
     fun `Extremwert akzeptiert nachweisbar reelle Variablen und lehnt komplexe Werte ab`() {
         val knoten = MathematikKnotenVorlagen.Maximum.erzeuge(GraphPunkt.Zero)
-        val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
+        val auswerter = StandardMathematikAuswerter.erzeugeRegister().findeNachMigration(knoten.art)
         val ergebnis = auswerter.auswerten(KnotenAuswertungsKontext(
             knoten,
             mapOf(
@@ -92,7 +74,7 @@ class AssoziativeOperatorenTest {
         val addition = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt.Zero)
         val maximum = MathematikKnotenVorlagen.Maximum.erzeuge(GraphPunkt.Zero)
         val register = StandardMathematikAuswerter.erzeugeRegister()
-        val summe = register.finde(addition.art)!!.auswerten(KnotenAuswertungsKontext(
+        val summe = register.findeNachMigration(addition.art).auswerten(KnotenAuswertungsKontext(
             addition,
             mapOf(
                 "a" to BedingterWert(Variable("x"), werteVorrat = ReelleZahlen),
@@ -101,7 +83,7 @@ class AssoziativeOperatorenTest {
             RechenKontext(),
         )).ausgaben.getValue("wert")
 
-        val ergebnis = register.finde(maximum.art)!!.auswerten(KnotenAuswertungsKontext(
+        val ergebnis = register.findeNachMigration(maximum.art).auswerten(KnotenAuswertungsKontext(
             maximum,
             mapOf("a" to summe, "b" to BedingterWert(RationaleZahl.von(3))),
             RechenKontext(),
@@ -113,7 +95,7 @@ class AssoziativeOperatorenTest {
     @Test
     fun `Extremwert lehnt Division durch null trotz mitgeführter Annahme ab`() {
         val knoten = MathematikKnotenVorlagen.Maximum.erzeuge(GraphPunkt.Zero)
-        val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
+        val auswerter = StandardMathematikAuswerter.erzeugeRegister().findeNachMigration(knoten.art)
         val undefiniert = BedingterWert(
             Division(RationaleZahl.Eins, RationaleZahl.Null),
             setOf(de.TeutonStudio.MathematikRechenSystem.kern.Ungleichheit(RationaleZahl.Null, RationaleZahl.Null)),

@@ -80,7 +80,7 @@ fun GebundeneFormel.werteMitOperationsKontextAus(bindungen: Map<String, Mathemat
                             inferiereZahlenWertevorrat(zahl, vorräte).fundamentalerZahlbereichOderNull()
                                 ?: error("Zahlbereich nicht bestimmbar."))
                     }
-                    when (val ergebnis = ZahlenRechner.erzeuge(op, eingaben)) {
+                    when (val ergebnis = ZahlenRechner.erzeuge(op, eingaben,RechenKontext(annahmen=bedingungen.toSet()))) {
                         is ZahlenRechnerErgebnis.Wert -> { bedingungen += ergebnis.bedingungen; ergebnis.ausdruck }
                         is ZahlenRechnerErgebnis.Bedingt -> { bedingungen += ergebnis.bedingungen; ergebnis.ausdruck }
                         is ZahlenRechnerErgebnis.Ungueltig -> error(ergebnis.nachricht)

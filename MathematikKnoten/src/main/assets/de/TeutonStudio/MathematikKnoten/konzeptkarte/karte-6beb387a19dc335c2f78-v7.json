@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810529,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-0",
         "anschlussId": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-0-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-1",
         "anschlussId": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-1-wert"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-regel",
         "anschlussId": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-regel-2"
@@ -45,30 +48,30 @@
         "breite": 280,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.tensor",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "zulässigeArten": [
-            "mathematik.matrix",
-            "mathematik.tensor",
-            "mathematik.tupel",
-            "mathematik.vektor",
-            "mathematik.vektor.spalte",
-            "mathematik.vektor.zeile",
-            "mathematik.zahl"
-          ],
-          "dynamischErzeugt": false,
-          "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.tensor",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "zulässigeArten": [
+          "mathematik.matrix",
+          "mathematik.tensor",
+          "mathematik.tupel",
+          "mathematik.vektor",
+          "mathematik.vektor.spalte",
+          "mathematik.vektor.zeile",
+          "mathematik.zahl"
+        ],
+        "dynamischErzeugt": false,
+        "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "typ": "mathematik.tensor",
-        "rolle": "links"
+        "rolle": "links",
+        "typ": "mathematik.tensor"
       },
       "name": "links",
       "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-0",
@@ -84,30 +87,30 @@
         "breite": 280,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.tensor",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "zulässigeArten": [
-            "mathematik.matrix",
-            "mathematik.tensor",
-            "mathematik.tupel",
-            "mathematik.vektor",
-            "mathematik.vektor.spalte",
-            "mathematik.vektor.zeile",
-            "mathematik.zahl"
-          ],
-          "dynamischErzeugt": false,
-          "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-1-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.tensor",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "zulässigeArten": [
+          "mathematik.matrix",
+          "mathematik.tensor",
+          "mathematik.tupel",
+          "mathematik.vektor",
+          "mathematik.vektor.spalte",
+          "mathematik.vektor.zeile",
+          "mathematik.zahl"
+        ],
+        "dynamischErzeugt": false,
+        "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-1-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "typ": "mathematik.tensor",
-        "rolle": "rechts"
+        "rolle": "rechts",
+        "typ": "mathematik.tensor"
       },
       "name": "rechts",
       "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-eingang-1",
@@ -125,9 +128,10 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.tensor",
-          "kannSichErweitern": false,
+          "kannSichErweitern": true,
           "name": "links",
           "kante": "Links",
           "zulässigeArten": [
@@ -141,12 +145,14 @@
           ],
           "dynamischErzeugt": false,
           "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-regel-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.tensor",
-          "kannSichErweitern": false,
+          "kannSichErweitern": true,
           "name": "rechts",
           "kante": "Links",
           "zulässigeArten": [
@@ -160,9 +166,11 @@
           ],
           "dynamischErzeugt": false,
           "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-regel-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.tensor",
           "kannSichErweitern": false,
@@ -170,6 +178,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-regel-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -193,21 +202,21 @@
         "breite": 280,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.tensor",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-ausgang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.tensor",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-ausgang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
-        "typ": "mathematik.tensor",
-        "rolle": "wert"
+        "rolle": "wert",
+        "typ": "mathematik.tensor"
       },
       "name": "wert",
       "id": "definition-tensor-export-mathematik-tensorrechner-operator-tensor-addition-tensorrechner-0-ausgang-0",
@@ -224,6 +233,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

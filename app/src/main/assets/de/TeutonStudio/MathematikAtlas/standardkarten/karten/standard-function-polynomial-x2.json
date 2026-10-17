@@ -1,1 +1,365 @@
-{"formatVersion":7,"id":"standard.function.polynomial.x2","name":"Quadratische Funktion x²","version":1,"erstelltAm":0,"archiviert":false,"ansicht":{"x":40,"y":40,"zoom":0.72},"knoten":[{"id":"standard-function-polynomial-x2-x","art":"mathematik.variable","name":"x","position":{"x":50,"y":160},"größe":{"breite":190,"höhe":102},"parameter":{"name":"x","werteVorrat":"R"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-polynomial-x2-x-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-polynomial-x2-exp","art":"mathematik.zahl","name":"2","position":{"x":50,"y":330},"größe":{"breite":180,"höhe":92},"parameter":{"wert":"2"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-polynomial-x2-exp-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-polynomial-x2-pow","art":"mathematik.potenz","name":"Potenz","position":{"x":340,"y":210},"größe":{"breite":210,"höhe":110},"parameter":{},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-polynomial-x2-pow-b","name":"basis","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false},{"id":"standard-function-polynomial-x2-pow-x","name":"exponent","richtung":"Eingang","kante":"Links","art":"mathematik.zahl","reihenfolge":1,"kannSichErweitern":false,"dynamischErzeugt":false},{"id":"standard-function-polynomial-x2-pow-o","name":"wert","richtung":"Ausgang","kante":"Rechts","art":"mathematik.zahl","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-polynomial-x2-tm","art":"mathematik.termZuMethode","name":"Term zu Methode","position":{"x":620,"y":210},"größe":{"breite":265,"höhe":135},"parameter":{"name":"f","argumentReihenfolge":"x"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-polynomial-x2-tm-i","name":"term","richtung":"Eingang","kante":"Links","art":"mathematik.objekt","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false},{"id":"standard-function-polynomial-x2-tm-o","name":"methode","richtung":"Ausgang","kante":"Rechts","art":"mathematik.methode","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-polynomial-x2-out","art":"mathematik.kartenAusgang","name":"Karten-Ausgang","position":{"x":930,"y":210},"größe":{"breite":210,"höhe":100},"parameter":{"name":"methode"},"eigenschaften":{},"anschlüsse":[{"id":"standard-function-polynomial-x2-out-i","name":"wert","richtung":"Eingang","kante":"Links","art":"mathematik.methode","reihenfolge":0,"kannSichErweitern":false,"dynamischErzeugt":false}]},{"id":"standard-function-polynomial-x2-note-note","art":"karte.notiz","name":"Erwartetes Ergebnis","position":{"x":760,"y":420},"größe":{"breite":560,"höhe":220},"parameter":{"text":"Erwartetes Ergebnis\n\nf: ℝ → ℝ\nx ↦ x²","textAusrichtung":"links","schriftgrößeSp":"16"},"eigenschaften":{},"anschlüsse":[]}],"verbindungen":[{"id":"standard-function-polynomial-x2-e1","von":{"knotenId":"standard-function-polynomial-x2-x","anschlussId":"standard-function-polynomial-x2-x-o"},"zu":{"knotenId":"standard-function-polynomial-x2-pow","anschlussId":"standard-function-polynomial-x2-pow-b"}},{"id":"standard-function-polynomial-x2-e2","von":{"knotenId":"standard-function-polynomial-x2-exp","anschlussId":"standard-function-polynomial-x2-exp-o"},"zu":{"knotenId":"standard-function-polynomial-x2-pow","anschlussId":"standard-function-polynomial-x2-pow-x"}},{"id":"standard-function-polynomial-x2-e3","von":{"knotenId":"standard-function-polynomial-x2-pow","anschlussId":"standard-function-polynomial-x2-pow-o"},"zu":{"knotenId":"standard-function-polynomial-x2-tm","anschlussId":"standard-function-polynomial-x2-tm-i"}},{"id":"standard-function-polynomial-x2-e4","von":{"knotenId":"standard-function-polynomial-x2-tm","anschlussId":"standard-function-polynomial-x2-tm-o"},"zu":{"knotenId":"standard-function-polynomial-x2-out","anschlussId":"standard-function-polynomial-x2-out-i"}}],"visuelleGruppen":[]}
+{
+  "erstelltAm": 0,
+  "verbindungen": [
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-polynomial-x2-x",
+        "anschlussId": "standard-function-polynomial-x2-x-o"
+      },
+      "id": "standard-function-polynomial-x2-e1",
+      "zu": {
+        "knotenId": "standard-function-polynomial-x2-pow",
+        "anschlussId": "standard-function-polynomial-x2-pow-b"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-polynomial-x2-exp",
+        "anschlussId": "standard-function-polynomial-x2-exp-o"
+      },
+      "id": "standard-function-polynomial-x2-e2",
+      "zu": {
+        "knotenId": "standard-function-polynomial-x2-pow",
+        "anschlussId": "standard-function-polynomial-x2-pow-x"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-polynomial-x2-pow",
+        "anschlussId": "standard-function-polynomial-x2-pow-o"
+      },
+      "id": "standard-function-polynomial-x2-e3",
+      "zu": {
+        "knotenId": "standard-function-polynomial-x2-tm",
+        "anschlussId": "standard-function-polynomial-x2-tm-i"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-polynomial-x2-tm",
+        "anschlussId": "standard-function-polynomial-x2-tm-o"
+      },
+      "id": "standard-function-polynomial-x2-e4",
+      "zu": {
+        "knotenId": "standard-function-polynomial-x2-out",
+        "anschlussId": "standard-function-polynomial-x2-out-i"
+      }
+    },
+    {
+      "eingangsReihenfolge": 0,
+      "von": {
+        "knotenId": "standard-function-polynomial-x2-x:migration-grundraum",
+        "anschlussId": "standard-function-polynomial-x2-x:migration-grundraum:Ausgang:menge"
+      },
+      "id": "standard-function-polynomial-x2-x:migration-grundraum:verbindung",
+      "zu": {
+        "knotenId": "standard-function-polynomial-x2-x",
+        "anschlussId": "standard-function-polynomial-x2-x:grundraum"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Quadratische Funktion x²",
+  "knoten": [
+    {
+      "art": "mathematik.variable",
+      "größe": {
+        "breite": 190,
+        "höhe": 102
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "vertrag": {"typ": {
+            "art": "atom",
+            "id": "mathematik.zahl.reell"
+          }},
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "standard-function-polynomial-x2-x-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "grundraum",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "standard-function-polynomial-x2-x:grundraum",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "x",
+        "werteVorrat": "R"
+      },
+      "name": "x",
+      "id": "standard-function-polynomial-x2-x",
+      "position": {
+        "x": 50,
+        "y": 160
+      },
+      "eigenschaften": {"variable.grundraumVertrag": {
+        "wert": "1",
+        "typ": "text"
+      }}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "standard-function-polynomial-x2-exp-o",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"wert": "2"},
+      "name": "2",
+      "id": "standard-function-polynomial-x2-exp",
+      "position": {
+        "x": 50,
+        "y": 330
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "standard-function-polynomial-x2-pow-b",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "atlas.wert",
+          "kannSichErweitern": false,
+          "name": "b",
+          "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
+          "dynamischErzeugt": false,
+          "id": "standard-function-polynomial-x2-pow-x",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
+          "id": "standard-function-polynomial-x2-pow-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.potenz"
+      },
+      "name": "Potenz",
+      "id": "standard-function-polynomial-x2-pow",
+      "position": {
+        "x": 340,
+        "y": 210
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.termZuMethode",
+      "größe": {
+        "breite": 265,
+        "höhe": 135
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "term",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "standard-function-polynomial-x2-tm-i",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "standard-function-polynomial-x2-tm-o",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "f",
+        "argumentReihenfolge": "x"
+      },
+      "name": "Term zu Methode",
+      "id": "standard-function-polynomial-x2-tm",
+      "position": {
+        "x": 620,
+        "y": 210
+      },
+      "eigenschaften": {"atlas.darstellungsform": {
+        "wert": "adapter",
+        "typ": "text"
+      }}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "standard-function-polynomial-x2-out-i",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "methode"},
+      "name": "Karten-Ausgang",
+      "id": "standard-function-polynomial-x2-out",
+      "position": {
+        "x": 930,
+        "y": 210
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "karte.notiz",
+      "größe": {
+        "breite": 560,
+        "höhe": 220
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "textAusrichtung": "links",
+        "schriftgrößeSp": "16",
+        "text": "Erwartetes Ergebnis\n\nf: ℝ → ℝ\nx ↦ x²"
+      },
+      "name": "Erwartetes Ergebnis",
+      "id": "standard-function-polynomial-x2-note-note",
+      "position": {
+        "x": 760,
+        "y": 420
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.menge",
+      "größe": {
+        "breite": 230,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "standard-function-polynomial-x2-x:migration-grundraum:Eingang:dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "standard-function-polynomial-x2-x:migration-grundraum:Ausgang:menge",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {"mengeAuswahl": "R"},
+      "name": "Grundraum · x",
+      "id": "standard-function-polynomial-x2-x:migration-grundraum",
+      "position": {
+        "x": -290,
+        "y": 160
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "standard.function.polynomial.x2",
+  "ansicht": {
+    "x": 40,
+    "y": 40,
+    "zoom": 0.72
+  },
+  "formatVersion": 10,
+  "version": 1
+}

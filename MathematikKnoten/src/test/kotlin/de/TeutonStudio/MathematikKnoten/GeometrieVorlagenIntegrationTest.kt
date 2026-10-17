@@ -11,7 +11,10 @@ class GeometrieVorlagenIntegrationTest {
         assertEquals(arten.size, arten.toSet().size, "Geometrie-Knotenarten müssen eindeutig sein.")
 
         val register = GesamterMathematikAuswerter.erzeugeRegister()
-        assertEquals(emptyList(), arten.filter { register.finde(it) == null }, "Jede Geometrievorlage benötigt einen Auswerter.")
+        GeometrieKnotenVorlagen.alle.forEach {v ->
+            val k=MathematikKartenMigrationen.vorSpeichern(KartenDaten(name="Geometrie",knoten=listOf(v.erzeuge(GraphPunkt.Zero)))).knoten.single()
+            assertNull(k.parameter[RECHNER_MIGRATION_DIAGNOSE]);assertNotNull(register.finde(k.art))
+        }
     }
 
     @Test

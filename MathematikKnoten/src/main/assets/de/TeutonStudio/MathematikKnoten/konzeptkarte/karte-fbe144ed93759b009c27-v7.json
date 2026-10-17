@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810220,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-methode",
         "anschlussId": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-methode-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-indexmenge",
         "anschlussId": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-indexmenge-wert"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor",
         "anschlussId": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor-anschluss-2"
@@ -35,6 +38,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-konjunktion-2-neutral",
         "anschlussId": "definition-iterierteAussagenverknüpfung-konjunktion-2-neutral-anschluss-0"
@@ -46,6 +50,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor",
         "anschlussId": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor-anschluss-3"
@@ -57,6 +62,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-konjunktion-2-methoden-anwendung",
         "anschlussId": "definition-iterierteAussagenverknüpfung-konjunktion-2-methoden-anwendung-anschluss-2"
@@ -68,6 +74,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-konjunktion-2-verknuepfung",
         "anschlussId": "definition-iterierteAussagenverknüpfung-konjunktion-2-verknuepfung-anschluss-2"
@@ -79,6 +86,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungsdefinator",
         "anschlussId": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungsdefinator-anschluss-1"
@@ -100,22 +108,22 @@
         "breite": 250,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.methode",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-methode-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-methode-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.methode",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "P",
       "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-methode",
@@ -131,18 +139,18 @@
         "breite": 250,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "menge",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-indexmenge-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "menge",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-eingang-indexmenge-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "elementKonfiguration": "v2:bWF0aGVtYXRpay56YWhs|z:c3RhbmRhcmQtMQ:bWF0aGVtYXRpay56YWhs:MQ|z:c3RhbmRhcmQtMg:bWF0aGVtYXRpay56YWhs:Mg|z:c3RhbmRhcmQtMw:bWF0aGVtYXRpay56YWhs:Mw",
         "elemente": "1,2,3"
@@ -161,18 +169,18 @@
         "breite": 180,
         "höhe": 90
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.aussage",
-          "kannSichErweitern": false,
-          "name": "aussage",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-neutral-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.aussage",
+        "kannSichErweitern": false,
+        "name": "aussage",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-neutral-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {},
       "name": "Wahr",
       "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-neutral",
@@ -190,6 +198,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -197,9 +206,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -207,9 +218,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -217,9 +230,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -228,14 +243,15 @@
           "artFolgtEingang": "neutral",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor-anschluss-3",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
         "faltung.paar": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltung",
         "faltung.akkumulatorName": "a",
-        "faltung.operator": "konjunktion",
-        "faltung.indexName": "i"
+        "faltung.indexName": "i",
+        "faltung.operator": "konjunktion"
       },
       "name": "Faltungskonstruktor",
       "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungskonstruktor",
@@ -246,13 +262,14 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.methodenAnwendung",
+      "art": "mathematik.methodeAufrufen",
       "größe": {
         "breite": 265,
         "höhe": 115
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -260,9 +277,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-methoden-anwendung-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -270,9 +289,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-methoden-anwendung-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -280,11 +301,16 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-methoden-anwendung-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
-        "methodenAnwendung.ergebnisArt": "mathematik.aussage"
+        "methodenAufruf.argumentprojektion": "separiert",
+        "methodenAufruf.projektionFest": "true",
+        "methodenAnwendung.ergebnisArt": "mathematik.aussage",
+        "methodenAufruf.ergebnisprojektion": "direkt",
+        "festeEingänge": "1"
       },
       "name": "Aussagenmethode anwenden",
       "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-methoden-anwendung",
@@ -295,46 +321,68 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.konjunktion",
+      "art": "mathematik.aussagensatz",
       "größe": {
         "breite": 230,
         "höhe": 115
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.aussage",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.aussage",
+            "mathematik.methode"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-verknuepfung-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.aussage",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.aussage",
+            "mathematik.methode"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-verknuepfung-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
-          "name": "aussage",
+          "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-verknuepfung-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
+        "operatorAnzeige": "wert",
         "festeEingänge": "2",
-        "operatorAnzeige": "wert"
+        "operator": "aussage.konjunktion"
       },
       "name": "Konjunktion",
       "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-verknuepfung",
@@ -352,6 +400,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -359,9 +408,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungsdefinator-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -370,6 +421,7 @@
           "artFolgtEingang": "nächsterAkkumulator",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-faltungsdefinator-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -391,21 +443,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.aussage",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-karten-ausgang-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "aussage"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.aussage",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-karten-ausgang-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "aussage"},
       "name": "Karten-Ausgang",
       "id": "definition-iterierteAussagenverknüpfung-konjunktion-2-karten-ausgang",
       "position": {
@@ -421,6 +471,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

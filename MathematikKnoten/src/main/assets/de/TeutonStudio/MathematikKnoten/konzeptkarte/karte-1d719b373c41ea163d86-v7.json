@@ -1,18 +1,17 @@
 {
   "erstelltAm": 1785883810207,
-  "verbindungen": [
-    {
-      "von": {
-        "knotenId": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-regel",
-        "anschlussId": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-regel-0"
-      },
-      "id": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-a-0",
-      "zu": {
-        "knotenId": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-ausgang-0",
-        "anschlussId": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-ausgang-0-wert"
-      }
+  "verbindungen": [{
+    "eingangsReihenfolge": 0,
+    "von": {
+      "knotenId": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-regel",
+      "anschlussId": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-regel-0"
+    },
+    "id": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-a-0",
+    "zu": {
+      "knotenId": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-ausgang-0",
+      "anschlussId": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-ausgang-0-wert"
     }
-  ],
+  }],
   "visuelleGruppen": [],
   "archiviert": false,
   "name": "Definition von Allgemeiner Parameter",
@@ -23,18 +22,18 @@
         "breite": 390,
         "höhe": 150
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.objekt",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-regel-0",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.objekt",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-regel-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "knotenArt": "mathematik.allgemeinerParameter",
         "regel": "Freier, nicht auf Zahlterme beschränkter Parameter für allgemeine Methoden.",
@@ -54,22 +53,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.objekt",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-ausgang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.objekt",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-ausgang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.objekt",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "wert",
       "id": "definition-mathematik-allgemeinerparameter-allgemeiner-parameter-0-ausgang-0",
@@ -86,6 +85,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

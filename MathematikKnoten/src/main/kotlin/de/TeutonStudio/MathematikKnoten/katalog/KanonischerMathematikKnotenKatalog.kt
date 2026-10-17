@@ -61,7 +61,7 @@ object KanonischerMathematikKnotenKatalog {
                 VektorOrientierungsVorlagen.alle.flatMap { v ->
                     if (v.art in HISTORISCHE_METHODEN_ANALYSIS || v.art in setOf("mathematik.kreuzproduktSpalte","mathematik.tupelZuSpalte")) listOf(v, v.let { val k=konfiguriereOrientierungsKnoten(it.erzeuge(GraphPunkt.Zero),VEKTOR_ORIENTIERUNG_ZEILE); it.copy(anschlüsse=k.anschlüsse,standardParameter=k.parameter) }) else listOf(v)
                 } +
-                listOf(MathematikKnotenVorlagen.Kleiner, MathematikKnotenVorlagen.KleinerGleich, MathematikKnotenVorlagen.Größer, MathematikKnotenVorlagen.GrößerGleich) +
+                listOf(MathematikKnotenVorlagen.VektorZuPolynom, MathematikKnotenVorlagen.Kleiner, MathematikKnotenVorlagen.KleinerGleich, MathematikKnotenVorlagen.Größer, MathematikKnotenVorlagen.GrößerGleich) +
                 MultinomVektorKnotenVorlagen.standard +
                 MengenRechnerKnotenVorlagen.standard +
                 PraedikatKnotenVorlagen.standard +
@@ -198,6 +198,12 @@ object KanonischerMathematikKnotenKatalog {
         v.anschlüsse.map { it.copy(id = AnschlussId("vorlage")) }).joinToString("|")
 
     internal fun kanonisiereMethodenUndRelationsVorlage(v: KnotenVorlage): KnotenVorlage {
+        if(v.art=="mathematik.vektorZuPolynom") {
+            val alt=KnotenDaten(art=v.art,name=v.name,anschlüsse=v.anschlüsse,parameter=v.standardParameter,eigenschaften=v.standardEigenschaften)
+            val neu=KartenDaten(name="Vorlage",knoten=listOf(alt)).migrierePolynomKompatibilität().knoten.single()
+            check(RECHNER_MIGRATION_DIAGNOSE !in neu.parameter) {"Ungültige Polynomvorlage: ${neu.parameter[RECHNER_MIGRATION_DIAGNOSE]}"}
+            return v.copy(art=neu.art,anschlüsse=neu.anschlüsse,standardParameter=neu.parameter,standardEigenschaften=neu.eigenschaften)
+        }
         if (v.art in mengenKonsolidierungAltarten) {
             val alt=KnotenDaten(art=v.art,name=v.name,anschlüsse=v.anschlüsse,parameter=v.standardParameter,eigenschaften=v.standardEigenschaften)
             val neu=KartenDaten(name="Vorlage",knoten=listOf(alt)).migriereMengenKonsolidierung().knoten.single()

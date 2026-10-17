@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810223,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-eingang-methode",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-eingang-methode-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-methoden-zielmenge",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-methoden-zielmenge-anschluss-1"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-eingang-methode",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-eingang-methode-wert"
@@ -35,6 +38,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-index-i",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-index-i-anschluss-0"
@@ -46,6 +50,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-mengenkonstruktor",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-mengenkonstruktor-anschluss-0"
@@ -57,6 +62,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-methoden-aufruf",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-methoden-aufruf-wert"
@@ -68,6 +74,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-element",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-element-anschluss-2"
@@ -79,6 +86,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-aussage-zu-methode",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-aussage-zu-methode-anschluss-1"
@@ -90,6 +98,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-eingang-indexmenge",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-eingang-indexmenge-wert"
@@ -101,6 +110,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-mengenkonstruktor",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-mengenkonstruktor-anschluss-0"
@@ -112,6 +122,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-iterierte-aussage",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-iterierte-aussage-anschluss-2"
@@ -123,6 +134,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteVereinigung-disjunktion-0-mengendefinator",
         "anschlussId": "definition-iterierteVereinigung-disjunktion-0-mengendefinator-anschluss-1"
@@ -144,22 +156,22 @@
         "breite": 250,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.methode",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteVereinigung-disjunktion-0-eingang-methode-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteVereinigung-disjunktion-0-eingang-methode-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.methode",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "A",
       "id": "definition-iterierteVereinigung-disjunktion-0-eingang-methode",
@@ -175,22 +187,22 @@
         "breite": 250,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteVereinigung-disjunktion-0-eingang-indexmenge-wert",
-          "reihenfolge": 1
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteVereinigung-disjunktion-0-eingang-indexmenge-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 1
+      }],
       "parameter": {
         "typ": "mathematik.menge",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "I",
       "id": "definition-iterierteVereinigung-disjunktion-0-eingang-indexmenge",
@@ -206,42 +218,38 @@
         "breite": 215,
         "höhe": 102
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.objekt",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteVereinigung-disjunktion-0-index-i-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "i"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.objekt",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteVereinigung-disjunktion-0-index-i-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "i"},
       "name": "Allgemeiner Parameter",
       "id": "definition-iterierteVereinigung-disjunktion-0-index-i",
       "position": {
         "x": 350,
         "y": 350
       },
-      "eigenschaften": {
-        "wertebereich": {
-          "felder": {
-            "art": {
-              "wert": "zahl",
-              "typ": "text"
-            },
-            "grundmenge": {
-              "wert": "R",
-              "typ": "text"
-            }
+      "eigenschaften": {"wertebereich": {
+        "felder": {
+          "art": {
+            "wert": "zahl",
+            "typ": "text"
           },
-          "typ": "objekt"
-        }
-      }
+          "grundmenge": {
+            "wert": "R",
+            "typ": "text"
+          }
+        },
+        "typ": "objekt"
+      }}
     },
     {
       "art": "mathematik.methodenZielmenge",
@@ -251,6 +259,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -258,9 +267,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-methoden-zielmenge-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -268,6 +279,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-methoden-zielmenge-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -288,6 +300,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -295,9 +308,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-methoden-aufruf-methode",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
@@ -305,9 +320,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-methoden-aufruf:methodenAufruf:argument:0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -315,6 +332,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-methoden-aufruf-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -338,6 +356,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
@@ -345,9 +364,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-mengenkonstruktor-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -355,6 +376,7 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-mengenkonstruktor-obermenge",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -373,33 +395,38 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.element",
+      "art": "mathematik.praedikat",
       "größe": {
         "breite": 220,
         "höhe": 110
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
-          "name": "links",
+          "name": "element",
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-element-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
-          "name": "rechts",
+          "name": "menge",
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-element-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -407,11 +434,15 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-element-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
-      "parameter": {},
-      "name": "Element",
+      "parameter": {
+        "operator": "menge.relation.element",
+        "praedikatSeite": "relationen"
+      },
+      "name": "Prädikat",
       "id": "definition-iterierteVereinigung-disjunktion-0-element",
       "position": {
         "x": 1000,
@@ -427,6 +458,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -434,9 +466,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-aussage-zu-methode-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -444,6 +478,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-aussage-zu-methode-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -451,13 +486,16 @@
         "name": "P",
         "argumentReihenfolge": "i"
       },
-      "name": "Aussage zu Methode",
+      "name": "Aussage zu Prädikat",
       "id": "definition-iterierteVereinigung-disjunktion-0-aussage-zu-methode",
       "position": {
         "x": 1320,
         "y": 290
       },
-      "eigenschaften": {}
+      "eigenschaften": {"atlas.darstellungsform": {
+        "wert": "adapter",
+        "typ": "text"
+      }}
     },
     {
       "art": "mathematik.iterierteAussagenverknüpfung",
@@ -467,6 +505,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -474,9 +513,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-iterierte-aussage-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -484,9 +525,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-iterierte-aussage-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -494,9 +537,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-iterierte-aussage-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
@@ -504,12 +549,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-iterierte-aussage-elementbindung",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 2
         }
       ],
-      "parameter": {
-        "operator": "disjunktion"
-      },
+      "parameter": {"operator": "disjunktion"},
       "name": "Iterierte Disjunktion",
       "id": "definition-iterierteVereinigung-disjunktion-0-iterierte-aussage",
       "position": {
@@ -526,6 +570,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -533,9 +578,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-mengendefinator-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -543,12 +590,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteVereinigung-disjunktion-0-mengendefinator-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
-      "parameter": {
-        "mengendefinition.paar": "definition-iterierteVereinigung-disjunktion-0-mengendefinition"
-      },
+      "parameter": {"mengendefinition.paar": "definition-iterierteVereinigung-disjunktion-0-mengendefinition"},
       "name": "Mengendefinator",
       "id": "definition-iterierteVereinigung-disjunktion-0-mengendefinator",
       "position": {
@@ -563,21 +609,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteVereinigung-disjunktion-0-karten-ausgang-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "menge"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteVereinigung-disjunktion-0-karten-ausgang-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "menge"},
       "name": "Karten-Ausgang",
       "id": "definition-iterierteVereinigung-disjunktion-0-karten-ausgang",
       "position": {
@@ -593,6 +637,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

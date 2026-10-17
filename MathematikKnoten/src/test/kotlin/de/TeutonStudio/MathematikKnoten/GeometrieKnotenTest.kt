@@ -16,7 +16,10 @@ class GeometrieKnotenTest {
     }
 
     @Test fun `Alle Geometrievorlagen besitzen registrierte Auswerter`() {
-        assertTrue(GeometrieKnotenVorlagen.alle.all { register.finde(it.art) != null })
+        GeometrieKnotenVorlagen.alle.forEach {v ->
+            val k=MathematikKartenMigrationen.vorSpeichern(KartenDaten(name="Geometrie",knoten=listOf(v.erzeuge(GraphPunkt.Zero)))).knoten.single()
+            assertNull(k.parameter[RECHNER_MIGRATION_DIAGNOSE]);assertNotNull(register.finde(k.art))
+        }
     }
 
     @Test fun `Punkt aus Koordinaten bewahrt das Tupel`() {

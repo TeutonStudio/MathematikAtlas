@@ -56,7 +56,7 @@ class PolynomAbstraktionsRegelTest {
     fun `gemeinsam verwendeter zwischenknoten wird von keinem vorschlag geloescht`() {
         val laufzeit = MathematikKartenLaufzeit()
         val basis = kubischesPolynom().mitTestGrundräumen()
-        val potenz = basis.knoten.first { it.art == "mathematik.potenz" }
+        val potenz = basis.knoten.first { it.art == ZAHLENRECHNER_ART && it.parameter[ZAHLENRECHNER_OPERATOR]=="zahl.potenz" }
         val eins = zahl(1, GraphPunkt(0f, 600f))
         val verbraucher = MathematikKnotenVorlagen.Addition.erzeuge(GraphPunkt(900f, 600f))
         val erweitert = basis.copy(

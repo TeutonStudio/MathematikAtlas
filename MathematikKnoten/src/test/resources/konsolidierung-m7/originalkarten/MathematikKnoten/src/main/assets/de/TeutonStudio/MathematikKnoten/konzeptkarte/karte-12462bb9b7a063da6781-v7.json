@@ -1,0 +1,196 @@
+{
+  "erstelltAm": 1785883810588,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-maximum-n-0-eingang-0",
+        "anschlussId": "definition-zahlenrechner-maximum-n-0-eingang-0-wert"
+      },
+      "id": "definition-zahlenrechner-maximum-n-0-e-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-maximum-n-0-regel",
+        "anschlussId": "definition-zahlenrechner-maximum-n-0-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-maximum-n-0-eingang-1",
+        "anschlussId": "definition-zahlenrechner-maximum-n-0-eingang-1-wert"
+      },
+      "id": "definition-zahlenrechner-maximum-n-0-e-1",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-maximum-n-0-regel",
+        "anschlussId": "definition-zahlenrechner-maximum-n-0-regel-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-zahlenrechner-maximum-n-0-regel",
+        "anschlussId": "definition-zahlenrechner-maximum-n-0-regel-2"
+      },
+      "id": "definition-zahlenrechner-maximum-n-0-a-0",
+      "zu": {
+        "knotenId": "definition-zahlenrechner-maximum-n-0-ausgang-0",
+        "anschlussId": "definition-zahlenrechner-maximum-n-0-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Maximum auf \\mathbb N",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-maximum-n-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "a"
+      },
+      "name": "a",
+      "id": "definition-zahlenrechner-maximum-n-0-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-maximum-n-0-eingang-1-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "b"
+      },
+      "name": "b",
+      "id": "definition-zahlenrechner-maximum-n-0-eingang-1",
+      "position": {
+        "x": 30,
+        "y": 190
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 470,
+        "höhe": 173
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-maximum-n-0-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-maximum-n-0-regel-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-maximum-n-0-regel-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "zahlbereich": "N",
+        "zahlbereichLatex": "\\mathbb N",
+        "geordnet": "true",
+        "definition": "\\max\\vert_{\\mathbb N}",
+        "regel": "Definition: \\max\\vert_{\\mathbb N}",
+        "operator": "zahl.maximum",
+        "kommutativ": "true"
+      },
+      "name": "\\max\\vert_{\\mathbb N}",
+      "id": "definition-zahlenrechner-maximum-n-0-regel",
+      "position": {
+        "x": 390,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 270,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-zahlenrechner-maximum-n-0-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.zahl",
+        "rolle": "wert"
+      },
+      "name": "wert",
+      "id": "definition-zahlenrechner-maximum-n-0-ausgang-0",
+      "position": {
+        "x": 930,
+        "y": 70
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.7a37e9cb.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

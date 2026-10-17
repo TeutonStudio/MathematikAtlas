@@ -4,12 +4,8 @@ import de.TeutonStudio.MathematikKartenAdapter.MathematikAuswerterRegister
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 internal fun MathematikAuswerterRegister.registriereGeometrieTransformationen() {
-    registriere("mathematik.spalteZuTupel") { k ->
-        geometrieErgebnis("tupel", k.geometrieSpalte("vektor").alsTupel(), k)
-    }
-    registriere("mathematik.zeileZuTupel") { k ->
-        geometrieErgebnis("tupel", k.geometrieZeile("vektor").alsTupel(), k)
-    }
+
+
     registriere("mathematik.geometrie.punktTransformationLinear") { k ->
         geometrieErgebnis("bild", transformierePunkt(k.geometrieTupel("punkt"), k.geometrieMatrix("matrix")), k)
     }

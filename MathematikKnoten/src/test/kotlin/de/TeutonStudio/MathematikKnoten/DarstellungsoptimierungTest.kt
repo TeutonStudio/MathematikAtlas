@@ -31,7 +31,7 @@ class DarstellungsoptimierungTest {
             ),
         )
 
-        val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
+        val ergebnis = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister()).auswertenNachMigration(karte)
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString())
         val zahlWert = ergebnis.knoten.getValue(zahl.id).ausgaben.getValue("wert")
         val uWert = ergebnis.knoten.getValue(aliasU.id).ausgaben.getValue("wert")

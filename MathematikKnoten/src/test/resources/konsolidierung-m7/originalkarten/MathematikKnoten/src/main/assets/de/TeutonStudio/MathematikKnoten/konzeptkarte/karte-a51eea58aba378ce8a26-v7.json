@@ -1,0 +1,91 @@
+{
+  "erstelltAm": 1785883810230,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-mathematik-kartenausgang-karten-ausgang-0-eingang-0",
+        "anschlussId": "definition-mathematik-kartenausgang-karten-ausgang-0-eingang-0-wert"
+      },
+      "id": "definition-mathematik-kartenausgang-karten-ausgang-0-e-0",
+      "zu": {
+        "knotenId": "definition-mathematik-kartenausgang-karten-ausgang-0-regel",
+        "anschlussId": "definition-mathematik-kartenausgang-karten-ausgang-0-regel-0"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition von Karten-Ausgang",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-kartenausgang-karten-ausgang-0-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.objekt",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "wert",
+      "id": "definition-mathematik-kartenausgang-karten-ausgang-0-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 55
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 390,
+        "höhe": 150
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-kartenausgang-karten-ausgang-0-regel-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "knotenArt": "mathematik.kartenAusgang",
+        "regel": "Öffentliche Ausgabe einer wiederverwendbaren Karte.",
+        "kategorie": "Eigene Karten"
+      },
+      "name": "Karten-Ausgang",
+      "id": "definition-mathematik-kartenausgang-karten-ausgang-0-regel",
+      "position": {
+        "x": 370,
+        "y": 55
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.kartenAusgang|Karten-Ausgang|name=ergebnis.e4039123.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

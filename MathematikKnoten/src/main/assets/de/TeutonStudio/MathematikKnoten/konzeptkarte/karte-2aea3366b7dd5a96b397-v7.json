@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810577,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-zahlenrechner-summe-0-eingang-methode",
         "anschlussId": "definition-zahlenrechner-summe-0-eingang-methode-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-zahlenrechner-summe-0-eingang-indexmenge",
         "anschlussId": "definition-zahlenrechner-summe-0-eingang-indexmenge-wert"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-zahlenrechner-summe-0-faltungskonstruktor",
         "anschlussId": "definition-zahlenrechner-summe-0-faltungskonstruktor-anschluss-2"
@@ -35,6 +38,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-zahlenrechner-summe-0-neutral",
         "anschlussId": "definition-zahlenrechner-summe-0-neutral-anschluss-0"
@@ -46,6 +50,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-zahlenrechner-summe-0-faltungskonstruktor",
         "anschlussId": "definition-zahlenrechner-summe-0-faltungskonstruktor-anschluss-3"
@@ -57,6 +62,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-zahlenrechner-summe-0-methoden-anwendung",
         "anschlussId": "definition-zahlenrechner-summe-0-methoden-anwendung-anschluss-2"
@@ -68,6 +74,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-zahlenrechner-summe-0-verknuepfung",
         "anschlussId": "definition-zahlenrechner-summe-0-verknuepfung-anschluss-2"
@@ -79,6 +86,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-zahlenrechner-summe-0-faltungsdefinator",
         "anschlussId": "definition-zahlenrechner-summe-0-faltungsdefinator-anschluss-1"
@@ -100,22 +108,22 @@
         "breite": 250,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.methode",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-zahlenrechner-summe-0-eingang-methode-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-zahlenrechner-summe-0-eingang-methode-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.methode",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "f",
       "id": "definition-zahlenrechner-summe-0-eingang-methode",
@@ -131,22 +139,22 @@
         "breite": 250,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-zahlenrechner-summe-0-eingang-indexmenge-wert",
-          "reihenfolge": 1
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-zahlenrechner-summe-0-eingang-indexmenge-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 1
+      }],
       "parameter": {
         "typ": "mathematik.menge",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "I",
       "id": "definition-zahlenrechner-summe-0-eingang-indexmenge",
@@ -162,21 +170,19 @@
         "breite": 180,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-zahlenrechner-summe-0-neutral-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "wert": "0"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-zahlenrechner-summe-0-neutral-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"wert": "0"},
       "name": "Zahl",
       "id": "definition-zahlenrechner-summe-0-neutral",
       "position": {
@@ -193,6 +199,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -200,9 +207,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-faltungskonstruktor-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -210,9 +219,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-faltungskonstruktor-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -220,9 +231,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-faltungskonstruktor-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -231,14 +244,15 @@
           "artFolgtEingang": "neutral",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-faltungskonstruktor-anschluss-3",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
         "faltung.paar": "definition-zahlenrechner-summe-0-faltung",
         "faltung.akkumulatorName": "a",
-        "faltung.operator": "summe",
-        "faltung.indexName": "i"
+        "faltung.indexName": "i",
+        "faltung.operator": "summe"
       },
       "name": "Faltungskonstruktor",
       "id": "definition-zahlenrechner-summe-0-faltungskonstruktor",
@@ -249,13 +263,14 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.methodenAnwendung",
+      "art": "mathematik.methodeAufrufen",
       "größe": {
         "breite": 265,
         "höhe": 115
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -263,9 +278,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-methoden-anwendung-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -273,9 +290,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-methoden-anwendung-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -283,11 +302,16 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-methoden-anwendung-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
-        "methodenAnwendung.ergebnisArt": "mathematik.zahl"
+        "methodenAufruf.argumentprojektion": "separiert",
+        "methodenAufruf.projektionFest": "true",
+        "methodenAnwendung.ergebnisArt": "mathematik.zahl",
+        "methodenAufruf.ergebnisprojektion": "direkt",
+        "festeEingänge": "1"
       },
       "name": "Zahlmethode anwenden",
       "id": "definition-zahlenrechner-summe-0-methoden-anwendung",
@@ -305,33 +329,54 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-verknuepfung-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.zahl",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.methode",
+            "mathematik.zahl"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-verknuepfung-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
           "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "definition-zahlenrechner-summe-0-verknuepfung-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -360,6 +405,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -367,9 +413,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-faltungsdefinator-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -378,6 +426,7 @@
           "artFolgtEingang": "nächsterAkkumulator",
           "dynamischErzeugt": false,
           "id": "definition-zahlenrechner-summe-0-faltungsdefinator-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -399,21 +448,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-zahlenrechner-summe-0-karten-ausgang-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "wert"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-zahlenrechner-summe-0-karten-ausgang-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "wert"},
       "name": "Karten-Ausgang",
       "id": "definition-zahlenrechner-summe-0-karten-ausgang",
       "position": {
@@ -429,6 +476,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }
