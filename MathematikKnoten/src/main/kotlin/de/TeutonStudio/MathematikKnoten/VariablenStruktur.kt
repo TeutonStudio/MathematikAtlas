@@ -39,26 +39,13 @@ internal fun variablenGrundraumWert(k: KnotenDaten, menge: MengenAusdruck): Bedi
     val grundraum = kanonischerRichtungsraum(menge)
     val name = k.parameter["name"]?.trim().orEmpty().ifBlank { "x" }
     val id = "${k.id.wert}:grundraum-element"
-    val intern = "__variable:${k.id.wert}:$name"
-    val typ = grundraum.elementTypAusdruck()
-    val art = variablenAnschlussArt(typ)
-    fun komponentenRäume(raum: MengenAusdruck): List<MengenAusdruck>? {
-        raum.kartesischeFaktorenOderNull()?.let { return it }
-        if (raum !is EndlicheMenge || raum.elemente.isEmpty() || raum.elemente.any { it !is Tupel }) return null
-        val tupel = raum.elemente.filterIsInstance<Tupel>()
-        val n = tupel.first().elemente.size
-        if (tupel.any { it.elemente.size != n }) return null
-        return List(n) { i -> EndlicheMenge(tupel.map { it.elemente[i] }.toSet()) }
-    }
-    val form = when (grundraum) {
-        is Vektorraum -> listOf(RationaleZahl.von(grundraum.dimension.toLong()))
-        is Matrizenraum -> listOf(RationaleZahl.von(grundraum.zeilen.toLong()), RationaleZahl.von(grundraum.spalten.toLong()))
-        is Tensorraum -> grundraum.dimensionen
-        else -> komponentenRäume(grundraum)?.let { listOf(RationaleZahl.von(it.size.toLong())) }
-    }
+    val intern = "__variable:${k.id.wert}"
+    val info=quellenGrundraumInformation(grundraum)
+    val art=info.art
+    val form=info.form
     val parameter = TypisiertesElement(intern, art.wert, latex = name, strukturForm = form?.takeUnless { achsen -> achsen.any { it == RationaleZahl.Null } })
     fun element(raum: MengenAusdruck, quelle: MathematischesObjekt): MathematischesObjekt {
-        val faktoren = komponentenRäume(raum)
+        val faktoren = quellenKomponentenRäume(raum)
         if (faktoren != null) return Tupel(faktoren.mapIndexed { i, faktor ->
             val index = RationaleZahl.von((i + 1).toLong())
             val numerisch = variablenAnschlussArt(faktor.elementTypAusdruck()) == MathematikAnschlussArten.Zahl.id ||
@@ -85,8 +72,8 @@ internal fun variablenGrundraumWert(k: KnotenDaten, menge: MengenAusdruck): Bedi
         else -> element(grundraum, parameter)
     }
     return BedingterWert(objekt, werteVorrat = grundraum,
-        komponentenMengen = komponentenRäume(grundraum).orEmpty(),
-        variablenQuellen = listOf(VariablenQuelle(k.id, if (skalar || grundraum == Gradmenge) name else intern, grundraum, bindungsId = id,
+        komponentenMengen = quellenKomponentenRäume(grundraum).orEmpty(),
+        variablenQuellen = listOf(VariablenQuelle(k.id, if (skalar || grundraum == Gradmenge) name else intern, grundraum, bindungsId = id, bindungsName = "wert",
             lösungsRolle = LösungsQuellenRolle.Variable,
             strukturBindung = StrukturQuellenBindung(id, name, grundraum))))
 }
@@ -126,7 +113,7 @@ internal fun variablenStrukturWert(k: KnotenDaten, grundmenge: MengenAusdruck, g
 
 /** Ergänzt den Grundraumanschluss, ohne bestehende Ausgangsreferenzen zu verändern. */
 fun KartenDaten.migriereVariablenGrundraum(): KartenDaten = copy(knoten = knoten.map { k ->
-    if (k.art != "mathematik.variable" || k.anschlüsse.any { it.richtung == AnschlussRichtung.Eingang && it.name == "grundraum" }) k
+    if (RECHNER_MIGRATION_DIAGNOSE in k.parameter || k.art != "mathematik.variable" || k.anschlüsse.any { it.richtung == AnschlussRichtung.Eingang && it.name == "grundraum" }) k
     else k.copy(anschlüsse = k.anschlüsse + AnschlussDaten(
         id = AnschlussId("${k.id.wert}:grundraum"), name = "grundraum",
         richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links,

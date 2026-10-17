@@ -28,7 +28,7 @@ fun inferiereZielmenge(
     )
     is WinkelAusdruck -> Gradmenge
     is ZahlAusdruck -> inferiereZahlenWertevorrat(ausdruck, werteVorräte, annahmen)
-    is AllgemeinerParameter -> werteVorräte[ausdruck.name]
+    is AllgemeinerParameter -> (ausdruck.bindungsId?.let(werteVorräte::get) ?: werteVorräte[ausdruck.name])
         ?: error("Für den allgemeinen Parameter '${ausdruck.name}' fehlt ein Wertevorrat.")
     is TypisiertesElement -> werteVorräte[ausdruck.name]
         ?: error(

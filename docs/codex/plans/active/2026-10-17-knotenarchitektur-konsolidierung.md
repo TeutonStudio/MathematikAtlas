@@ -10,7 +10,8 @@ M2: integriert als v3.4.4, ec152625926698f58e1ddd1d1a1d6420f8b0c6cc;
 ursprüngliche Android-Schlussabnahme fehlgeschlagen, durch enges Test-Reparaturrelease
 v3.4.5/x abgeschlossen: e6760b9a41aaeb186dee7ee7c13254430cb47ee8, alle Master-Gates grün.
 M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle finalen Master-Gates grün.
-M4: v3.4.7/x auf samai/v3.4.7/konsolidierung-m4 in Umsetzung, Basis 43726159.
+M4: v3.4.7 veröffentlicht, finaler Master 69d4e70a; PR- und Masterabnahme grün.
+M5: v3.4.8/x auf samai/v3.4.8/konsolidierung-m5 reserviert, Basis 69d4e70a.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -100,8 +101,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M1 Methodenaufrufe/Prädikate: v3.4.3 veröffentlicht, e665a7fde78fe845dc7c62fa60fa00896d35f58a, PR #457, alle PR-/master-Gates grün; 132 gemeinsame/134 Androidtypen.
 - [x] M2 Matrix/Vektor/Tensor: v3.4.4 integriert; Schlussabnahme über separat veröffentlichte Testreparatur v3.4.5/e6760b9a vollständig grün, ursprünglicher Laufzeitfehler historisch erhalten.
 - [x] M3 Tupel/Übersetzer: v3.4.6/43726159 veröffentlicht, PR #460; 124 gemeinsame/126 Androidarten, alle PR-/Master-Gates grün, PR-Geräteabnahme 62/62.
-- [-] M4 Mengen: v3.4.7/x reserviert, c10ce42d; drei Spezialarten, graphfähige endliche Menge und Schutz offizieller Standardkartenupdates in Umsetzung.
-- [ ] M5 Quellenverträge und Konstanten ohne Typentfernung vereinheitlichen.
+- [x] M4 Mengen: v3.4.7 veröffentlicht, 69d4e70a4f1bdbf69b23f0ee708f5893d5232947, PR #461; drei Spezialarten konsolidiert, 121 gemeinsame/123 Androidtypen, alle sechs jüngsten PR-Gates und vier finalen Master-Workflows grün.
+- [-] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8/x ab v3.4.7/69d4e70a auf samai/v3.4.8/konsolidierung-m5 reserviert, Produktarbeit offen.
 - [ ] M6 Begriffe und Verantwortlichkeiten korrigieren.
 - [ ] M7 unabhängige Alt-Auswerter entfernen, Gesamtabschluss prüfen.
 
@@ -587,3 +588,83 @@ Unabhängige Ursachenprüfung bestätigt diesen engen Fix. Fehlerarchiv
 Gezielte lokale Korrekturprüfung bestanden: app:testDebugUnitTest, lintDebug,
 assembleDebug und assembleDebugAndroidTest, 53 s/207 Tasks
 (/tmp/atlas-m4-runtime-fix-local.log). Unabhängige Diffprüfung ohne Blocker.
+
+
+### M4 veröffentlicht; M5 reserviert
+
+PR #461 wurde am freigegebenen Head 91f5c953589008e9ad090bb358f4356bfc9a849a
+regulär ohne Admin-/Bypassoption als v3.4.7 integriert. Finaler Mastercommit
+69d4e70a4f1bdbf69b23f0ee708f5893d5232947 (Vorgänger 43726159) trägt die
+GitHub-Squashidentität Alexander/GitHub; lokale Arbeitscommits 974544a8 und
+91f5c953 sowie Reservierung c10ce42d sind SamAI/SamAI verifiziert.
+
+Alle sechs maßgeblichen jüngsten PR-Prüfungen erfolgreich. Isolierter Emulator
+bestätigt Editor 7/7 und App 59/59, insgesamt 66/66 ohne Fehler oder Skips;
+Mengeneingabe-/Undo-Test und sämtliche drei Originalstandardkarten-Gerätetests
+bestanden (/tmp/atlas-m4-runtime-fix-final.zip). Ursprüngliche Runtimefehler und
+der root-classpath-Resolverfehler bleiben oben beziehungsweise im PR dokumentiert.
+Genau ein PR-Android-Retry am identischen Head bestand (Run 39000698093,
+Job 117303178680); der API-HTTP-500 hinterließ den historischen roten Check im
+Rollup. Keine Dependency-, CI- oder Prüfungsumgehung. Regulärer Merge zulässig
+und erfolgreich, historische rote Ergebnisse werden nicht als grün ausgegeben.
+
+Finale Masterabnahme am exakten 69d4e70a: Android 39001388559,
+Linux/RPM/Neustartpersistenz 39001388566, Kern/isolierte Android-Laufzeit
+39001388536 und Release-Guard 39001388554 jeweils completed/success;
+beide Kernworkflowjobs verify und android-runtime erfolgreich. M4 ist damit
+abgeschlossen. Diese Abnahme ersetzt die vorherigen offenen M4-Statusangaben.
+
+Erst danach wurde M5 als v3.4.8/x direkt auf dem finalen Mastercommit reserviert.
+Gemeinsame Typ-/Bereichsableitung und Konstantenpflege betreffen vorhandene
+Quellen; Parameter-/Variablenrollen, stabile Identitäten und Wahr/Falsch bleiben
+erhalten. Keine neuen Knotentypen oder Typentfernung, Katalog weiterhin 121/123.
+M6–M7 bleiben offen und unreserviert. Android/Desktop/Linux/current_version
+bleiben bis zum M5-Zielabschluss kohärent auf der veröffentlichten 3.4.7.
+
+M5 erste Umsetzung auf reservierter Basis: gemeinsame Quellen-Grundrauminformation,
+ID-basierte allgemeine Parameter, strikter Wertebereichsdecoder mit ausdrücklich
+versioniertem neuem Leertupelbereich und gemeinsamer Android-/Desktop-Editor.
+Historische mehrdeutige Quellen bleiben vor Portnormalisierung diagnostisch erhalten.
+Methodenbildung und skalare Lösungsnamen unterscheiden gleichnamige Quellen nach
+Identität. Numerische Nullinferenz und numerischer Ergebnisbereichsschutz sind in
+Umsetzung; der bestehende Mengenfamilien-Zielmengenvertrag bleibt ausdrücklich
+unverändert (ADR 2026-07-27). Neuer ADR: stabile-quellen-und-strikte-bereiche.
+Erster gezielter Gradle-Lauf läuft; noch keine M5-Produkt-/Laufzeitfreigabe.
+
+M5 gezielte Prüfung bestanden (26 s/147 Tasks, /tmp/atlas-m5-fifth.log):
+Kern/Knoten/App-Unit-Tests, Android-Test-APK und zwei neue native Desktoptests
+für explizite Bereichsreparatur und vollständige Tiefengrenzvalidierung. Zwei
+neue Android-Inspector-/Undo-Tests kompiliert; Geräteausführung noch offen.
+Zusätzliche symbolische Tupelpackung erhält ein logisches Ergebnis, und explizite
+strukturierte Quellen besitzen selbsttragende Formel-/Wire-Bindungen.
+Historische allgemeine Parameterargumente behalten exakt ihre Knoten-ID; keine
+Umstellung dieser bestehenden Argumentidentität auf ein neues Suffix.
+Letzte Ergänzungen und vollständige Suite am kohärenten Zielstand 3.4.8 stehen aus.
+
+
+M5 letzte Vertragskorrekturen: gebundene Formeln priorisieren Quellen-IDs vor
+Namensaliasen und erhalten strukturierte Zielräume über Wire/Methodenbildung.
+Konkrete Vektor-/Matrixbereichsmitgliedschaften prüfen Orientierung/Form und
+Komponenten; Skalarbindungen werden abgewiesen, offene Strukturparameter bleiben
+offen. Tensor Rang zwei wird nicht still zur Matrix. Achsenlängen einschließlich
+leerer Tupel inferieren N₀. Gesonderte Quellenidentitätsdiagnosen bleiben auch bei
+ausdrücklicher Bereichsreparatur gesperrt.
+
+Gezielter Nachlauf erfolgreich, 26 s/141 Tasks
+(/tmp/atlas-m5-membership-targeted.log). Unabhängige finale Diffprüfung ohne
+blockierende Findings und ohne Änderungen/Builds. Vollständige Suite läuft am
+kohärenten Zielbaum 3.4.8; noch kein Produktcommit/PR oder Laufzeitfreigabe.
+
+
+M5 vollständige lokale Freigabeprüfung bestanden, 3 min 26 s/277 Tasks:
+2237 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener Opt-in-Skip = 2236 bestanden.
+XML-Zählung ausschließlich build/test-results (keine älteren connected-XMLs).
+16 neue Quellenregressionen, sechs neue Kerntests und zwei Desktop-UI-Tests grün;
+zwei neue Android-Inspector-/Undo-Fälle kompiliert, 68 Gerätefälle erst erwartet.
+Log /tmp/atlas-m5-final-verified.log. Repository/15 Standardkarten/Releaseplan
+114/Versionsfolge/14 Guards/Diffprüfung erfolgreich. Zusätzliche Standalone-
+Kernprüfung mangels kotlinc nicht ausführbar. Lokaler packageRpm-Lauf 2 s/22 Tasks
+scheitert unverändert in jpackage: Invalid or unsupported type: [rpm]
+(/tmp/atlas-m5-rpm.log). Kein lokaler Geräte-Neuinstallationsversuch mit Datenverlust;
+fremde Nutzersignatur bleibt geschützt. Produktdiff unabhängig ohne Blocker.
+Produktbaum für SHA-bezogene CI eingefroren; M5 noch nicht veröffentlicht.

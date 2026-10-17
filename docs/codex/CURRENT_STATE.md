@@ -1,27 +1,41 @@
 ## Aktueller Konsolidierungsstand, 17. Oktober 2026
 
-Veröffentlichte Basis: v3.4.6/43726159, M0–M3 einschließlich separater
-Testreparatur abgeschlossen; alle finalen Master-Gates grün. M4 ist als
-v3.4.7/x auf `samai/v3.4.7/konsolidierung-m4` implementiert und lokal geprüft,
-noch nicht veröffentlicht. Gemeinsamer Erstellenbestand 121 mathematische Arten,
-Android einschließlich Werkzeug/Gruppe 123. Einzel-, Potenz- und Abbildungsmenge
-sind konfigurierte vorhandene Konstruktor-/Rechnerpfade; mathematische Methoden
-sind als ganze Graph-Elemente verdrahtbar, Scriptmethoden werden abgewiesen.
-Strenge Migration, Voraussetzungen, Rollen/IDs, präzise Definitionen und
-Undo-Verlustvorschau sind geprüft. Nur der exakte Originalhash beweist eine
-unveränderte Standardkarte; offizielle Updates bewahren Vorgängerrevisionen.
+Veröffentlichte Basis: v3.4.7/69d4e70a4f1bdbf69b23f0ee708f5893d5232947,
+M0–M4 einschließlich separater Testreparatur abgeschlossen. PR #461 wurde nach
+sechs aktuellen grünen Prüfungen an 91f5c953 regulär integriert. Android-PR-Laufzeit
+66/66 ohne Fehler/Skips; vorherige zwei Fehler und der einmalig wiederholte
+Resolverfehler bleiben im ExecPlan dokumentiert. Alle vier finalen Master-Gates
+(Android 39001388559, Linux 39001388566, Kern/Laufzeit 39001388536,
+Guard 39001388554) sind grün. Gemeinsamer Erstellenbestand 121 mathematische
+Arten, Android einschließlich Werkzeug/Gruppe 123.
 
-Endgültige lokale Suite: 2213 Fälle, 0 Fehler, 1 vorhandener Skip; Lint,
-Android-/Test-APKs und Desktop grün (3m27s/277 Tasks), APK 3.4.7/3004007.
-Unabhängige Abschlussprüfung ohne weitere Findings. Repository-/Standardkarten-/
-Releaseprüfungen und 14 Guardregressionen grün. Standalone-Kernskript ohne
-`kotlinc` nicht ausführbar; lokales jpackage meldet weiterhin unsupported rpm
-(2 s, `/tmp/atlas-m4-rpm.log`). Android-/Linux-Laufzeitabnahme am finalen
-Release-SHA steht aus. CI an 974544a8: fünf Gates grün, Android-Laufzeit
-66 Fälle mit zwei Fehlern. Fehlender Android-Aufruf der gemeinsamen
-Mengeneinstellungen korrigiert; historischer Testhash wird plattformgerecht
-aus dem unveränderten Original rekonstruiert, Produktionsschutz unverändert.
-Erneute CI erforderlich, kein Merge. M5–M7 offen. Nachfolgend historische Einträge.
+M5 ist als v3.4.8/x auf `samai/v3.4.8/konsolidierung-m5` in Umsetzung:
+gemeinsame Quellen-Typ-/Grundrauminformation, stabile Parameteridentitäten bei
+Umbenennen/Kopieren, getrennte Lösungsrollen und eindeutige lokale Namen.
+Die historische Argumentidentität allgemeiner Parameter bleibt ihre Knoten-ID.
+Ungültige gespeicherte Bereiche bleiben erhalten und blockiert; ein neuer
+expliziter Leertupelbereich wird innerhalb der bestehenden Eigenschaft versioniert.
+Android/Desktop verwenden denselben validierten Bereichseditor. Wahr/Falsch
+bleiben eigene nullstellige Quellen; ID/Enum `lüge`/`Lüge` und historische
+Konzeptreferenzen bleiben stabil, sichtbare Begriffe verwenden Falsch.
+
+Numerische Nullinferenz ist auf N₀ korrigiert. Der zusätzliche numerische
+Ergebnisbereichsschutz erhält offene Bedingungen und diagnostiziert falsche
+Altzielbereiche, ohne die bestehende Mengenfamiliensemantik umzudeuten.
+Vollständige lokale Zielstandprüfung erfolgreich: 3 min 26 s/277 Tasks,
+2237 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener Opt-in-Skip (2236 bestanden).
+Gezählte XMLs ausschließlich unter build/test-results; ältere connected-Ergebnisse
+werden nicht mitgezählt. 16 Quellen- und sechs Kernregressionen sowie zwei native
+Desktop-Bereichstests grün. Zwei neue Android-Inspector-/Undo-Tests kompiliert;
+Geräteausführung noch offen. Repository, 15 Standardkarten, Releaseplan,
+Versionsfolge, 14 Guardregressionen und Diffprüfung grün. Unabhängige finale
+Diffprüfung ohne Blocker. /tmp/atlas-m5-final-verified.log.
+Standalone-Kernprüfung benötigt weiterhin fehlendes kotlinc; lokale RPM-
+Paketierung scheitert in jpackage mit Invalid or unsupported type: [rpm]
+(2 s/22 Tasks, /tmp/atlas-m5-rpm.log). Die Nutzer-App besitzt eine fremde Signatur;
+keine Deinstallation ihrer Daten. Isolierte CI- und Masterabnahmen bleiben
+vor Veröffentlichung erforderlich. M6/M7 offen.
+Nachfolgend historische Einträge.
 
 > Releaseprüfung PR #454: Der schmale Operator-Auswahldialog wurde wegen des nachgewiesenen Höhenkonflikts gezielt begrenzt. Scrollbarer Steuerbereich höchstens45Prozent, eigener verbleibender Trefferbereich; Titel und Aktionen bleiben im AtlasDialog-Rahmen. Unabhängig statisch ohne Findings geprüft; Androidregression für Listenhöhe, Auswahl, Abbruch und Übernahme bei Schriftfaktor1/2 ergänzt. Lokale App-Tests/Lint/APKs grün48s; native Laufzeitfreigabe erst nach vollständiger CI auf neuem Head. b22267cc bleibt ohne Mergefreigabe. Optionale Hardwaremessungen bleiben separat und gelten nicht als ausgeführt.
 

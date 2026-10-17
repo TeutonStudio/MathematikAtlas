@@ -45,35 +45,53 @@ sealed interface WertebereichKonfiguration {
         const val EIGENSCHAFT = "wertebereich"
         val Standard = Zahl()
 
-        fun vonEigenschaft(wert: KnotenEigenschaft?): WertebereichKonfiguration = liesObjekt(wert as? KnotenEigenschaft.Objekt)
+        /** Ganz fehlend bedeutet den dokumentierten historischen Standard; fehlerhafte Daten niemals. */
+        fun vonEigenschaft(wert: KnotenEigenschaft?): WertebereichKonfiguration {
+            if(wert==null) return Standard
+            return liesObjekt(wert,0).also {it.zuMenge()}
+        }
 
-        private fun liesObjekt(objekt: KnotenEigenschaft.Objekt?): WertebereichKonfiguration {
-            val felder = objekt?.felder.orEmpty()
-            val art = (felder["art"] as? KnotenEigenschaft.Text)?.wert
-            return when (art) {
-                "zahl" -> Zahl(text(felder, "grundmenge", "R"))
+        private fun liesObjekt(wert:KnotenEigenschaft, tiefe:Int):WertebereichKonfiguration {
+            require(tiefe<64) { "Der Wertebereich ist zu tief verschachtelt." }
+            val felder=(wert as? KnotenEigenschaft.Objekt)?.felder ?: error("Ein Wertebereich muss ein Objekt sein.")
+            val version=felder["version"]?.let {(it as? KnotenEigenschaft.Ganzzahl)?.wert ?: error("Ungültige Wertebereichsversion.")} ?: 0
+            require(version in 0..1) {"Unbekannte Wertebereichsversion: $version"}
+            val art=(felder["art"] as? KnotenEigenschaft.Text)?.wert ?: error("Die Art des Wertebereichs fehlt oder ist ungültig.")
+            val erlaubt=when(art) {
+                "zahl" -> setOf("grundmenge")
+                "winkel","aussage" -> emptySet()
+                "menge" -> setOf("elementBereich")
+                "tupel" -> setOf("komponenten")
+                "vektor" -> setOf("orientierung","dimension","skalarMenge")
+                "matrix" -> setOf("zeilen","spalten","skalarMenge")
+                else -> error("Unbekannte Wertebereichsart '$art'.")
+            }+setOf("art","version")
+            require(felder.keys.all {it in erlaubt}) {"Unbekannte Wertebereichsfelder: ${(felder.keys-erlaubt).sorted().joinToString()}"}
+            fun unterbereich(name:String)=felder[name]?.let {liesObjekt(it,tiefe+1)} ?: Standard
+            return when(art) {
+                "zahl" -> Zahl(text(felder,"grundmenge","R"))
                 "winkel" -> Winkel
                 "aussage" -> Aussage
-                "menge" -> Menge(liesObjekt(felder["elementBereich"] as? KnotenEigenschaft.Objekt))
-                "tupel" -> Tupel((felder["komponenten"] as? KnotenEigenschaft.Liste)?.werte
-                    ?.map { liesObjekt(it as? KnotenEigenschaft.Objekt) }
-                    ?.takeIf { it.isNotEmpty() } ?: listOf(Zahl(), Zahl()))
+                "menge" -> Menge(unterbereich("elementBereich"))
+                "tupel" -> {
+                    val komponenten=felder["komponenten"]?.let {(it as? KnotenEigenschaft.Liste)?.werte ?: error("Tupelkomponenten müssen eine Liste sein.")}
+                    require(version==1 || komponenten?.isEmpty()!=true) {"Der historische leere Tupelbereich wurde als zwei reelle Komponenten behandelt. Bitte den gewünschten Wertebereich ausdrücklich neu wählen."}
+                    Tupel(komponenten?.map {liesObjekt(it,tiefe+1)} ?: listOf(Zahl(),Zahl()))
+                }
                 "vektor" -> Vektor(
-                    runCatching { VektorOrientierung.valueOf(text(felder, "orientierung", VektorOrientierung.Spalte.name)) }.getOrDefault(VektorOrientierung.Spalte),
-                    ganzzahl(felder, "dimension", 2),
-                    text(felder, "skalarMenge", "R"),
-                )
-                "matrix" -> Matrix(ganzzahl(felder, "zeilen", 2), ganzzahl(felder, "spalten", 2), text(felder, "skalarMenge", "R"))
-                else -> Standard
+                    runCatching {VektorOrientierung.valueOf(text(felder,"orientierung",VektorOrientierung.Spalte.name))}.getOrElse {error("Unbekannte Vektororientierung im Wertebereich.")},
+                    ganzzahl(felder,"dimension",2),text(felder,"skalarMenge","R"))
+                "matrix" -> Matrix(ganzzahl(felder,"zeilen",2),ganzzahl(felder,"spalten",2),text(felder,"skalarMenge","R"))
+                else -> error("Unbekannte Wertebereichsart.")
             }
         }
 
         private fun objekt(art: String, vararg felder: Pair<String, KnotenEigenschaft>) =
-            KnotenEigenschaft.Objekt(mapOf("art" to KnotenEigenschaft.Text(art)) + felder)
+            KnotenEigenschaft.Objekt(mapOf("art" to KnotenEigenschaft.Text(art), "version" to KnotenEigenschaft.Ganzzahl(1)) + felder)
         private fun text(felder: Map<String, KnotenEigenschaft>, schlüssel: String, standard: String) =
-            (felder[schlüssel] as? KnotenEigenschaft.Text)?.wert ?: standard
+            felder[schlüssel]?.let {(it as? KnotenEigenschaft.Text)?.wert ?: error("Wertebereichsfeld '$schlüssel' muss Text sein.")} ?: standard
         private fun ganzzahl(felder: Map<String, KnotenEigenschaft>, schlüssel: String, standard: Int) =
-            (felder[schlüssel] as? KnotenEigenschaft.Ganzzahl)?.wert ?: standard
+            felder[schlüssel]?.let {(it as? KnotenEigenschaft.Ganzzahl)?.wert ?: error("Wertebereichsfeld '$schlüssel' muss eine ganze Zahl sein.")} ?: standard
     }
 }
 

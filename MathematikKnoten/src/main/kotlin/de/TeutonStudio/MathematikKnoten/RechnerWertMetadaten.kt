@@ -9,18 +9,19 @@ internal fun Iterable<BedingterWert>.rechnerQuellBereiche(): Map<String, MengenA
     val quellen = werte.flatMap { it.variablenQuellen }.distinctBy { it.identität }
     val identitäten = quellen.map { it.name to (it.bindungsId ?: it.knotenId.wert) } +
         werte.mapNotNull { (it.objekt as? MethodenParameter)?.let { p -> p.name to (p.bindungsId ?: p.name) } }
+    val ids=identitäten.map {it.second}.toSet()
     val mehrdeutigeNamen = identitäten.groupBy({ it.first }, { it.second })
         .filterValues { it.distinct().size > 1 }.keys
     return buildMap {
         werte.forEach { wert -> putAll(wert.reelleVariablen.filterKeys { it !in mehrdeutigeNamen }) }
         quellen.forEach { quelle ->
             put(quelle.bindungsId ?: quelle.knotenId.wert, quelle.werteVorrat)
-            if (quelle.name !in mehrdeutigeNamen) put(quelle.name, quelle.werteVorrat)
+            if (quelle.name !in mehrdeutigeNamen && (quelle.name !in ids || quelle.name==(quelle.bindungsId ?: quelle.knotenId.wert))) put(quelle.name, quelle.werteVorrat)
         }
         werte.forEach { wert ->
             (wert.objekt as? MethodenParameter)?.let { p -> (wert.werteVorrat ?: wert.zielMenge)?.let { menge ->
                 put(p.bindungsId ?: p.name, menge)
-                if (p.name !in mehrdeutigeNamen) put(p.name, menge)
+                if (p.name !in mehrdeutigeNamen && (p.name !in ids || p.name==(p.bindungsId ?: p.name))) put(p.name, menge)
             } }
         }
     }

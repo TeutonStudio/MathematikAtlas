@@ -10,10 +10,13 @@ import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenReferenz
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensReifegrad
 
+/** Sichtbarer Begriff darf historische Konzept-/Variantenreferenzen nicht ändern. */
+private fun KnotenVorlage.stabilerKonzeptName()=if(art=="mathematik.lüge" && name=="Falsch") "Lüge" else name
+
 fun KnotenVorlage.stabileKonzeptId(): String {
     val variantenSchlüssel = standardParameter.toSortedMap()
         .entries.joinToString(";") { (schlüssel, wert) -> "$schlüssel=$wert" }
-    return listOf(art, name, variantenSchlüssel).joinToString("|")
+    return listOf(art, stabilerKonzeptName(), variantenSchlüssel).joinToString("|")
 }
 
 fun KnotenVorlage.stabileVariantenId(): VariantenId = VariantenId(
@@ -22,7 +25,7 @@ fun KnotenVorlage.stabileVariantenId(): VariantenId = VariantenId(
         standardParameter.toSortedMap().forEach { (schlüssel, wert) ->
             append('|').append(schlüssel).append('=').append(wert)
         }
-        append('|').append(name)
+        append('|').append(stabilerKonzeptName())
     },
 )
 

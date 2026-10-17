@@ -345,6 +345,8 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
         is KartesischerPotenzraum -> entscheideKartesischePotenzmitgliedschaft(element, menge, kontext)
         is ÜbersetzungsBildraum -> menge.enthält(element, kontext)
         is Tupelraum -> entscheideTupelMitgliedschaft(element, menge.komponenten, kontext)
+        is Vektorraum -> entscheideVektorMitgliedschaft(element, menge, kontext)
+        is Matrizenraum -> entscheideMatrixMitgliedschaft(element, menge, kontext)
         is Vereinigung -> Disjunktion(menge.mengen.map { ElementBeziehung(element, it) }).entscheide(kontext)
         is Schnitt -> if (menge.mengen.isEmpty()) {
             menge.grundMenge?.let { ElementBeziehung(element, it).entscheide(kontext) }
@@ -458,6 +460,41 @@ fun prüfeTeilmenge(
         }
     }
     else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+}
+
+/** Unbekannte Strukturparameter bleiben offen; konkrete fremde Strukturen sind ausgeschlossen. */
+private fun unpassendeLineareStruktur(element: MathematischesObjekt, beschreibung: String): AussageErgebnis =
+    when (element) {
+        is ZahlAusdruck, is Tupel, is Tensorartig, is MengenAusdruck, is Aussage, is Methode,
+        is WinkelAusdruck -> AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, beschreibung)
+        else -> AussageErgebnis(null, EntscheidungsStatus.Unbekannt)
+    }
+
+private fun entscheideVektorMitgliedschaft(
+    element: MathematischesObjekt,
+    raum: Vektorraum,
+    kontext: RechenKontext,
+): AussageErgebnis {
+    val vektor = element as? OrientierterVektor
+        ?: return unpassendeLineareStruktur(element, "Ein Vektorraum enthält nur orientierte Vektoren.")
+    val orientierung = if (vektor is SpaltenVektor) VektorOrientierung.Spalte else VektorOrientierung.Zeile
+    if (orientierung != raum.orientierung || vektor.werte.size != raum.dimension) {
+        return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Vektororientierung oder Dimension stimmt nicht mit dem Raum überein.")
+    }
+    return Konjunktion(vektor.werte.map { ElementBeziehung(it, raum.skalarMenge) }).entscheide(kontext)
+}
+
+private fun entscheideMatrixMitgliedschaft(
+    element: MathematischesObjekt,
+    raum: Matrizenraum,
+    kontext: RechenKontext,
+): AussageErgebnis {
+    val matrix = element as? Matrix
+        ?: return unpassendeLineareStruktur(element, "Ein Matrizenraum enthält nur Matrizen.")
+    if (matrix.zeilenAnzahl != raum.zeilen || matrix.spaltenAnzahl != raum.spalten) {
+        return AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt, "Die Matrixform stimmt nicht mit dem Raum überein.")
+    }
+    return Konjunktion(matrix.zeilen.flatten().map { ElementBeziehung(it, raum.skalarMenge) }).entscheide(kontext)
 }
 
 private fun entscheideTupelMitgliedschaft(

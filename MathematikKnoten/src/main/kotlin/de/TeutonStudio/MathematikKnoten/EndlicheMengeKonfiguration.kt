@@ -103,7 +103,7 @@ object EndlicheMengeKonstanten {
         ),
         EndlicheMengeKonstante(
             "aussage.lüge",
-            "Lüge",
+            "Falsch",
             MathematikAnschlussArten.Aussage.id,
             WahrheitsKonstante(false),
         ),

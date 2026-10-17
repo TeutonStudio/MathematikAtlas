@@ -67,7 +67,8 @@ class ÜbersetzungsKnotenTest {
             AnschlussDaten(name = "argument1", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id)))
         val angewandt = register.finde(aufruf.art)!!.auswerten(KnotenAuswertungsKontext(aufruf,
             mapOf("methode" to ergebnis, "argument1" to BedingterWert(z(2))), RechenKontext())).ausgaben.getValue("wert")
-        assertEquals(setOf(Gleichheit(z(2), y)), angewandt.annahmen)
+        // Die offene externe Zahlquelle bleibt zusätzlich an den deklarierten Ergebnisbereich gebunden.
+        assertEquals(setOf(Gleichheit(z(2), y),ElementBeziehung(addition(z(2),y),ReelleZahlen)), angewandt.annahmen)
         assertEquals(mapOf("y" to ReelleZahlen), angewandt.reelleVariablen)
     }
 

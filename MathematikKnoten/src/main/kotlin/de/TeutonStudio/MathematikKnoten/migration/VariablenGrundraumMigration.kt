@@ -7,11 +7,11 @@ const val VARIABLE_GRUNDRAUM_VERTRAG = "variable.grundraumVertrag"
 
 /** Alte implizite Bereiche werden einmalig zu expliziten, editierbaren Quellen. */
 fun KartenDaten.migriereHistorischeVariablenGrundräume(): KartenDaten {
-    val karte = migriereVariablenGrundraum()
+    val karte = diagnostiziereQuellenBereiche().migriereVariablenGrundraum()
     val neu = mutableListOf<KnotenDaten>()
     val verbindungen = mutableListOf<VerbindungDaten>()
     val variablen = karte.knoten.map { k ->
-        if (k.art != "mathematik.variable" || VARIABLE_GRUNDRAUM_VERTRAG in k.eigenschaften) return@map k
+        if (RECHNER_MIGRATION_DIAGNOSE in k.parameter || k.art != "mathematik.variable" || VARIABLE_GRUNDRAUM_VERTRAG in k.eigenschaften) return@map k
         val eingang = k.anschlüsse.single { it.name == "grundraum" && it.richtung == AnschlussRichtung.Eingang }
         if (karte.verbindungen.none { it.zu == AnschlussVerweis(k.id, eingang.id) }) {
             val basis = historischeVariablenBasis(k)
@@ -42,7 +42,7 @@ fun KartenDaten.migriereHistorischeVariablenGrundräume(): KartenDaten {
     return karte.copy(knoten = variablen + neu, verbindungen = karte.verbindungen + verbindungen)
 }
 
-private fun historischeVariablenBasis(k: KnotenDaten): MengenAusdruck {
+internal fun historischeVariablenBasis(k: KnotenDaten): MengenAusdruck {
     val roh = k.parameter["werteVorrat"]?.trim()?.uppercase().orEmpty().ifBlank { "R" }
     val id = mapOf("ℕ" to "N", "ℤ" to "Z", "ℚ" to "Q", "ℝ" to "R", "ℂ" to "C")[roh] ?: roh
     return requireNotNull(MengenKnotenAuswahl.vonIdOderNull(id)) { "Unbekannter historischer Variablenbereich: $roh" }.menge()

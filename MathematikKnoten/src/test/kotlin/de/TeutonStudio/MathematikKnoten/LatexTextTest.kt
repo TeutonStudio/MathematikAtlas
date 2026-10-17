@@ -81,7 +81,7 @@ class LatexTextTest {
         val quelltext = atlasLatexQuelltext("\\top \\land \\bot \\land \\mathcal{Wahr}", dunklesSchema = false)
 
         assertContains(quelltext, "\\textcolor{#1B5E20}{\\mathcal{Wahr}}")
-        assertContains(quelltext, "\\textcolor{#B71C1C}{\\mathcal{Lüge}}")
+        assertContains(quelltext, "\\textcolor{#B71C1C}{\\mathcal{Falsch}}")
         assertFalse("\\textcolor{#1B5E20}{\\textcolor" in quelltext)
     }
 

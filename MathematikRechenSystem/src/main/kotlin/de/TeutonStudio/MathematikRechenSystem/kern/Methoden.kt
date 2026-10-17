@@ -87,6 +87,10 @@ data class MathematischeMethode(
             else -> (zielMenge as Tupelraum).komponenten
         }
 
+    /** Ergebnisdeklarationen sind auch ohne vollständige historische Argumentbereiche prüfbar. */
+    internal val ergebnisMengenVertrag:List<Pair<String,MengenAusdruck>>
+        get()=ausgabeNamen.zip(ergebnisZielMengen)
+
     /** Kanonischer mathematischer Zielraum, auch bei null oder einer Ausgabe. */
     val zielRaum: Tupelraum
         get() = Tupelraum(ergebnisZielMengen)
@@ -264,7 +268,9 @@ data class MathematischeMethode(
         val offene = prüfeDefinitionsBedingungen(argumente)
         require(offene.none { it.entscheide().wahrheitswert == Wahrheitswert.Lüge }) { "Die Argumente verletzen den Definitionsraum der Methode '$name'." }
         val ausgewertet = ergebnisTupel.elemente.map { vereinfacheObjekt(ersetze(it, bindungen)) }
-        return Tupel(ausgewertet)
+        val ergebnis=Tupel(ausgewertet)
+        prüfeNumerischeMethodenErgebnisBedingungen(name,ergebnisMengenVertrag,ergebnis,bindungen,RechenKontext(annahmen=offene))
+        return ergebnis
     }
 
     /**

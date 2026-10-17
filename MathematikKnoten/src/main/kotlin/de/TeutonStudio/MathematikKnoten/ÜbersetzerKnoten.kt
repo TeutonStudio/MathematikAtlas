@@ -162,20 +162,17 @@ internal fun termAlsMethode(k: KnotenAuswertungsKontext, termWert: BedingterWert
     var quellenWerte=termWert.variablenQuellen+parameterQuelle?.variablenQuellen.orEmpty()
     val strukturQuellen=quellenWerte.filter { it.strukturBindung!=null }.groupBy { it.strukturBindung!!.id }
     val freieVorher=(term.freieMethodenParameter()+parameterObjekt?.freieMethodenParameter().orEmpty()+quellAnnahmen.flatMap { it.freieMethodenParameter() }).toSet()
-    val strukturNamen=strukturQuellen.values.flatten().map { it.name }.toSet()
-    val belegt=freieVorher.filter { it.name !in strukturNamen }.map { it.name }.toMutableSet()
+    val geplanteNamen=strukturQuellenNamen(quellenWerte,freieVorher)
     val umbenennungen=linkedMapOf<String,MathematischesObjekt>()
     val quellenNamen=mutableMapOf<String,String>()
     strukturQuellen.values.forEach { zusammen ->
         val bindung=zusammen.first().strukturBindung!!
         require(zusammen.all { it.strukturBindung!!.parameterName==bindung.parameterName && it.strukturBindung!!.werteVorrat==bindung.werteVorrat }) { "Die strukturierte Parameterquelle ist widersprüchlich." }
-        var name=bindung.parameterName;var suffix=1
-        while(!belegt.add(name)) name="${bindung.parameterName}_${suffix++}"
+        val name=geplanteNamen.getValue(bindung.id)
         zusammen.forEach { q ->
-            val frei=freieVorher.singleOrNull { it.bindungsId == bindung.id }
-                ?: freieVorher.singleOrNull { it.name == q.name && it.bindungsId == null } ?: return@forEach
+            val frei=strukturQuellenParameter(q,freieVorher) ?: return@forEach
             require(q.strukturBindung!!.komponentenPfad.isEmpty()) { "Historische Komponentenquellen benötigen eine explizite Argumentpackungsmigration." }
-            val parameter=when(frei) { is TypisiertesElement -> frei.copy(name=name,latex=name); is Variable -> frei.copy(name=name,latex=name,bindungsId=null); is WinkelParameter -> frei.copy(name=name,latex=name,bindungsId=null); else -> error("Nicht unterstützte strukturierte Parameterquelle.") }
+            val parameter=when(frei) { is TypisiertesElement -> frei.copy(name=name,latex=name); is Variable -> frei.copy(name=name,latex=name,bindungsId=null); is WinkelParameter -> frei.copy(name=name,latex=name,bindungsId=null); is AllgemeinerParameter -> frei.copy(name=name,latex=name,bindungsId=null); else -> error("Nicht unterstützte strukturierte Parameterquelle.") }
             umbenennungen[frei.bindungsId ?: q.name]=parameter;quellenNamen[bindung.id]=name
         }
     }
@@ -202,12 +199,13 @@ internal fun termAlsMethode(k: KnotenAuswertungsKontext, termWert: BedingterWert
     val namen = gespeichert + (bindbare - gespeichert.toSet()).sorted()
     val ziel = inferiereZielmenge(term, vorräte, quellAnnahmen)
     val einzelausgabe=term is Tupel && k.knoten.parameter["methode.tupelEinzelausgabe"] == "true"
+    val strukturiertesEinzelergebnis=einzelausgabe || term !is Tupel && ziel is Tupelraum
     val ausgabeNamen = if (term is Tupel && !einzelausgabe) term.elemente.indices.map { "element${it + 1}" } else listOf("wert")
     val methode = MathematischeMethode(name = k.knoten.parameter["name"] ?: "f", parameter = namen.map { name ->
         if (quellen.getValue(name).first().lösungsRolle == LösungsQuellenRolle.Parameter)
             AllgemeinerParameter(name) else freie.getValue(name)
     },
-        vorschrift = if (einzelausgabe) Tupel(listOf(term)) else term, zielMenge = if (einzelausgabe) Tupelraum(listOf(ziel)) else ziel, werteVorräte = namen.associateWith { vorräte.getValue(it) }, ausgabeNamen = ausgabeNamen,
+        vorschrift = if (strukturiertesEinzelergebnis) Tupel(listOf(term)) else term, zielMenge = if (strukturiertesEinzelergebnis) Tupelraum(listOf(ziel)) else ziel, werteVorräte = namen.associateWith { vorräte.getValue(it) }, ausgabeNamen = ausgabeNamen,
         argumentIdentitäten = namen.associateWith { name ->
             val quelle = quellen.getValue(name).first()
             quelle.strukturBindung?.id ?: quelle.bindungsId?.let { id -> id + (quelle.bindungsName?.let { "::$it" } ?: "") } ?: quelle.knotenId.wert

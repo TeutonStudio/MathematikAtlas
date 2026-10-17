@@ -12,11 +12,11 @@ internal object LuegeKonzeptDatei1389D14E : ExpliziteKonzeptDatei {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
         return WissensEintrag(
             id = id,
-            titel = "Lüge",
+            titel = "Falsch",
             kurzbeschreibung = "Die falsche Aussage ⊥.",
             fachPfade = setOf(FachPfad.von("logik", "aussagen")),
-            suchbegriffe = setOf("Aussagen: Aussagenlogik", "Die falsche Aussage ⊥.", "Lüge", "aussage", "mathematik.aussage", "mathematik.lüge"),
-            aliase = emptySet(),
+            suchbegriffe = setOf("Falsch", "Aussagen: Aussagenlogik", "Die falsche Aussage ⊥.", "Lüge", "aussage", "mathematik.aussage", "mathematik.lüge"),
+            aliase = setOf("Lüge"),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
             knotenArten = setOf("mathematik.lüge"),

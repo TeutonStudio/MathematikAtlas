@@ -51,12 +51,34 @@ fun BedingterWert.alsGebundeneErgebnisFormel():GebundeneFormel {
         val q=kandidaten.singleOrNull() ?: error("Die Quelle ${p.name} besitzt keinen eindeutigen Exportvertrag.")
         val id=p.bindungsId ?: q.bindungsId ?: q.knotenId.wert
         if(p.bindungsId==null) {
-            require(p is Variable) {"Historische strukturierte Quellen benötigen eine explizite Identität."}
-            bindungen[p.name]=p.copy(bindungsId=id)
+            bindungen[p.name]=when {
+                p is Variable -> p.copy(bindungsId=id)
+                p is TypisiertesElement && q.strukturBindung?.id==id && q.strukturBindung.komponentenPfad.isEmpty() -> p.copy(name=id)
+                else -> error("Historische strukturierte Quellen benötigen eine explizite Identität.")
+            }
         }
         val sig=(p as? MethodenVariable)?.signatur
-        val typ=when {sig!=null -> FormelTyp.METHODE;p is ZahlAusdruck -> FormelTyp.ZAHL;p is MengenAusdruck -> FormelTyp.MENGE;p is Aussage -> FormelTyp.AUSSAGE;else -> FormelTyp.OBJEKT}
-        FormelVariablenQuelle(id,p.name,if(q.alsMethodenParameter) FormelVariablenArt.FREI else FormelVariablenArt.EXTERN,typ,q.werteVorrat,methodenSignatur=sig)
+        val bereichsTyp=q.werteVorrat.elementTypAusdruck()
+        val typId=when(bereichsTyp) {
+            is de.TeutonStudio.TypSystem.TypAusdruck.Atom -> bereichsTyp.id
+            is de.TeutonStudio.TypSystem.TypAusdruck.Parameterisiert -> bereichsTyp.konstruktor
+            else -> null
+        }
+        val typ=when {
+            sig!=null -> FormelTyp.METHODE
+            p is ZahlAusdruck -> FormelTyp.ZAHL
+            p is MengenAusdruck || typId==MathematischeTypen.Menge -> FormelTyp.MENGE
+            p is Aussage || typId==MathematischeTypen.Aussage -> FormelTyp.AUSSAGE
+            typId==MathematischeTypen.Tupel -> FormelTyp.TUPEL
+            typId!=null && MathematischeTypen.istAtomUntertyp(typId,MathematischeTypen.Vektor) -> FormelTyp.VEKTOR
+            typId==MathematischeTypen.Matrix -> FormelTyp.MATRIX
+            typId==MathematischeTypen.Tensor -> FormelTyp.TENSOR
+            else -> FormelTyp.OBJEKT
+        }
+        FormelVariablenQuelle(id,q.strukturBindung?.parameterName ?: p.name,
+            if(q.alsMethodenParameter) FormelVariablenArt.FREI else FormelVariablenArt.EXTERN,typ,q.werteVorrat,methodenSignatur=sig).let {
+                if(typ==FormelTyp.OBJEKT && p !is ZahlAusdruck) it.copy(rolle=FormelSymbolRolle.STRUKTUR) else it
+            }
     }.distinct()
     val typ=when(wert) {is ZahlAusdruck -> FormelTyp.ZAHL;is Tupel -> FormelTyp.TUPEL;is Methode -> FormelTyp.METHODE;is MengenAusdruck -> FormelTyp.MENGE;is Aussage -> FormelTyp.AUSSAGE;else -> FormelTyp.OBJEKT}
     val kontext=übersetzungsKontext()

@@ -423,6 +423,7 @@ internal fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester,
                         meldungen.forEach { Text(it.text, color = if (it.art == KnotenMeldungsArt.Fehler) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant) }
                         if (besitztPrädikatsRechenweg(knoten.art)) Button(onClick = { rechenwegOffen = true }) { Text("Rechenweg öffnen") }
             DesktopMethodenQuelle(knoten, atlas)
+            if (knoten.art == "mathematik.allgemeinerParameter") InspektorAllgemeinerParameter(knoten,atlas::beantrageKonfiguration)
             if (knoten.art == "mathematik.variable") {
                 MatrixVariableFelder(knoten) { atlas.beantrageKonfiguration(it) }
             }
