@@ -12,7 +12,8 @@ v3.4.5/x abgeschlossen: e6760b9a41aaeb186dee7ee7c13254430cb47ee8, alle Master-Ga
 M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle finalen Master-Gates grün.
 M4: v3.4.7 veröffentlicht, finaler Master 69d4e70a; PR- und Masterabnahme grün.
 M5: v3.4.8 veröffentlicht, finaler Master fb1984f9; PR- und Masterabnahme grün.
-M6: v3.4.9/x auf samai/v3.4.9/konsolidierung-m6 reserviert, Basis fb1984f9.
+M6: v3.4.9 veröffentlicht, finaler Master 49945974; PR- und Masterabnahme grün.
+M7: v3.4.10/x auf samai/v3.4.10/konsolidierung-m7 reserviert, Basis 49945974.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -104,8 +105,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M3 Tupel/Übersetzer: v3.4.6/43726159 veröffentlicht, PR #460; 124 gemeinsame/126 Androidarten, alle PR-/Master-Gates grün, PR-Geräteabnahme 62/62.
 - [x] M4 Mengen: v3.4.7 veröffentlicht, 69d4e70a4f1bdbf69b23f0ee708f5893d5232947, PR #461; drei Spezialarten konsolidiert, 121 gemeinsame/123 Androidtypen, alle sechs jüngsten PR-Gates und vier finalen Master-Workflows grün.
 - [x] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8 veröffentlicht, fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a, PR #462; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
-- [-] M6 Begriffe und Verantwortlichkeiten: v3.4.9/x direkt ab v3.4.8/fb1984f9 auf samai/v3.4.9/konsolidierung-m6 reserviert, Produktarbeit offen.
-- [ ] M7 unabhängige Alt-Auswerter entfernen, Gesamtabschluss prüfen.
+- [x] M6 Begriffe und Verantwortlichkeiten: v3.4.9 veröffentlicht, 49945974dbe96778b70341f29a32bd96747d18d8, PR #463; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
+- [-] M7 Alt-Auswerter und Legacy-Migrationsverträge: v3.4.10/x direkt ab v3.4.9/49945974 auf samai/v3.4.10/konsolidierung-m7 reserviert; Bereinigung, nachgewiesene Migrationsfehler und Gesamtabschlussprüfung offen.
 
 ## 10. Konkrete Umsetzungsschritte
 
@@ -738,3 +739,36 @@ nach Snapshotkorrektur ohne weitere Blocker. Standalone-Skript mangels kotlinc
 weiterhin offen; lokales jpackage unterstützt rpm nicht (/tmp/atlas-m6-rpm.log).
 User-App und Daten wegen fremder Signatur unverändert. Produktdiff für PR/CI
 am kohärenten 3.4.9-Zielstand eingefroren; noch keine Veröffentlichung.
+
+
+### M6 veröffentlicht; M7 reserviert
+
+PR #463 wurde am konkret freigegebenen Head c2b539ef2224684ec76363e6e3b2ca10eb444c17
+regulär ohne Admin-/Bypassoption als v3.4.9 integriert. Finaler Mastercommit
+49945974dbe96778b70341f29a32bd96747d18d8 folgt unmittelbar auf v3.4.8/fb1984f9.
+GitHub-Squashidentität Alexander/GitHub; lokale Reservierung c37069dd und
+Produktcommit c2b539ef SamAI/SamAI verifiziert. Kein Connector-Produktcommit.
+
+Finale lokale Suite: 2244 aktuelle JVM-/Desktopfälle, 0 Fehler, 1 vorhandener
+Skip, also 2243 bestanden; 3m47s/277 Tasks. Sieben neue M6-Regressionen und
+unabhängiger Nachreview nach Snapshotfix ohne Blocker. Alle sechs finalen
+PR-Gates grün; isolierter Emulator Editor 7/7 und App 61/61, insgesamt 68/68
+ohne Fehler oder Skips (/tmp/atlas-m6-runtime-final.zip). Standalone-kotlinc
+fehlt und RPM ist lokal unsupported; unveränderte Kern- und Linux-RPM-/
+Neustartpersistenz-CI lief erfolgreich.
+
+Finale Masterabnahme am exakten 49945974: Android 39006842925,
+Linux/RPM/Neustartpersistenz 39006843006, Kern/isolierte Android-Laufzeit
+39006842966 und Release-Guard 39006843009 jeweils completed/success;
+beide Kernworkflowjobs verify und android-runtime erfolgreich. M6 ist damit
+abgeschlossen. Diese Abnahme ersetzt vorherige offene M6-Statusangaben.
+
+Erst danach wurde M7 als v3.4.10/x direkt vom finalen Mastercommit reserviert.
+Neben nachgewiesener Alt-Auswerterbereinigung gehören ältere belegte Fehler
+bei Sperrdiagnosen, Ports, Standardwerten und Logarithmusbasis-Argumenten zum
+beauftragten Migrationsvertrag. Gesperrte Knoten erhalten keinen historischen
+Mathematikfallback. Der Gesamtabschluss bleibt bis zur vollständigen Verbraucher-
+und Vertragsevidenz offen; Katalogzahlen allein sind kein Nachweis.
+Keine neuen oder aus dem kanonischen Katalog entfernten Knotentypen, weiterhin
+121/123. Keine Folgeversion reserviert. Android/Desktop/Linux/current_version
+bleiben bis zum M7-Zielabschluss kohärent auf 3.4.9.
