@@ -11,7 +11,8 @@ ursprüngliche Android-Schlussabnahme fehlgeschlagen, durch enges Test-Reparatur
 v3.4.5/x abgeschlossen: e6760b9a41aaeb186dee7ee7c13254430cb47ee8, alle Master-Gates grün.
 M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle finalen Master-Gates grün.
 M4: v3.4.7 veröffentlicht, finaler Master 69d4e70a; PR- und Masterabnahme grün.
-M5: v3.4.8/x auf samai/v3.4.8/konsolidierung-m5 reserviert, Basis 69d4e70a.
+M5: v3.4.8 veröffentlicht, finaler Master fb1984f9; PR- und Masterabnahme grün.
+M6: v3.4.9/x auf samai/v3.4.9/konsolidierung-m6 reserviert, Basis fb1984f9.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -102,8 +103,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M2 Matrix/Vektor/Tensor: v3.4.4 integriert; Schlussabnahme über separat veröffentlichte Testreparatur v3.4.5/e6760b9a vollständig grün, ursprünglicher Laufzeitfehler historisch erhalten.
 - [x] M3 Tupel/Übersetzer: v3.4.6/43726159 veröffentlicht, PR #460; 124 gemeinsame/126 Androidarten, alle PR-/Master-Gates grün, PR-Geräteabnahme 62/62.
 - [x] M4 Mengen: v3.4.7 veröffentlicht, 69d4e70a4f1bdbf69b23f0ee708f5893d5232947, PR #461; drei Spezialarten konsolidiert, 121 gemeinsame/123 Androidtypen, alle sechs jüngsten PR-Gates und vier finalen Master-Workflows grün.
-- [-] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8/x ab v3.4.7/69d4e70a auf samai/v3.4.8/konsolidierung-m5 reserviert, Produktarbeit offen.
-- [ ] M6 Begriffe und Verantwortlichkeiten korrigieren.
+- [x] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8 veröffentlicht, fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a, PR #462; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
+- [-] M6 Begriffe und Verantwortlichkeiten: v3.4.9/x direkt ab v3.4.8/fb1984f9 auf samai/v3.4.9/konsolidierung-m6 reserviert, Produktarbeit offen.
 - [ ] M7 unabhängige Alt-Auswerter entfernen, Gesamtabschluss prüfen.
 
 ## 10. Konkrete Umsetzungsschritte
@@ -668,3 +669,72 @@ scheitert unverändert in jpackage: Invalid or unsupported type: [rpm]
 (/tmp/atlas-m5-rpm.log). Kein lokaler Geräte-Neuinstallationsversuch mit Datenverlust;
 fremde Nutzersignatur bleibt geschützt. Produktdiff unabhängig ohne Blocker.
 Produktbaum für SHA-bezogene CI eingefroren; M5 noch nicht veröffentlicht.
+
+
+### M5 veröffentlicht; M6 reserviert
+
+PR #462 wurde am konkret freigegebenen Head d31f4cded72d1ecd4af98109dd77a89a2d32979c
+regulär ohne Admin-/Bypassoption als v3.4.8 integriert. Finaler Mastercommit
+fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a folgt unmittelbar auf v3.4.7/69d4e70a.
+GitHub-Squashidentität Alexander/GitHub; lokale Reservierung 584b59bd und
+Produktcommit d31f4cde SamAI/SamAI verifiziert. Kein Connector-Produktcommit.
+
+Die finale lokale Suite bestand mit 2237 Fällen/0 Fehlern/1 vorhandenem Skip,
+also 2236 bestanden, 3m26s/277 Tasks. Nur aktuelle build/test-results-XMLs
+inklusive TypSystem gezählt; ältere connected-Berichte ausgeschlossen.
+Unabhängiger Abschlussreview ohne Blocker. Alle sechs finalen PR-Gates grün;
+isolierter Emulator Editor 7/7 und App 61/61, insgesamt 68/68 ohne Fehler oder
+Skips (/tmp/atlas-m5-runtime-final.zip). Neue Parameterbereich-/Dimensions-/Undo-
+und explizite Diagnose-Reparaturtests tatsächlich ausgeführt und erfolgreich.
+Lokales Standalone-kotlinc fehlt und RPM ist lokal unsupported; unveränderte
+Kern- und Linux-RPM-/Neustartpersistenz-CI lief erfolgreich.
+
+Finale Masterabnahme am exakten fb1984f9: Android 39005206217,
+Linux/RPM/Neustartpersistenz 39005206228, Kern/isolierte Android-Laufzeit
+39005206244 und Release-Guard 39005206226 jeweils completed/success;
+beide Kernworkflowjobs verify und android-runtime erfolgreich. M5 ist damit
+abgeschlossen. Diese Abnahme ersetzt vorherige offene M5-Statusangaben.
+
+Erst danach wurde M6 als v3.4.9/x direkt vom finalen Mastercommit reserviert.
+Der Umfang präzisiert Begriffe und Verträge bestehender Darstellungs-, Maß-,
+Raum-, Cauchy- und Richtungsknoten. Keine neuen Knotentypen oder Typentfernung,
+Katalog weiterhin 121/123. M7 bleibt offen und unreserviert. Android/Desktop/
+Linux/current_version bleiben bis zum M6-Zielabschluss kohärent auf 3.4.8.
+
+
+M6 erste Umsetzung: LaTeX-Darstellung registriert im vorhandenen mathematischen Basisregister;
+Adapter-Sonderdispatch entfernt. Bezeugte Ausgaben behalten ihre eigene Anzeige
+und ihren Kontext. Folgerechnungen erhalten konservativ numerische Annäherung,
+aber keine veralteten Form-/Bereichskontexte und keine künstlichen Zeugnisse.
+Richtungsquelle n=0 bleibt exakt; n>0 erhält bestehenden Genauigkeitskontext und
+Hinweis. Nachgewiesene Kerngrenzabweichung 31 versus gemeinsame 64 Winkel auf
+MAXIMALE_RICHTUNGS_WINKEL vereinheitlicht. Präzisierte sichtbare Begriffe bei
+stabilen Typ-/Konzept-/Varianten-IDs und erhaltenen Suchaliasen. Sechs neue
+Vertragsregressionen; gezielter Lauf gestartet. ADR Darstellung/Genauigkeit.
+
+
+M6 gezielte Korrekturprüfung erfolgreich, 7 s/44 Tasks
+(/tmp/atlas-m6-third.log): sieben neue Architektur-/Genauigkeitsregressionen und
+bestehende Mengen-Methodenverträge. Die unabhängige Prüfung fand zuvor einen
+Genauigkeitsverlust in Formel-Snapshots. Literal-Snapshots verwenden nun den
+fortgeführten Kontext; Operations-ASTs erhalten rekursiv NUM aus Kindmetadaten
+und Herkunft ohne veraltete Formräume. Beide Fälle sind über Wire und erneute
+Formelauswertung geprüft. Genauigkeitstransport liest ausschließlich Metadaten
+und erzwingt keine neue Signaturinferenz historischer Methoden. Nachreview ohne
+weitere Blocker. Erste Gesamtsuite wurde durch diesen letzten Inferenzfehler
+abgebrochen; korrigierter finaler Gesamtlauf gestartet. Zwei frühe Testfixtures
+wurden an bestehende Verträge angepasst: Norm besitzt Kompatibilitätsaliasausgabe,
+Cauchy erwartet einen numerischen Träger ohne eindeutige Standardmetrik (Z).
+Die Darstellung registriert einmalig im bestehenden Standard-Basisregister,
+damit auch dessen bestehende API erhalten bleibt; keine doppelte Paketregistrierung.
+
+
+M6 vollständige finale lokale Suite erfolgreich: 3 min 47 s/277 Tasks,
+2244 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener Opt-in-Skip = 2243 bestanden
+(/tmp/atlas-m6-final.log). Sieben neue Regressionen grün; bestehende 68 Gerätefälle
+kompiliert, noch nicht an M6 ausgeführt. Repository/15 Standardkarten/Releaseplan
+115/Versionsfolge/14 Guardregressionen/Diffprüfung grün. Unabhängiger Nachreview
+nach Snapshotkorrektur ohne weitere Blocker. Standalone-Skript mangels kotlinc
+weiterhin offen; lokales jpackage unterstützt rpm nicht (/tmp/atlas-m6-rpm.log).
+User-App und Daten wegen fremder Signatur unverändert. Produktdiff für PR/CI
+am kohärenten 3.4.9-Zielstand eingefroren; noch keine Veröffentlichung.

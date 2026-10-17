@@ -117,7 +117,7 @@ object StrukturRechnerKnotenVorlagen {
 
     val Cauchy = KnotenVorlage(
         art = CAUCHY_ART,
-        name = "Cauchy",
+        name = "Nichtstandard-Cauchyprüfung",
         kategorie = "Analysis: Nichtstandardanalysis",
         beschreibung = "Prüft ein unnatürliches kartesisches Tupel primär über unendliche Hyperindizes.",
         standardGröße = GraphGröße(270f, 115f),

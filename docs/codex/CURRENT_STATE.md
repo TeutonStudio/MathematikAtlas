@@ -1,40 +1,28 @@
 ## Aktueller Konsolidierungsstand, 17. Oktober 2026
 
-Veröffentlichte Basis: v3.4.7/69d4e70a4f1bdbf69b23f0ee708f5893d5232947,
-M0–M4 einschließlich separater Testreparatur abgeschlossen. PR #461 wurde nach
-sechs aktuellen grünen Prüfungen an 91f5c953 regulär integriert. Android-PR-Laufzeit
-66/66 ohne Fehler/Skips; vorherige zwei Fehler und der einmalig wiederholte
-Resolverfehler bleiben im ExecPlan dokumentiert. Alle vier finalen Master-Gates
-(Android 39001388559, Linux 39001388566, Kern/Laufzeit 39001388536,
-Guard 39001388554) sind grün. Gemeinsamer Erstellenbestand 121 mathematische
-Arten, Android einschließlich Werkzeug/Gruppe 123.
+M0–M5 veröffentlicht und vollständig abgenommen. Aktuelle Basis v3.4.8,
+fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a. PR #462: geprüfter SamAI-Head
+d31f4cd, alle sechs Prüfungen grün, isolierter Emulator 68/68 ohne Fehler/Skips.
+Finaler Master: Android 39005206217, Linux/RPM/Persistenz 39005206228,
+Kern/Emulator 39005206244 und Guard 39005206226 sämtlich grün. Lokale M5-Suite
+2237/0/1 vorhandener Skip, 3 min 26 s/277 Tasks. Squash Alexander/GitHub.
 
-M5 ist als v3.4.8/x auf `samai/v3.4.8/konsolidierung-m5` in Umsetzung:
-gemeinsame Quellen-Typ-/Grundrauminformation, stabile Parameteridentitäten bei
-Umbenennen/Kopieren, getrennte Lösungsrollen und eindeutige lokale Namen.
-Die historische Argumentidentität allgemeiner Parameter bleibt ihre Knoten-ID.
-Ungültige gespeicherte Bereiche bleiben erhalten und blockiert; ein neuer
-expliziter Leertupelbereich wird innerhalb der bestehenden Eigenschaft versioniert.
-Android/Desktop verwenden denselben validierten Bereichseditor. Wahr/Falsch
-bleiben eigene nullstellige Quellen; ID/Enum `lüge`/`Lüge` und historische
-Konzeptreferenzen bleiben stabil, sichtbare Begriffe verwenden Falsch.
+M6 als v3.4.9/x direkt auf dieser Basis reserviert, Branch
+samai/v3.4.9/konsolidierung-m6. Registrierte LaTeX-Darstellung, präzisierte
+Maß-/Tensorträger-/Nichtstandard-Cauchybegriffe und erhaltene numerische
+Richtungsgenauigkeit in Umsetzung. Gemeinsamer Katalog bleibt 121 mathematische
+und 123 Androidtypen; keine neuen Typen oder Abhängigkeiten. Die bestehende
+64-Winkel-Grenze wird im Richtungskern vereinheitlicht. Sieben neue Regressionen
+geprüft. Vollständige lokale Suite grün (3 min 47 s/277 Tasks, 2244 Fälle/0 Fehler/
+1 vorhandener Skip). Repository, 15 Standardkarten, Releaseplan, Versionsfolge,
+14 Guardregressionen und Diffprüfung grün; unabhängiger Nachreview ohne Blocker.
+Formel-Snapshots erhalten Genauigkeit über Wire und erneute Auswertung.
+Noch keine M6-CI-/Laufzeitfreigabe; 68 Gerätetests erwartet. M7 bleibt offen.
 
-Numerische Nullinferenz ist auf N₀ korrigiert. Der zusätzliche numerische
-Ergebnisbereichsschutz erhält offene Bedingungen und diagnostiziert falsche
-Altzielbereiche, ohne die bestehende Mengenfamiliensemantik umzudeuten.
-Vollständige lokale Zielstandprüfung erfolgreich: 3 min 26 s/277 Tasks,
-2237 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener Opt-in-Skip (2236 bestanden).
-Gezählte XMLs ausschließlich unter build/test-results; ältere connected-Ergebnisse
-werden nicht mitgezählt. 16 Quellen- und sechs Kernregressionen sowie zwei native
-Desktop-Bereichstests grün. Zwei neue Android-Inspector-/Undo-Tests kompiliert;
-Geräteausführung noch offen. Repository, 15 Standardkarten, Releaseplan,
-Versionsfolge, 14 Guardregressionen und Diffprüfung grün. Unabhängige finale
-Diffprüfung ohne Blocker. /tmp/atlas-m5-final-verified.log.
-Standalone-Kernprüfung benötigt weiterhin fehlendes kotlinc; lokale RPM-
-Paketierung scheitert in jpackage mit Invalid or unsupported type: [rpm]
-(2 s/22 Tasks, /tmp/atlas-m5-rpm.log). Die Nutzer-App besitzt eine fremde Signatur;
-keine Deinstallation ihrer Daten. Isolierte CI- und Masterabnahmen bleiben
-vor Veröffentlichung erforderlich. M6/M7 offen.
+Lokale Prüfgrenzen unverändert: zusätzliches Standalone-Skript ohne kotlinc,
+jpackage unterstützt rpm nicht; Nutzersignatur verhindert nichtdestruktive
+Testinstallation. Isolierte CI-Abnahmen sind verpflichtend.
+
 Nachfolgend historische Einträge.
 
 > Releaseprüfung PR #454: Der schmale Operator-Auswahldialog wurde wegen des nachgewiesenen Höhenkonflikts gezielt begrenzt. Scrollbarer Steuerbereich höchstens45Prozent, eigener verbleibender Trefferbereich; Titel und Aktionen bleiben im AtlasDialog-Rahmen. Unabhängig statisch ohne Findings geprüft; Androidregression für Listenhöhe, Auswahl, Abbruch und Übernahme bei Schriftfaktor1/2 ergänzt. Lokale App-Tests/Lint/APKs grün48s; native Laufzeitfreigabe erst nach vollständiger CI auf neuem Head. b22267cc bleibt ohne Mergefreigabe. Optionale Hardwaremessungen bleiben separat und gelten nicht als ausgeführt.

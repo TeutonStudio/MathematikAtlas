@@ -11,7 +11,14 @@ import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensKartenRolle
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.WissensReifegrad
 
 /** Sichtbarer Begriff darf historische Konzept-/Variantenreferenzen nicht ändern. */
-private fun KnotenVorlage.stabilerKonzeptName()=if(art=="mathematik.lüge" && name=="Falsch") "Lüge" else name
+private fun KnotenVorlage.stabilerKonzeptName() = when (art to name) {
+    "mathematik.lüge" to "Falsch" -> "Lüge"
+    "mathematik.darstellungsoptimierung" to "LaTeX-Darstellung" -> "Darstellungsoptimierung"
+    "mathematik.mengenNorm" to "Maß einer Menge" -> "Norm einer Menge"
+    "mathematik.vektorraum" to "Tensorträgermenge erster Stufe" -> "Vektorraum Aⁿ"
+    "mathematik.cauchy" to "Nichtstandard-Cauchyprüfung" -> "Cauchy"
+    else -> name
+}
 
 fun KnotenVorlage.stabileKonzeptId(): String {
     val variantenSchlüssel = standardParameter.toSortedMap()
@@ -40,6 +47,7 @@ private fun Iterable<String>.bereinigteSuchbegriffe(): Set<String> =
 private fun KnotenVorlage.suchbegriffe(): Set<String> = buildList {
     add(art)
     add(name)
+    add(stabilerKonzeptName())
     add(kategorie)
     add(wissensBeschreibung())
     addAll(standardParameter.keys)
