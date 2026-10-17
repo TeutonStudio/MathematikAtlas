@@ -3,6 +3,7 @@ package de.TeutonStudio.MathematikAtlas
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
+import de.TeutonStudio.MathematikKnoten.RECHNER_MIGRATION_DIAGNOSE
 import de.TeutonStudio.MathematikKnoten.AUSSAGEN_LOGIK_SEMANTIK
 import de.TeutonStudio.MathematikKnoten.AUSSAGEN_LOGIK_XOR
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
@@ -16,6 +17,9 @@ internal fun migriereAussagenOperatoren(karte: KartenDaten): KartenDaten = karte
 )
 
 private fun migriereAussagenKnoten(knoten: KnotenDaten): KnotenDaten = when {
+    RECHNER_MIGRATION_DIAGNOSE in knoten.parameter -> knoten
+    knoten.art == "mathematik.adjunktion" && knoten.parameter[AUSSAGEN_LOGIK_SEMANTIK] !in setOf(null, AUSSAGEN_LOGIK_XOR) ->
+        knoten.copy(parameter = knoten.parameter + (RECHNER_MIGRATION_DIAGNOSE to "Adjunktion bleibt erhalten: Unbekannte gespeicherte Semantik."))
     knoten.art == "mathematik.adjunktion" && knoten.parameter[AUSSAGEN_LOGIK_SEMANTIK] != AUSSAGEN_LOGIK_XOR ->
         knoten.copy(
             art = "mathematik.konjunktion",

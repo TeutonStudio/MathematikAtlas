@@ -91,9 +91,9 @@ fun kartenGrenzSortierung(): Comparator<KnotenDaten> = compareBy<KnotenDaten>(
 )
 
 /** Idempotente Migration: historische Layoutreihenfolge einmalig als Fachreihenfolge speichern. */
-fun KartenDaten.normalisiereSchnittstellenReihenfolge(): KartenDaten {
+fun KartenDaten.normalisiereSchnittstellenReihenfolge(geschützt: Set<de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenId> = emptySet()): KartenDaten {
     val positionen = listOf("mathematik.kartenEingang", "mathematik.kartenAusgang").flatMap { art ->
-        knoten.filter { it.art == art }.takeIf { it.size > 1 }.orEmpty().sortedWith(kartenGrenzSortierung()).mapIndexed { i, k -> k.id to i }
+        knoten.filter { it.art == art && it.id !in geschützt }.takeIf { it.size > 1 }.orEmpty().sortedWith(kartenGrenzSortierung()).mapIndexed { i, k -> k.id to i }
     }.toMap()
     if (knoten.all { k -> positionen[k.id]?.let { k.parameter[KARTEN_SCHNITTSTELLEN_POSITION] == it.toString() } ?: true }) return this
     return copy(knoten = knoten.map { k -> positionen[k.id]?.let { i ->

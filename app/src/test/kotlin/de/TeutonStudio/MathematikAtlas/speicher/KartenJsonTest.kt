@@ -1,7 +1,8 @@
 package de.TeutonStudio.MathematikAtlas.speicher
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
-import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.UniversellerZahlenOperator
 import kotlin.test.*
 
 class KartenJsonTest {
@@ -113,7 +114,8 @@ class KartenJsonTest {
         val extremwert = MathematikKnotenVorlagen.Minimum.erzeuge(GraphPunkt.Zero)
         val gelesen = KartenJson.lese(KartenJson.schreibe(KartenDaten(name = "Test", knoten = listOf(extremwert)))).knoten.single()
 
-        assertEquals("mathematik.extremwert", gelesen.art)
+        assertEquals(ZAHLENRECHNER_ART, gelesen.art)
+        assertEquals(UniversellerZahlenOperator.MINIMUM.stabileId, gelesen.parameter[ZAHLENRECHNER_OPERATOR])
         assertEquals("minimum", gelesen.parameter.getValue("modus"))
         assertEquals(listOf(extremwert.anschlüsse.first().id, extremwert.anschlüsse.last().id), gelesen.anschlüsse.map { it.id })
     }

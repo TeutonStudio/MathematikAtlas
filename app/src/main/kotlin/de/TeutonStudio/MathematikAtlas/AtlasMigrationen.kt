@@ -17,6 +17,7 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
         ),
     )
     val assoziativAktualisiert = migriert.copy(knoten = migriert.knoten.map { ursprünglicherKnoten ->
+        if (RECHNER_MIGRATION_DIAGNOSE in ursprünglicherKnoten.parameter) return@map ursprünglicherKnoten
         val knoten = if (ursprünglicherKnoten.art == "mathematik.differenz" && ursprünglicherKnoten.name == "Mengendifferenz") ursprünglicherKnoten.copy(name = "Differenz") else ursprünglicherKnoten
         val istAssoziativ = knoten.art in assoziativeKnotenArten &&
             !(knoten.art == "mathematik.tupel" && tupelKonfiguration(knoten).erzeugungsArt == TUPEL_METHODE)
@@ -31,7 +32,7 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
             )
         }
     })
-    return migriereIntervallGrundmenge(migriereMatrixKnoten(assoziativAktualisiert))
+    return migriereIntervallGrundmenge(migriereMatrixKnoten(assoziativAktualisiert)).bewahreDiagnostizierteOriginale(karte)
 }
 
 /**
@@ -40,6 +41,7 @@ internal fun migriereAssoziativeKnoten(karte: KartenDaten): KartenDaten {
  */
 internal fun migriereIntervallGrundmenge(karte: KartenDaten): KartenDaten = karte.copy(
     knoten = karte.knoten.map { knoten ->
+        if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter) return@map knoten
         if (knoten.art !in setOf("mathematik.halbesIntervall", "mathematik.reellesIntervall")) {
             knoten
         } else {
@@ -67,6 +69,7 @@ internal fun migriereIntervallGrundmenge(karte: KartenDaten): KartenDaten = kart
 /** Vereinigt die vier historischen Vergleichsarten zu einem parametrierten Knoten. */
 internal fun migriereOrdnungsrelation(karte: KartenDaten): KartenDaten = karte.copy(
     knoten = karte.knoten.map { knoten ->
+        if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter) return@map knoten
         val relation = when (knoten.art) {
             "mathematik.kleiner" -> "kleiner"
             "mathematik.kleinerGleich" -> "kleinerGleich"
@@ -84,6 +87,7 @@ internal fun migriereOrdnungsrelation(karte: KartenDaten): KartenDaten = karte.c
 /** Aktualisiert bestehende Bildmengen-Knoten ohne benutzerdefinierte Namen oder Kanten zu verändern. */
 internal fun migriereAbbildZuAllgemeinerMethode(karte: KartenDaten): KartenDaten = karte.copy(
     knoten = karte.knoten.map { knoten ->
+        if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter) return@map knoten
         if (knoten.art != "mathematik.abbild") knoten else knoten.copy(
             name = if (knoten.name == "Abbild") "Bildmenge" else knoten.name,
             anschlüsse = knoten.anschlüsse.map { anschluss ->
@@ -98,6 +102,7 @@ internal fun migriereTermZuMethodeUndVariablen(karte: KartenDaten): KartenDaten 
     val entfernteAnschlüsse = mutableSetOf<AnschlussVerweis>()
     val termKnoten = mutableSetOf<KnotenId>()
     val knoten = karte.knoten.map { alt ->
+        if (RECHNER_MIGRATION_DIAGNOSE in alt.parameter) return@map alt
         when (alt.art) {
             "mathematik.variable" -> {
                 alt.anschlüsse.filter { it.name == "wertevorrat" }.forEach { entfernteAnschlüsse += AnschlussVerweis(alt.id, it.id) }
@@ -174,6 +179,7 @@ internal fun migriereDivisionV240(karte: KartenDaten): KartenDaten {
     }
 
     val knoten = karte.knoten.map { alt ->
+        if (RECHNER_MIGRATION_DIAGNOSE in alt.parameter) return@map alt
         if (alt.art != "mathematik.division") return@map alt
         val dividend = alt.anschlüsse.firstOrNull { it.name == "dividend" && it.richtung == AnschlussRichtung.Eingang }
             ?: AnschlussDaten(name = "dividend", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id)
@@ -260,6 +266,7 @@ internal fun migriereDivisionV240(karte: KartenDaten): KartenDaten {
 internal fun migriereFallunterscheidung(karte: KartenDaten): KartenDaten {
     val ausgangUmleitungen = mutableMapOf<AnschlussVerweis, AnschlussVerweis>()
     val knoten = karte.knoten.map { alt ->
+        if (RECHNER_MIGRATION_DIAGNOSE in alt.parameter) return@map alt
         if (alt.art != "mathematik.fall") return@map alt
         if (alt.anschlüsse.any { it.name == "wahr" }) {
             return@map alt.copy(anschlüsse = alt.anschlüsse.map { anschluss ->
@@ -310,7 +317,7 @@ private val assoziativeKnotenArten = setOf(
 
 /** Migriert den nicht verlustfrei zerlegbaren alten Zeilenvektor-Modus auf einzelne 2×2-Eingänge. */
 internal fun migriereMatrixKnoten(karte: KartenDaten): KartenDaten {
-    val zuMigrieren = karte.knoten.filter { matrix -> matrix.art == "mathematik.matrix" && "erzeugungsArt" !in matrix.parameter }.map { it.id }.toSet()
+    val zuMigrieren = karte.knoten.filter { matrix -> RECHNER_MIGRATION_DIAGNOSE !in matrix.parameter && matrix.art == "mathematik.matrix" && "erzeugungsArt" !in matrix.parameter }.map { it.id }.toSet()
     if (zuMigrieren.isEmpty()) return karte
     val knoten = karte.knoten.map { matrix -> if (matrix.id in zuMigrieren) konfiguriereMatrix(matrix, MATRIX_EINZEL_EINGABEN, höhe = 2, breite = 2) else matrix }
     val anschlüsse = knoten.associate { matrix -> matrix.id to matrix.anschlüsse.map { it.id }.toSet() }
@@ -349,11 +356,11 @@ internal fun öffentlicherKartenName(knoten: KnotenDaten): String = knoten.param
 internal fun migriereKartenAusgangZuEinzelanschluss(karte: KartenDaten): KartenDaten {
     val entfernteAnschlüsse = karte.knoten.asSequence()
         .filter { it.art == "mathematik.kartenAusgang" }
-        .flatMap { knoten -> knoten.anschlüsse.asSequence().filter { it.name == "zielmenge" }.map { AnschlussVerweis(knoten.id, it.id) } }
+        .flatMap { knoten -> knoten.anschlüsse.asSequence().filter { RECHNER_MIGRATION_DIAGNOSE !in knoten.parameter && it.name == "zielmenge" }.map { AnschlussVerweis(knoten.id, it.id) } }
         .toSet()
     if (entfernteAnschlüsse.isEmpty()) return karte
     return karte.copy(
-        knoten = karte.knoten.map { knoten -> if (knoten.art == "mathematik.kartenAusgang") knoten.copy(anschlüsse = knoten.anschlüsse.filterNot { it.name == "zielmenge" }) else knoten },
+        knoten = karte.knoten.map { knoten -> if (RECHNER_MIGRATION_DIAGNOSE !in knoten.parameter && knoten.art == "mathematik.kartenAusgang") knoten.copy(anschlüsse = knoten.anschlüsse.filterNot { it.name == "zielmenge" }) else knoten },
         verbindungen = karte.verbindungen.filter { it.von !in entfernteAnschlüsse && it.zu !in entfernteAnschlüsse },
     )
 }

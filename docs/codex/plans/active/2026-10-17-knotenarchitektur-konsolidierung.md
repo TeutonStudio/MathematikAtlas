@@ -13,7 +13,8 @@ M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle
 M4: v3.4.7 veröffentlicht, finaler Master 69d4e70a; PR- und Masterabnahme grün.
 M5: v3.4.8 veröffentlicht, finaler Master fb1984f9; PR- und Masterabnahme grün.
 M6: v3.4.9 veröffentlicht, finaler Master 49945974; PR- und Masterabnahme grün.
-M7: v3.4.10/x auf samai/v3.4.10/konsolidierung-m7 reserviert, Basis 49945974.
+M7a: v3.4.10/x auf samai/v3.4.10/konsolidierung-m7, Basis 49945974; enges Migrationsschutz-/Logarithmusrelease.
+M7b: Alt-Auswerterbereinigung und Kartenkanonisierung offen; noch keine Folgeversion reserviert.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -106,7 +107,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M4 Mengen: v3.4.7 veröffentlicht, 69d4e70a4f1bdbf69b23f0ee708f5893d5232947, PR #461; drei Spezialarten konsolidiert, 121 gemeinsame/123 Androidtypen, alle sechs jüngsten PR-Gates und vier finalen Master-Workflows grün.
 - [x] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8 veröffentlicht, fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a, PR #462; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
 - [x] M6 Begriffe und Verantwortlichkeiten: v3.4.9 veröffentlicht, 49945974dbe96778b70341f29a32bd96747d18d8, PR #463; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
-- [-] M7 Alt-Auswerter und Legacy-Migrationsverträge: v3.4.10/x direkt ab v3.4.9/49945974 auf samai/v3.4.10/konsolidierung-m7 reserviert; Bereinigung, nachgewiesene Migrationsfehler und Gesamtabschlussprüfung offen.
+- [-] M7a Migrationsschutz und Logarithmuskorrekturen: v3.4.10/x direkt ab v3.4.9/49945974 auf samai/v3.4.10/konsolidierung-m7; Produkt-/Releaseabnahme offen.
+- [ ] M7b Alt-Auswerterbereinigung, Kartenkanonisierung und Gesamtabschlussprüfung: erst nach vollständiger M7a-Masterabnahme reservieren, keine Folgeversion beansprucht.
 
 ## 10. Konkrete Umsetzungsschritte
 
@@ -772,3 +774,100 @@ und Vertragsevidenz offen; Katalogzahlen allein sind kein Nachweis.
 Keine neuen oder aus dem kanonischen Katalog entfernten Knotentypen, weiterhin
 121/123. Keine Folgeversion reserviert. Android/Desktop/Linux/current_version
 bleiben bis zum M7-Zielabschluss kohärent auf 3.4.9.
+
+
+### M7 in kleine getrennte Änderungsreleases teilen
+
+Die Verbraucherinventur hat vor der Auswerterbereinigung echte ältere
+Migrationsfehler belegt: Sperrdiagnosen konnten verloren gehen, Ports und
+Verbindungen verschwinden, falsche Defaults wirken und Logarithmusrollen
+beziehungsweise Basis-/Argumentzuordnungen mathematisch abweichen. Sie sind
+Voraussetzungen des beauftragten Datenvertrags. Gemäß dem Auftrag, kleine
+Änderungsreleases getrennt vollständig abzunehmen, wird die bestehende
+v3.4.10-Reservierung deshalb auf M7a eingegrenzt.
+
+M7a umfasst ausschließlich Migrationsschutz und Logarithmuskorrekturen. Es
+entfernt keine alten Auswerter und führt keine allgemeine Kartenkanonisierung
+durch. Unveränderte Basis ist der vollständig grüne v3.4.9-Master
+49945974dbe96778b70341f29a32bd96747d18d8; der vorhandene SamAI-Branch bleibt.
+Keine neuen oder entfernten kanonischen Knotentypen, weiterhin 121/123;
+Änderungs-Version x. Zielmetadaten Android 3.4.10/3004010, Desktop/Linux 3.4.10.
+Roadmapstatus released bezeichnet ausschließlich den PR-Zielbaum und keine
+bereits erfolgte Veröffentlichung.
+
+M7b enthält die anschließende Alt-Auswerterbereinigung, Kartenkanonisierung
+und Gesamtabschlussprüfung. Die nächste Version darf erst nach dem finalen
+v3.4.10-Commit auf master und allen vier grünen Master-Workflows bestimmt und
+reserviert werden. Jetzt wird keine Folgeversionsnummer reserviert. Der
+Gesamtabschluss M0–M7 bleibt offen; frühere breitere M7-Reservierungsangaben
+sind historische Planung und werden durch diese Umfangskorrektur präzisiert.
+
+
+### M7a Umsetzung und unabhängige Schutzprüfung
+
+Die alten Zahlen-, Mengen-, Einzelrechner- und Vektor-Konfigurationsmigrationen
+laufen in allen Codecphasen vor Adapterklassifikation. Bekannte historische
+Rollen werden ausdrücklich geprüft und einmalig gemeinsam umgesetzt; IDs,
+Standardwerte, Kartenfallbacks einschließlich @karte-Suffix, semantische
+Portverträge und Typinferenzreferenzen bleiben erhalten. Mehrdeutige Graphen
+bekommen vor Normalisierung eine konkrete Diagnose. Nachgelagerte Codec- und
+Androidnormalisierung stellt diagnostizierte Originalknoten und ihre Kanten
+wieder her, einschließlich doppelter Verbindungsidentitäten.
+
+Unabhängige Prüfung fand zusätzlich einen zweiten Default-Remap und globale
+Android-Kantenfilter sowie ungesicherte Transpositionsmigration. Diese werden
+mit Regressionen geschlossen. Gültige Vektortranspositionen verwenden die
+strikte gemeinsame Rollenabbildung; Matrixtransposition verwendet den bestehenden
+Matrixrechner. Bekannte historische Matrixeingänge behalten ihre dokumentierte
+Vektor-/Methodenerweiterung; individuelle semantische Verträge bleiben bestehen.
+
+Mathematische Korrekturen sind ausdrücklich: Logarithmus bindet basis→a und
+argument→b, geprüft als strukturierter Logarithmus und numerisch log₂(8)=3.
+Der historische einstellige Wurzelknoten bedeutet Quadratwurzel und erhält keinen
+erfundenen zweiten Gradanschluss. Nicht eindeutig in einen bestehenden Rechner
+abbildbare alte Divisionen mit wert und divisorNull bleiben vollständig erhalten,
+diagnostiziert und nicht auswertbar; der bisherige verlustbehaftete Androidumbau
+wird nicht als Fallback reaktiviert.
+
+Neue Beispiel- und Indexdefinitionskarten benutzen unmittelbar den gemeinsamen
+kanonischen Speicherpfad. Der unveränderte historische Fünfersatz der einmaligen
+Beispielinstallation bleibt erhalten. Noch keine allgemeine Assetumschreibung,
+Auswerterentfernung oder M7a-Gesamtfreigabe. Gezielte Tests werden nach den
+nachgewiesenen Schutzkorrekturen erneut ausgeführt.
+
+
+M7a gezielter Kartenvergleich erfolgreich: alle 523 produktiven Repositorykarten
+(508 Konzept- und 15 Standardkarten) über vier Codecphasen geprüft. Jede Phase
+ist für sich idempotent; der vollständige Laden-/Speichern-/Neuladen-Rundlauf
+bleibt stabil. Keine neue Sperrdiagnose in diesen Karten. Die absichtlich
+zusätzliche historische Anzeigenamenkorrektur beim vollständigen Laden wird
+von den schema-nahen Lesephasen getrennt geprüft. Laufprotokoll:
+/tmp/atlas-m7a-inventar-zweit.log, 2 s/42 Tasks, erfolgreich.
+
+Gezielte Knotensuite einschließlich neun neuer historischer Schutzregressionen
+und App-Suite einschließlich zwei Android-Nachmigrationstests zuvor erfolgreich,
+bis auf den jetzt behobenen dynamischen Indexdefinitionspfad. Dieser erzeugt
+Prädikate und Aussagenrechner unmittelbar kanonisch, statt generische Ports an
+alte Spezialtypen anzuhängen. Vollständige lokale Gesamtsuite anschließend
+gestartet. Repository, 15 Standardkarten, Releaseplan 116, Versionsfolge,
+14 Guardregressionen und Diffprüfung erfolgreich. Zusätzlicher Standalone-Kernlauf
+mangels kotlinc nicht ausführbar; Gradle-Kerntests und CI bleiben verbindlich.
+Frühe gezielte Läufe scheiterten an den dokumentierten Schutz-/Builderfehlern
+sowie zwei Testimport-/Indexdateikorrekturen; keine Freigabe aus Fehlversuchen.
+
+
+M7a finale lokale Gesamtsuite erfolgreich: 3 min 32 s/277 Tasks,
+2256 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener Opt-in-Skip, also 2255 bestanden
+(/tmp/atlas-m7a-final.log). Lint, App-/App-Test-/Editor-Test-APKs und Desktop-
+kompilierung enthalten. Unabhängiger finaler Diff-/Testreview ohne weitere
+Blocker; der 523-Kartenvergleich belegt Migration/Kompatibilität/Stabilität,
+keine pauschale mathematische Äquivalenz sämtlicher Karten. Neun neue gezielte
+Schutzregressionen, ein Repository-Kartenvergleich und zwei App-Nachmigrations-
+regressionen grün. Keine Produktionsdateien nach diesem Lauf geändert.
+PR-/CI-/isolierte Laufzeit- und finale Masterabnahme weiterhin erforderlich.
+
+Lokale RPM-Prüfung versucht, 2 s/22 Tasks: vorhandenes jpackage unterstützt rpm
+nicht (/tmp/atlas-m7a-rpm.log). Keine lokale Installation oder Änderung fremd
+signierter Nutzerdaten. Linux-Paketierung, Installation, zwei Starts mit gleichem
+XDG_DATA_HOME, Persistenz und Deinstallation müssen die unveränderten CI-Gates
+am freigegebenen Head belegen. 68 bestehende isolierte Androidfälle erwartet.

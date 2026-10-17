@@ -175,7 +175,8 @@ object PraedikatKnotenMigration {
 }
 
 /** Unklare Altverträge bleiben vollständig erhalten und werden nicht ausgewertet. */
-fun KartenDaten.migrierePraedikatKnoten(): KartenDaten = copy(knoten = knoten.map migration@ { alt ->
+fun KartenDaten.migrierePraedikatKnoten(): KartenDaten = diagnostiziereHistorischeGraphMehrdeutigkeiten().let { karte -> karte.copy(knoten = karte.knoten.map migration@ { alt ->
+    if (RECHNER_MIGRATION_DIAGNOSE in alt.parameter) return@migration alt
     val operatorId = PraedikatKnotenMigration.operatorId(alt) ?: return@migration if (alt.art == "mathematik.ordnungsrelation")
         alt.copy(parameter = alt.parameter + (RECHNER_MIGRATION_DIAGNOSE to "Unbekannte gespeicherte Ordnungsrelation '${alt.parameter["relation"]}'; Originaldaten bleiben erhalten.")) else alt
     val relation = RelationsOperatoren.vonIdOderNull(operatorId)
@@ -231,7 +232,7 @@ fun KartenDaten.migrierePraedikatKnoten(): KartenDaten = copy(knoten = knoten.ma
         parameter = alt.parameter.filterKeys { it != RECHNER_MIGRATION_DIAGNOSE && !it.startsWith("standardwert.") } +
             standards.toMap() + mapOf(RelationsOperatoren.OPERATOR_PARAMETER to operatorId, PRAEDIKAT_SEITE_PARAMETER to seite),
     )
-})
+}) }
 
 private val historischeRelationsStandardnamen = setOf(
     "Gleichheit",

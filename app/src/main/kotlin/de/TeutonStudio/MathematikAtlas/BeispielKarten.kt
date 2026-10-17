@@ -2,11 +2,12 @@ package de.TeutonStudio.MathematikAtlas
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen
+import de.TeutonStudio.MathematikKnoten.MathematikKartenMigrationen
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 
 object BeispielKarten {
     fun alle(): List<KartenDaten> {
-        return historische() + mandelbrotKarte()
+        return (historische() + mandelbrotKarte()).map(MathematikKartenMigrationen::vorSpeichern)
     }
 
     /** Unveränderter Fünfersatz für die einmalige Legacy-Migration. */

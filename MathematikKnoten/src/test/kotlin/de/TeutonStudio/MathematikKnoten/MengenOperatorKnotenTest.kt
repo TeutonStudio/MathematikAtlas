@@ -83,7 +83,7 @@ class MengenOperatorKnotenTest {
         )
         val migriert = KartenDaten(name = "Relation", knoten = listOf(alt)).migriereMengenOperatorKnoten().knoten.single()
 
-        assertEquals(MengenRelationRechner.KNOTEN_ART, migriert.art)
+        assertEquals(PraedikatKnotenVorlagen.standard.art, migriert.art)
         assertEquals(MengenRelationsOperator.DISJUNKT.stabileId, migriert.parameter[MENGENRELATION_OPERATOR_PARAMETER])
     }
 

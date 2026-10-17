@@ -259,15 +259,16 @@ private fun ZahlAusdruck.positiveDimensionOderNull(): Int? = (this as? Rationale
     ) zahl.zähler.toInt() else null
 }
 
-fun KartenDaten.migriereVektorRechnerKonfiguration(): KartenDaten = copy(
-    knoten = knoten.map { knoten ->
-        if (knoten.art != VektorRechner.KNOTEN_ART) return@map knoten
-        val gespeichert = knoten.parameter[VEKTOR_RECHNER_OPERATOR]
-        val operator = VektorRechnerOperator.vonIdOderNull(gespeichert)
-        if (operator == null && gespeichert != null) knoten
-        else konfiguriereVektorRechner(knoten, operator ?: VektorRechnerOperator.SKALARPRODUKT)
-    },
-)
+fun KartenDaten.migriereVektorRechnerKonfiguration(): KartenDaten = migriereHistorischeKnotenRollen { knoten ->
+    if(knoten.art!=VektorRechner.KNOTEN_ART) return@migriereHistorischeKnotenRollen knoten
+    val id=knoten.parameter[VEKTOR_RECHNER_OPERATOR]
+    require(id!=null && RechnerOperatorRegistry.finde(RechnerFamilie.VEKTOR,id) is RechnerOperatorAuflösung.Bekannt) {"Die Vektoroperator-ID fehlt oder ist unbekannt: $id"}
+    val operator=VektorRechnerOperator.vonIdOderNull(id) ?: return@migriereHistorischeKnotenRollen knoten
+    val neu=konfiguriereVektorRechner(knoten,operator)
+    val ids=knoten.anschlüsse.map {it.id}.toSet()
+    require(neu.anschlüsse.map {it.id}.toSet().containsAll(ids)) {"Ein gespeicherter Vektoranschluss würde verloren gehen."}
+    neu.copy(anschlüsse=neu.anschlüsse.filter {it.id in ids})
+}
 
 private fun bestimmeVektorfeldIntegralMass(
     knoten: KnotenDaten,

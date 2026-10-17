@@ -11,6 +11,7 @@ import de.TeutonStudio.MathematikRechenSystem.kern.*
  * nicht punktweise in mathematische Rechneroperationen gehoben.
  */
 private val methodenHebbareRechnerArten: Set<KnotenArtId> = setOf(
+    ZAHLENRECHNER_ART,
     MengenRechner.KNOTEN_ART,
     AussagenSatzRechner.KNOTEN_ART,
     VektorRechner.KNOTEN_ART,
@@ -31,7 +32,7 @@ private val methodenHebbareWertArten: Set<AnschlussArtId> = setOf(
 )
 
 fun normalisiereRechnerMethodenAnschluesse(knoten: KnotenDaten): KnotenDaten {
-    if (knoten.art !in methodenHebbareRechnerArten) return knoten
+    if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter || knoten.art !in methodenHebbareRechnerArten) return knoten
 
     if (knoten.anschlüsse.any {
             it.richtung == AnschlussRichtung.Ausgang && it.art == MathematikAnschlussArten.Methode.id
@@ -49,7 +50,7 @@ fun normalisiereRechnerMethodenAnschluesse(knoten: KnotenDaten): KnotenDaten {
         if (anschluss.art == MathematikAnschlussArten.Methode.id) return@map anschluss
 
         val deklarierteWertArten = buildSet {
-            if (anschluss.art in methodenHebbareWertArten) add(anschluss.art)
+            if (anschluss.zulässigeArten.isEmpty() && anschluss.art in methodenHebbareWertArten) add(anschluss.art)
             addAll(anschluss.zulässigeArten.filter { it in methodenHebbareWertArten })
         }
         if (deklarierteWertArten.isEmpty()) return@map anschluss
@@ -67,7 +68,7 @@ fun normalisiereRechnerMethodenAnschluesse(knoten: KnotenDaten): KnotenDaten {
         ) return@map anschluss
 
         anschluss.copy(
-            artPriorisiertEingänge = AnschlussArtPriorisierung(
+            artPriorisiertEingänge = anschluss.artPriorisiertEingänge ?: AnschlussArtPriorisierung(
                 eingänge = hebbareEingaenge,
                 prioritäten = listOf(MathematikAnschlussArten.Methode.id),
             ),

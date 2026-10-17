@@ -46,7 +46,9 @@ object MathematikKartenMigrationen {
 
     private fun vorSpeichern(karte: KartenDaten, tiefe: Int): KartenDaten = karte
         .diagnostiziereQuellenBereiche()
-        .normalisiereSchnittstellenReihenfolge()
+        .diagnostiziereHistorischeGraphMehrdeutigkeiten()
+        .migriereKonsolidierteKnoten()
+        .let {it.normalisiereSchnittstellenReihenfolge(it.knoten.filter {k -> RECHNER_MIGRATION_DIAGNOSE in k.parameter}.mapTo(hashSetOf()) {k -> k.id})}
         .migriereGradmengenDimension()
         .migriereVariablenGrundraum()
         .migrierePolarKonventionen()
@@ -54,6 +56,11 @@ object MathematikKartenMigrationen {
         .migriereMatrixZerlegenZumÜbersetzer()
         .migriereÜbersetzungsKonsolidierung()
         .migriereMengenKonsolidierung()
+        .migriereRechnerEinzeloperationen()
+        .let(::migriereTranspositionsKnoten)
+        .migriereUniversellenZahlenRechner()
+        .migriereMengenOperatorKnoten()
+        .migriereVektorRechnerKonfiguration()
         .klassifiziereAdapter()
         .migriereMethodenKonsolidierung()
         .migriereStrukturKonsolidierung()
@@ -69,13 +76,16 @@ object MathematikKartenMigrationen {
         .normalisiereDynamischeRechnerOperanden()
         .normalisiereJoinEingänge()
         .migriereEingebetteteMethodenQuellen(tiefe) { vorSpeichern(it, tiefe + 1) }
+        .bewahreDiagnostizierteOriginale(karte)
 
     fun nachDekodierung(karte: KartenDaten): KartenDaten = nachDekodierung(karte, 0)
 
     private fun nachDekodierung(karte: KartenDaten, tiefe: Int): KartenDaten = karte
         .diagnostiziereQuellenBereiche()
+        .diagnostiziereHistorischeGraphMehrdeutigkeiten()
+        .migriereKonsolidierteKnoten()
         .migriereHistorischeVariablenGrundräume()
-        .normalisiereSchnittstellenReihenfolge()
+        .let {it.normalisiereSchnittstellenReihenfolge(it.knoten.filter {k -> RECHNER_MIGRATION_DIAGNOSE in k.parameter}.mapTo(hashSetOf()) {k -> k.id})}
         .migriereGradmengenDimension()
         .migriereVariablenGrundraum()
         .migrierePolarKonventionen()
@@ -83,28 +93,35 @@ object MathematikKartenMigrationen {
         .migriereMatrixZerlegenZumÜbersetzer()
         .migriereÜbersetzungsKonsolidierung()
         .migriereMengenKonsolidierung()
+        .migriereRechnerEinzeloperationen()
+        .let(::migriereTranspositionsKnoten)
+        .migriereUniversellenZahlenRechner()
+        .migriereMengenOperatorKnoten()
+        .migriereVektorRechnerKonfiguration()
         .klassifiziereAdapter()
         .migriereMethodenKonsolidierung()
         .migriereStrukturKonsolidierung()
         .migrierePraedikatKnoten()
         .migriereMatrixProduktAnschlüsse()
         .migriereMethodenBereichsOperatoren()
-        .migriereRechnerEinzeloperationen()
-        .let(::migriereTranspositionsKnoten)
         .migriereTensorOperationKnoten()
         .migriereHyperAnalysisKnoten()
         .migriereDifferentialKnoten()
         .migriereIntegralKnoten()
+        .migriereRechnerMethodenAnschluesse()
         .normalisiereDynamischeRechnerOperanden()
         .normalisiereJoinEingänge()
         .migriereEingebetteteMethodenQuellen(tiefe) { nachDekodierung(it, tiefe + 1) }
+        .bewahreDiagnostizierteOriginale(karte)
 
     fun nachLaden(karte: KartenDaten): KartenDaten = nachLaden(karte, 0)
 
     private fun nachLaden(karte: KartenDaten, tiefe: Int): KartenDaten = karte
         .diagnostiziereQuellenBereiche()
+        .diagnostiziereHistorischeGraphMehrdeutigkeiten()
+        .migriereKonsolidierteKnoten()
         .migriereHistorischeVariablenGrundräume()
-        .normalisiereSchnittstellenReihenfolge()
+        .let {it.normalisiereSchnittstellenReihenfolge(it.knoten.filter {k -> RECHNER_MIGRATION_DIAGNOSE in k.parameter}.mapTo(hashSetOf()) {k -> k.id})}
         .migriereGradmengenDimension()
         .migriereVariablenGrundraum()
         .migrierePolarKonventionen()
@@ -112,23 +129,25 @@ object MathematikKartenMigrationen {
         .migriereMatrixZerlegenZumÜbersetzer()
         .migriereÜbersetzungsKonsolidierung()
         .migriereMengenKonsolidierung()
+        .migriereRechnerEinzeloperationen()
+        .let(::migriereTranspositionsKnoten)
+        .migriereUniversellenZahlenRechner()
+        .migriereMengenOperatorKnoten()
+        .migriereVektorRechnerKonfiguration()
         .klassifiziereAdapter()
         .migriereMethodenKonsolidierung()
         .migriereStrukturKonsolidierung()
         .migrierePraedikatKnoten()
-        .migriereRechnerEinzeloperationen()
         .migriereTensorraumDimensionen()
         .migrierePraedikatStandardname()
         .migriereMethodenAnschlüsse()
-        .migriereUniversellenZahlenRechner()
-        .migriereMengenOperatorKnoten()
         .migrierePraedikatKnoten()
-        .migriereVektorRechnerKonfiguration()
         .migriereStrukturierteDivision()
         .migriereRechnerMethodenAnschluesse()
         .normalisiereDynamischeRechnerOperanden()
         .normalisiereJoinEingänge()
         .migriereEingebetteteMethodenQuellen(tiefe) { nachLaden(it, tiefe + 1) }
+        .bewahreDiagnostizierteOriginale(karte)
 
     private fun KartenDaten.migriereEingebetteteMethodenQuellen(tiefe: Int, migration: (KartenDaten) -> KartenDaten): KartenDaten = copy(knoten = knoten.map { k ->
         if (RECHNER_MIGRATION_DIAGNOSE in k.parameter) return@map k
