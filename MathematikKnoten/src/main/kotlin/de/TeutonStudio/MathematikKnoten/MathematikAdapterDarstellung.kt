@@ -15,7 +15,7 @@ internal fun KnotenVorlage.alsAdapterVorlage(): KnotenVorlage = copy(
 )
 
 internal fun KartenDaten.klassifiziereAdapter(): KartenDaten = copy(knoten = knoten.map {
-    if (it.art in MATHEMATISCHE_ADAPTER_ARTEN) it.copy(
+    if (it.art in MATHEMATISCHE_ADAPTER_ARTEN && RECHNER_MIGRATION_DIAGNOSE !in it.parameter && KNOTEN_FORM_EIGENSCHAFT !in it.eigenschaften) it.copy(
         eigenschaften = it.eigenschaften + (KNOTEN_FORM_EIGENSCHAFT to KnotenEigenschaft.Text("adapter")),
     ) else it
 })

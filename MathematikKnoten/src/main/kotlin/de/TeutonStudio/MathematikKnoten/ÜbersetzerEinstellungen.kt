@@ -21,6 +21,14 @@ fun ÜbersetzerEinstellungen(knoten:KnotenDaten,ergebnis:KnotenAuswertungsErgebn
             }
         }
     }
+    if (übersetzerZiel(knoten) == "abflachen") {
+        Text("Abflachtiefe", style = MaterialTheme.typography.titleSmall)
+        val tiefe = (knoten.parameter["abflachen.ebenen"] ?: "rekursiv").let {if(it=="alle") "rekursiv" else it}
+        if (tiefe !in setOf("1","rekursiv")) Text("Unbekannte Abflachtiefe '$tiefe'. Bitte ausdrücklich wählen.", color = MaterialTheme.colorScheme.error)
+        listOf("rekursiv" to "Rekursiv: nur Tupel", "1" to "Eine Ebene: Tupel und Vektoren").forEach { (id,titel) ->
+            FilterChip(selected = tiefe == id,onClick = { parameter("abflachen.ebenen",id) },label = { Text(titel) })
+        }
+    }
     if (übersetzerZiel(knoten) == "matrixzerlegen") {
         Text("Zerlegung", style = MaterialTheme.typography.titleSmall)
         Row {

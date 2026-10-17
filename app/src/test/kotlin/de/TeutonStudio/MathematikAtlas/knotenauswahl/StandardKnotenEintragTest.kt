@@ -72,4 +72,15 @@ class StandardKnotenEintragTest {
             assertEquals(OperatorKnotenSuchindex.suche(text,b).map(::signatur),neu.map { signatur(it.vorlage) })
         }
     }
+    @Test fun `Uebersetzungsziele in Eigenschaften bleiben getrennte stabile Auswahlvarianten`() {
+        val basis=de.TeutonStudio.MathematikKnoten.ÜbersetzungsKnotenVorlagen.Übersetzer
+        val vorlagen=listOf("tupel","zeile","spalte","abflachen").map { z ->
+            val k=de.TeutonStudio.MathematikKnoten.konfiguriereÜbersetzer(basis.erzeuge(GraphPunkt.Zero),z)
+            basis.copy(name="Gleicher Titel",anschlüsse=k.anschlüsse,standardParameter=k.parameter,standardEigenschaften=k.eigenschaften)
+        }
+        val einträge=standardVorlagenEinträge(vorlagen)
+        assertEquals(4,einträge.size);assertEquals(4,einträge.map {it.schluessel}.distinct().size)
+        assertEquals(4,vorlagen.map {stabileKnotenVariante(it.erzeuge(GraphPunkt.Zero))}.distinct().size)
+    }
+
 }

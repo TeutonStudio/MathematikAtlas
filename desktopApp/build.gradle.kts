@@ -57,7 +57,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Rpm, TargetFormat.Deb)
             packageName = "mathematik-atlas"
-            packageVersion = "3.4.5"
+            packageVersion = "3.4.6"
             description = "Mathematische Prozesse als interaktive Knotenkarten"
             vendor = "TeutonStudio"
             linux {

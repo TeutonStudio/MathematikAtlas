@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikKnoten.konzeptkarte
 
 import de.TeutonStudio.MathematikKnoten.enzyklopädie.*
+import de.TeutonStudio.MathematikKnoten.konzeptknoten.stabileVariantenId
 
 object StatischeKonzeptKarten {
     val alle: List<WissensKartenReferenz.Asset> = listOf(
@@ -1076,7 +1077,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.tupelZuSpalte|Tupel zu Spalte")),
+            varianten = setOf(VariantenId("mathematik.tupelZuSpalte|Tupel zu Spalte"), de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog.kanonisiereMethodenUndRelationsVorlage(de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen.TupelZuSpalte).stabileVariantenId()),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.tupelZuZeile|Tupel zu Zeile|.d6e735a9.definition",
@@ -1085,7 +1086,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.tupelZuZeile|Tupel zu Zeile")),
+            varianten = setOf(VariantenId("mathematik.tupelZuZeile|Tupel zu Zeile"), de.TeutonStudio.MathematikKnoten.katalog.KanonischerMathematikKnotenKatalog.kanonisiereMethodenUndRelationsVorlage(de.TeutonStudio.MathematikKnoten.MathematikKnotenVorlagen.TupelZuZeile).stabileVariantenId()),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.tupel|Tupel|erzeugungsArt=einzelEingaben;festeEingänge=2;operatorAnzeige=wert.f3bf42c8.definition",

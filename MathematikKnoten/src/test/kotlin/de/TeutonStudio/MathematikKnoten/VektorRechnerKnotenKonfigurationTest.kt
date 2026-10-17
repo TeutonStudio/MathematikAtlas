@@ -30,7 +30,7 @@ class VektorRechnerKnotenKonfigurationTest {
     }
 
     @Test
-    fun `Legacy Tupelaufloeser wird mit Anschluss IDs in Zerlegen migriert`() {
+    fun `Tupelaufloeser bleibt eigener Vertrag mit direkten Anschluss IDs`() {
         val eingangId = AnschlussId("legacy-in")
         val ausgangId = AnschlussId("legacy-out")
         val alt = KnotenDaten(
@@ -55,13 +55,12 @@ class VektorRechnerKnotenKonfigurationTest {
         )
 
         val migriert = KartenDaten(name = "Legacy", knoten = listOf(alt))
-            .migriereLegacyVektorStrukturKnoten()
+            .let(MathematikKartenMigrationen::nachLaden)
             .knoten.single()
 
-        assertEquals(VektorRechner.KNOTEN_ART, migriert.art)
-        assertEquals(VektorRechnerOperator.ZERLEGEN.stabileId, migriert.parameter[VEKTOR_RECHNER_OPERATOR])
-        assertTrue(migriert.anschlüsse.any { it.id == eingangId && it.name == "struktur" })
-        assertTrue(migriert.anschlüsse.any { it.id == ausgangId && it.name == "element1" })
+        assertEquals(TUPEL_AUFLÖSEN_ART, migriert.art)
+        assertTrue(migriert.anschlüsse.any { it.id == eingangId && it.name == "tupel" })
+        assertTrue(migriert.anschlüsse.any { it.id == ausgangId && it.name == "element-1" })
     }
     @Test fun `Zerlegen bleibt bei wiederholter Konfiguration und Migration idempotent`() {
         val initial = vektorRechnerVorlage(VektorRechnerOperator.ZERLEGEN).erzeuge(GraphPunkt.Zero)

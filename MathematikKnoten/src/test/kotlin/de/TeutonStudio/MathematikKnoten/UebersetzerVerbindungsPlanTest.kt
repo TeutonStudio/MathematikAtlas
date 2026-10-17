@@ -46,6 +46,22 @@ class UebersetzerVerbindungsPlanTest {
         }
     }
 
+    @Test fun automatischeStrukturkettenFuegenKeineAbflachungEin() {
+        val quelle=knoten(MathematikAnschlussArten.Tupel.id,false)
+        val ziel=knoten(MathematikAnschlussArten.SpaltenVektor.id,true)
+        val (basis,pläne)=plane(quelle,ziel)
+        assertTrue(pläne.isNotEmpty())
+        for(plan in pläne) {
+            val adapter=plan.karte.knoten.filter {it.id !in basis.knoten.map {k->k.id}}
+            assertEquals(listOf("spalte"),adapter.map(::übersetzerZiel))
+        }
+        val t=Tupel(listOf(Tupel(listOf(RationaleZahl.Eins))))
+        val explizit=assertIs<ÜbersetzungsErgebnis.Erfolg>(ÜbersetzungsDienst.übersetze(ÜbersetzungsAnfrage(t,ÜbersetzungsZiel.ABFLACHEN)))
+        assertEquals(Tupel(listOf(RationaleZahl.Eins)),explizit.wert)
+        assertFalse(explizit.zeugnis.fürAutomatikGeeignet())
+        assertIs<ÜbersetzungsErgebnis.NichtDefiniert>(ÜbersetzungsDienst.übersetze(ÜbersetzungsAnfrage(t,ÜbersetzungsZiel.ABFLACHEN,automatisch=true)))
+    }
+
     @Test fun matrixZuMethodeBietetMehrereKurzeWegeAlsAuswahl() {
         val a = knoten(MathematikAnschlussArten.Matrix.id,false)
         val b = knoten(MathematikAnschlussArten.Methode.id,true)

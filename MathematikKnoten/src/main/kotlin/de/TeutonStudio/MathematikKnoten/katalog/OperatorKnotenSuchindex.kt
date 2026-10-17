@@ -23,7 +23,7 @@ object OperatorKnotenSuchindex {
 
     /** Vollständiger bestehender Operatorbestand, unabhängig von einem Suchtext. */
     fun alleMitMetadaten(basisVorlagen: List<KnotenVorlage>): List<OperatorKnotenSuchtreffer> =
-        eintraege(basisVorlagen).distinctBy { it.vorlage.art to it.vorlage.standardParameter.toSortedMap() }
+        eintraege(basisVorlagen).distinctBy { KanonischerMathematikKnotenKatalog.variantenKennung(it.vorlage) }
             .map { OperatorKnotenSuchtreffer(it.vorlage, it.operatorId) }
 
     fun suche(text: String, basisVorlagen: List<KnotenVorlage>): List<KnotenVorlage> =
@@ -34,7 +34,7 @@ object OperatorKnotenSuchindex {
         if (query.isBlank()) return emptyList()
         return eintraege(basisVorlagen)
             .filter { eintrag -> eintrag.begriffe.any { normalisiere(it).contains(query) } }
-            .distinctBy { it.vorlage.art to it.vorlage.standardParameter.toSortedMap().toString() }
+            .distinctBy { KanonischerMathematikKnotenKatalog.variantenKennung(it.vorlage) }
             .map { OperatorKnotenSuchtreffer(it.vorlage,it.operatorId) }
     }
 
@@ -62,6 +62,13 @@ object OperatorKnotenSuchindex {
                     ),
                 ),
             )
+        }
+
+        listOf("tupel","zeile","spalte","abflachen").forEach { ziel ->
+            val knoten=konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),ziel)
+            val titel=when(ziel) { "tupel" -> "Vektor zu Tupel"; "zeile" -> "Tupel zu Zeile"; "spalte" -> "Tupel zu Spalte"; else -> "Tupel abflachen" }
+            val aliase=when(ziel) { "tupel" -> setOf("Spalte zu Tupel","Zeile zu Tupel"); "zeile","spalte" -> setOf("Tupel zu Vektor"); else -> setOf("Abflachen","verschachtelte Tupel") }
+            add(Eintrag(aliase + titel + "uebersetzung.$ziel",knoten.alsSuchVorlage(titel,"Strukturen", "Explizite Strukturübersetzung: $titel."),"uebersetzung.$ziel"))
         }
 
         sichtbareMengenRechnerOperatoren().forEach { operator ->

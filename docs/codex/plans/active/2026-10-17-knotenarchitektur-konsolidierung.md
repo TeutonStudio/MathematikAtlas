@@ -7,8 +7,9 @@ Ausgang: master 9fea31ddbaaef8bd26fa7a2730177eaaa9744909, v3.4.1.
 M0: veröffentlicht als v3.4.2, Commit 5813c0337b5c7b2284d882b785559dfeea4ae3cd.
 M1: veröffentlicht als v3.4.3, Commit e665a7fde78fe845dc7c62fa60fa00896d35f58a.
 M2: integriert als v3.4.4, ec152625926698f58e1ddd1d1a1d6420f8b0c6cc;
-abschließende Android-Laufzeitabnahme fehlgeschlagen. Enges Test-Reparaturrelease
-v3.4.5/x auf samai/v3.4.5/such-reset-reparatur in Umsetzung; M3 unreserviert.
+ursprüngliche Android-Schlussabnahme fehlgeschlagen, durch enges Test-Reparaturrelease
+v3.4.5/x abgeschlossen: e6760b9a41aaeb186dee7ee7c13254430cb47ee8, alle Master-Gates grün.
+M3: v3.4.6/x auf samai/v3.4.6/konsolidierung-m3 in Umsetzung, Basis e6760b9a.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -455,3 +456,44 @@ M3 ist anschließend als v3.4.6/x auf `samai/v3.4.6/konsolidierung-m3` ab exakt
 `e6760b9a41aaeb186dee7ee7c13254430cb47ee8` reserviert; Reservierungscommit
 `63acb023c1bc33b8e38016834f480563faee8e3d`, ausschließlich Roadmap, SamAI/SamAI.
 M4–M7 bleiben unreserviert.
+
+M3 Implementierung: gemeinsame Strukturübersetzung über ÜbersetzungsDienst
+für Tupel/Zeile/Spalte/Abflachen; vorhandene Ziele und Wire-Payloads bleiben.
+Strenge gerichtete Rollenprüfung und vollständiges Remapping vor Darstellung,
+alle Codecphasen und eingebetteten Methodenquellen. Unbekannte Tiefe,
+mehrdeutige Rollen oder Einzelbelegungen bewahren Original plus Sperrdiagnose.
+Ein-Ebenen-Modus öffnet direkte Tupel und orientierte Vektoren wie bisher;
+rekursiver Modus öffnet nur Tupel. Automatik bietet Abflachen nicht an.
+Katalog/Definitionen/Suchindex/Android-Auswahlidentitäten und dynamische
+Sammel-/Definitionsbuilder auf vorhandene Übersetzer umgestellt.
+Gemeinsamer Inspector bietet explizite Abflachtiefe, Gerätetest prüft Undo.
+TupelAuflösen/Ergänzen bleiben; unaufgerufene pauschale Vektormigration entfernt.
+Synthetische unveränderliche verbundene Altkarte unter
+MathematikKnoten/src/test/resources/konsolidierung-m3/verbundene-altadapter-v10.json.
+Im Repositoryinventar keine tatsächlichen JSON-Altinstanzen dieser vier Typen;
+dynamische Erzeuger separat geprüft. Gemeinsamer Sollbestand 124, Android 126.
+Gezielte Knoten-/App-Tests und Android-Test-APK bestanden vor abschließender
+Identitätsregression. Unabhängiger Befund zur namensbasierten Bereichsinferenz
+korrigiert über bestehende rechnerQuellBereiche; gleichnamige ℂ-/ℝ-Quellen
+werden nun ausdrücklich getrennt geprüft. Abschlussprüfung/CI/Veröffentlichung offen.
+
+Historische Tiefenbezeichnung alle ist durch den bestehenden Kern-/Wiretest
+belegt und bleibt als rekursiver Alias gültig. Neuere explizite Auswahl verwendet
+rekursiv; bestehende alle-Parameter werden nicht umgeschrieben. Unbekannte
+Zahlen/Texte bleiben diagnostiziert. Der Wire-Zeugnisprüfer verwendet denselben
+Tiefenvertrag; Payload-Version und Format bleiben unverändert.
+
+M3 lokale Freigabe des eingefrorenen Produktstands: vollständige Gradle-Suite
+mit --no-parallel test, app lintDebug/assembleDebug/assembleDebugAndroidTest,
+Editor-Test-APK, Desktop-Kompilierung und allen vier Desktop-Testtasks
+erfolgreich (3 min 5 s, 277 Tasks). 2.193 Tests, 0 Fehler, 1 bestehender
+Opt-in-Skip. APK bestätigt 3.4.6/3004006. Log /tmp/atlas-m3-final.log.
+Repository/Architektur/Shadowmodule, 15 Standardkarten, Releaseplan mit
+112 Einträgen, Versionsfolge, 14 Guardregressionen und Diffprüfung bestehen.
+Standalone-Kernprüfung Exit 2 wegen fehlendem kotlinc (Java vorhanden).
+Lokale RPM-Werkzeuggrenze und fremde Android-App-Signatur unverändert;
+keine lokale Geräte-/RPM-Freigabe behauptet. CI-Laufzeit am endgültigen
+PR- und Master-SHA bleibt Voraussetzung. Unabhängige Abschlussprüfung
+einschließlich Identitäts-, Tiefenalias- und Orientierungszusätzen ohne Findings.
+Fixture-SHA256: 7e46c59edc9dfc744b8046e1a29ff5f1594b56ef0136bcb0698d66d0a5077dee.
+Produktbaum zur selektiven SamAI-Commit-/PR-Erstellung freigegeben.

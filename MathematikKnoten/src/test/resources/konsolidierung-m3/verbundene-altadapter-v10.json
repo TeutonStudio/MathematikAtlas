@@ -1,0 +1,285 @@
+{
+  "id": "m3-fixture",
+  "name": "Unveränderliche verbundene Altadapter",
+  "version": 7,
+  "formatVersion": 10,
+  "knoten": [
+    {
+      "id": "quelle",
+      "art": "mathematik.kartenEingang",
+      "name": "quelle",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "größe": {
+        "breite": 220,
+        "höhe": 100
+      },
+      "parameter": {},
+      "anschlüsse": [
+        {
+          "id": "quelle-wert-Ausgang",
+          "name": "wert",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.tupel"
+        }
+      ]
+    },
+    {
+      "id": "zuSpalte",
+      "art": "mathematik.tupelZuSpalte",
+      "name": "zuSpalte",
+      "position": {
+        "x": 240,
+        "y": 0
+      },
+      "größe": {
+        "breite": 220,
+        "höhe": 100
+      },
+      "parameter": {},
+      "anschlüsse": [
+        {
+          "id": "zuSpalte-tupel-Eingang",
+          "name": "tupel",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.tupel"
+        },
+        {
+          "id": "zuSpalte-vektor-Ausgang",
+          "name": "vektor",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.vektor.spalte"
+        }
+      ]
+    },
+    {
+      "id": "vonSpalte",
+      "art": "mathematik.spalteZuTupel",
+      "name": "vonSpalte",
+      "position": {
+        "x": 480,
+        "y": 0
+      },
+      "größe": {
+        "breite": 220,
+        "höhe": 100
+      },
+      "parameter": {},
+      "anschlüsse": [
+        {
+          "id": "vonSpalte-vektor-Eingang",
+          "name": "vektor",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.vektor.spalte"
+        },
+        {
+          "id": "vonSpalte-tupel-Ausgang",
+          "name": "tupel",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.tupel"
+        }
+      ]
+    },
+    {
+      "id": "flachSpalte",
+      "art": "mathematik.tupelAbflachen",
+      "name": "flachSpalte",
+      "position": {
+        "x": 720,
+        "y": 0
+      },
+      "größe": {
+        "breite": 220,
+        "höhe": 100
+      },
+      "parameter": {},
+      "anschlüsse": [
+        {
+          "id": "flachSpalte-tupel-Eingang",
+          "name": "tupel",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.tupel"
+        },
+        {
+          "id": "flachSpalte-tupel-Ausgang",
+          "name": "tupel",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.tupel"
+        }
+      ]
+    },
+    {
+      "id": "zuZeile",
+      "art": "mathematik.tupelZuZeile",
+      "name": "zuZeile",
+      "position": {
+        "x": 960,
+        "y": 0
+      },
+      "größe": {
+        "breite": 220,
+        "höhe": 100
+      },
+      "parameter": {},
+      "anschlüsse": [
+        {
+          "id": "zuZeile-tupel-Eingang",
+          "name": "tupel",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.tupel"
+        },
+        {
+          "id": "zuZeile-vektor-Ausgang",
+          "name": "vektor",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.vektor.zeile"
+        }
+      ]
+    },
+    {
+      "id": "vonZeile",
+      "art": "mathematik.zeileZuTupel",
+      "name": "vonZeile",
+      "position": {
+        "x": 1200,
+        "y": 0
+      },
+      "größe": {
+        "breite": 220,
+        "höhe": 100
+      },
+      "parameter": {},
+      "anschlüsse": [
+        {
+          "id": "vonZeile-vektor-Eingang",
+          "name": "vektor",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.vektor.zeile"
+        },
+        {
+          "id": "vonZeile-tupel-Ausgang",
+          "name": "tupel",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.tupel"
+        }
+      ]
+    },
+    {
+      "id": "flachZeile",
+      "art": "mathematik.tupelAbflachen",
+      "name": "flachZeile",
+      "position": {
+        "x": 1440,
+        "y": 0
+      },
+      "größe": {
+        "breite": 220,
+        "höhe": 100
+      },
+      "parameter": {},
+      "anschlüsse": [
+        {
+          "id": "flachZeile-tupel-Eingang",
+          "name": "tupel",
+          "richtung": "Eingang",
+          "kante": "Links",
+          "art": "mathematik.tupel"
+        },
+        {
+          "id": "flachZeile-tupel-Ausgang",
+          "name": "tupel",
+          "richtung": "Ausgang",
+          "kante": "Rechts",
+          "art": "mathematik.tupel"
+        }
+      ]
+    }
+  ],
+  "verbindungen": [
+    {
+      "id": "e-zuSpalte",
+      "von": {
+        "knotenId": "quelle",
+        "anschlussId": "quelle-wert-Ausgang"
+      },
+      "zu": {
+        "knotenId": "zuSpalte",
+        "anschlussId": "zuSpalte-tupel-Eingang"
+      },
+      "eingangsReihenfolge": 0
+    },
+    {
+      "id": "e-vonSpalte",
+      "von": {
+        "knotenId": "zuSpalte",
+        "anschlussId": "zuSpalte-vektor-Ausgang"
+      },
+      "zu": {
+        "knotenId": "vonSpalte",
+        "anschlussId": "vonSpalte-vektor-Eingang"
+      },
+      "eingangsReihenfolge": 0
+    },
+    {
+      "id": "e-flachSpalte",
+      "von": {
+        "knotenId": "vonSpalte",
+        "anschlussId": "vonSpalte-tupel-Ausgang"
+      },
+      "zu": {
+        "knotenId": "flachSpalte",
+        "anschlussId": "flachSpalte-tupel-Eingang"
+      },
+      "eingangsReihenfolge": 0
+    },
+    {
+      "id": "e-zuZeile",
+      "von": {
+        "knotenId": "quelle",
+        "anschlussId": "quelle-wert-Ausgang"
+      },
+      "zu": {
+        "knotenId": "zuZeile",
+        "anschlussId": "zuZeile-tupel-Eingang"
+      },
+      "eingangsReihenfolge": 0
+    },
+    {
+      "id": "e-vonZeile",
+      "von": {
+        "knotenId": "zuZeile",
+        "anschlussId": "zuZeile-vektor-Ausgang"
+      },
+      "zu": {
+        "knotenId": "vonZeile",
+        "anschlussId": "vonZeile-vektor-Eingang"
+      },
+      "eingangsReihenfolge": 0
+    },
+    {
+      "id": "e-flachZeile",
+      "von": {
+        "knotenId": "vonZeile",
+        "anschlussId": "vonZeile-tupel-Ausgang"
+      },
+      "zu": {
+        "knotenId": "flachZeile",
+        "anschlussId": "flachZeile-tupel-Eingang"
+      },
+      "eingangsReihenfolge": 0
+    }
+  ]
+}

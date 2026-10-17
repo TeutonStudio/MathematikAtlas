@@ -24,7 +24,9 @@ class AlphaStrukturKonzeptResolverTest {
                 assertTrue(text(konzept).contains("Grad"))
                 assertTrue(text(konzept).contains("R¹"))
             } else if (ziel in setOf("grad", "bogenmass")) assertTrue(text(konzept).contains("Winkelraum"))
-            else assertTrue(text(konzept).contains("symbolische"))
+            else if(ziel=="abflachen") {
+                assertTrue(text(konzept).contains("DFS"));assertTrue(text(konzept).contains("Rückführungsplan"))
+            } else assertTrue(text(konzept).contains("symbolische"))
         }
         assertEquals(ÜBERSETZER_ZIELE.size,ids.size)
         assertEquals(dynamischesKonzeptFürKnoten(konfiguriereÜbersetzer(basis,"spalte"))!!.id,dynamischesKonzeptFürKnoten(basis)!!.id)

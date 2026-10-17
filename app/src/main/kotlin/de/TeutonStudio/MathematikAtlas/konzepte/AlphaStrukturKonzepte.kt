@@ -21,6 +21,12 @@ internal fun alphaStrukturKonzeptFürKnoten(knoten: KnotenDaten): KonzeptDefinit
 private fun übersetzerKonzept(knoten: KnotenDaten): KonzeptDefinition {
     val ziel = übersetzerZiel(knoten)
     val regel = when (ziel) {
+        "abflachen" -> if (knoten.parameter["abflachen.ebenen"] == "1")
+            "Öffnet genau eine Ebene direkter Tupel und orientierter Vektoren; weitere Verschachtelungen bleiben einzelne Komponenten."
+        else if (knoten.parameter["abflachen.ebenen"] in setOf(null,"rekursiv","alle"))
+            "DFS von links nach rechts: F(())=(); F((a₁,…,aₙ))=F(a₁) ⧺ … ⧺ F(aₙ). Nur Tupel werden rekursiv geöffnet; andere Objekte bleiben Blätter."
+        else "Die gespeicherte Abflachtiefe ist unbekannt; Auswertung abgelehnt."
+
         "grad" -> "q: R → Grad; x ↦ [180x/π]°. R wird als Bogenmaß gelesen, vollständige Umdrehungen werden identifiziert."
         "bogenmass" -> "Grad → R: w ↦ sein Hauptvertreter im gespeicherten Bogenmaßintervall. Diese Auswahl ist eine Rechtsinverse von q; R → Grad → R normalisiert auf dieses Intervall."
         "polar" -> "(x₁,…,xₙ) → (r,(φ,θ₁,…)). r ist die euklidische Norm; φ=atan2(x₂,x₁); θₖ=atan2(‖(x₁,…,xₖ₊₁)‖,xₖ₊₂). Nicht bestimmte Teilwinkel werden 0°. R¹: x → (|x|,sign(x))."
@@ -32,7 +38,9 @@ private fun übersetzerKonzept(knoten: KnotenDaten): KonzeptDefinition {
         "methode" -> "Term t → Methode f mit internem Vertrag Tupel → Tupel. Ohne gebundene Parameter: f(())=(c), Definitionsraum {()}. Mit x: f((x))=(t(x)). Eine bereits tupelförmige Vorschrift erhält ihre äußere Tupelstruktur; auch () und Einertupel bleiben strukturell erhalten."
         else -> "Das gespeicherte Ziel '$ziel' ist unbekannt; es wird keine Ersatzübersetzung angenommen."
     }
-    val zulässigkeit = if (ziel in setOf("grad", "bogenmass")) "Grad ist ein eigener Winkelraum, keine reelle Teilmenge. Vertreterintervall: ${übersetzerVertreter(knoten).menge.zuLatex()}. 360°=0°. Die additive Winkelgruppe besitzt keine von der üblichen reellen Multiplikation induzierte Ringstruktur."
+    val zulässigkeit = if (ziel == "abflachen")
+        "Der Eingang muss ein Tupel sein. Leere Tupel sind erlaubt; Mengen, Aussagen und andere mathematische Blätter werden weder sortiert noch dedupliziert. Annahmen und Quellen bleiben erhalten. Die ursprüngliche Verschachtelung ist nur mit dem mitgeführten Rückführungsplan wiederherstellbar; Injektivität und automatische Eignung werden nicht behauptet."
+    else if (ziel in setOf("grad", "bogenmass")) "Grad ist ein eigener Winkelraum, keine reelle Teilmenge. Vertreterintervall: ${übersetzerVertreter(knoten).menge.zuLatex()}. 360°=0°. Die additive Winkelgruppe besitzt keine von der üblichen reellen Multiplikation induzierte Ringstruktur."
     else if (ziel in setOf("polar", "kartesisch"))
         de.TeutonStudio.MathematikRechenSystem.kern.Polarkoordinaten.KONVENTION +
             " Kartesisch: nichtleere flache Tupel reeller Komponenten. Polar ab R²: Radius und verschachteltes Winkeltupel; historische flache Polartupel bleiben lesbar. Radius nichtnegativ; skalares Vorzeichen −1,0,+1, wobei 0 nur mit Radius 0 erlaubt ist. Ergebnisse sind numerische Näherungen."

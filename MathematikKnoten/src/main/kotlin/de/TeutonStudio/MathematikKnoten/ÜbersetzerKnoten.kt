@@ -22,6 +22,7 @@ fun übersetzerPolarKonvention(knoten:KnotenDaten):PolarKonvention =
 const val ÜBERSETZER_R1 = "uebersetzer.r1"
 val ÜBERSETZER_ZIELE = ÜbersetzungsZiel.knotenZiele
 fun übersetzerZielTitel(ziel: String): String = when (ziel) {
+    "abflachen" -> "Tupel abflachen"
     "rueckfuehrung" -> "Struktur zurückführen"
     "koordinatenmenge" -> "Geometrie → Koordinatenmenge"
     "mittelpunkt" -> "Geometrischer Mittelpunkt"
@@ -60,7 +61,7 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
         "geometrie" -> GeometrieAnschlussArten.Objekt.id
         "grad" -> MathematikAnschlussArten.Winkel.id
         "bogenmass" -> MathematikAnschlussArten.Zahl.id
-        "tupel", "polar", "kartesisch" -> MathematikAnschlussArten.Tupel.id
+        "tupel", "abflachen", "polar", "kartesisch" -> MathematikAnschlussArten.Tupel.id
         "matrixzerlegen" -> MathematikAnschlussArten.Methode.id
         "zeile" -> MathematikAnschlussArten.ZeilenVektor.id
         "spalte" -> MathematikAnschlussArten.SpaltenVektor.id
@@ -104,7 +105,7 @@ fun konfiguriereÜbersetzer(knoten: KnotenDaten, ziel: String): KnotenDaten {
                     "grad" -> setOf(MathematikAnschlussArten.Zahl.id)
                     "bogenmass" -> setOf(MathematikAnschlussArten.Winkel.id)
                     "matrixzerlegen" -> setOf(MathematikAnschlussArten.Matrix.id)
-                    "polar", "kartesisch" -> setOf(MathematikAnschlussArten.Tupel.id)
+                    "abflachen", "polar", "kartesisch" -> setOf(MathematikAnschlussArten.Tupel.id)
                     "indexmethode" -> setOf(MathematikAnschlussArten.AtlasWert.id, MathematikAnschlussArten.Vektor.id, MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id, MathematikAnschlussArten.Matrix.id, MathematikAnschlussArten.Tensor.id)
                     "tupel" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.ZeilenVektor.id, MathematikAnschlussArten.SpaltenVektor.id)
                     "zeile" -> setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.SpaltenVektor.id, MathematikAnschlussArten.ZeilenVektor.id)
@@ -493,7 +494,7 @@ internal fun übersetzterWert(quelle: BedingterWert, ergebnis: MathematischesObj
         is Tupel, is OrientierterVektor -> quelle.komponentenMengen ?: (quelle.zielMenge as? Tupelraum)?.komponenten
         else -> null
     },
-    zielMenge = strukturRaumÜbersetzung(quelle.komponentenMengen?.let(::Tupelraum) ?: quelle.zielMenge ?: quelle.werteVorrat, ergebnis) ?: inferiereZielmenge(ergebnis, quelle.variablenQuellen.associate { it.name to it.werteVorrat }, quelle.annahmen),
+    zielMenge = strukturRaumÜbersetzung(quelle.komponentenMengen?.let(::Tupelraum) ?: quelle.zielMenge ?: quelle.werteVorrat, ergebnis) ?: inferiereZielmenge(ergebnis, listOf(quelle).rechnerQuellBereiche(), quelle.annahmen),
 )
 
 /** Gebundene Strukturparameter behalten ihre Identität; das neutrale Element liefert nur die Form. */

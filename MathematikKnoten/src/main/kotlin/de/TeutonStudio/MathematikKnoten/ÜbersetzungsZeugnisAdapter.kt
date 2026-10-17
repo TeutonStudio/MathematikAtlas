@@ -8,6 +8,9 @@ internal fun MathematikAuswerterRegister.bezeugeÜbersetzer(art: String, ziel: (
     val basis = finde(art) ?: error("Übersetzerauswerter '$art' fehlt.")
     registriere(art) { k ->
         try {
+            val übersetzungsZiel = ziel(k)
+            if (übersetzungsZiel in setOf(ÜbersetzungsZiel.TUPEL,ÜbersetzungsZiel.ZEILE,ÜbersetzungsZiel.SPALTE,ÜbersetzungsZiel.ABFLACHEN))
+                return@registriere übersetzeStrukturMitZeugnis(k,übersetzungsZiel)
             val ergebnis = basis.auswerten(k)
             if (ergebnis.fehler != null) return@registriere ergebnis.copy(
                 übersetzungsDiagnose = ergebnis.übersetzungsDiagnose ?: ÜbersetzungsErgebnis.NichtDefiniert("nicht_definiert",requireNotNull(ergebnis.fehler)),
@@ -80,10 +83,42 @@ internal fun MathematikAuswerterRegister.bezeugeHistorischeÜbersetzer() {
     listOf("mathematik.spalteZuTupel", "mathematik.zeileZuTupel").forEach { art ->
         if (finde(art) != null) bezeugeÜbersetzer(art) { ÜbersetzungsZiel.TUPEL }
     }
-    if (finde("mathematik.tupelZuSpalte") != null) bezeugeÜbersetzer("mathematik.tupelZuSpalte") { k ->
-        if (orientierungFürOrientierungsKnoten(k.knoten) == VEKTOR_ORIENTIERUNG_ZEILE) ÜbersetzungsZiel.ZEILE else ÜbersetzungsZiel.SPALTE
+    listOf("mathematik.tupelZuSpalte","mathematik.tupelZuZeile").forEach { art ->
+        if (finde(art) != null) bezeugeÜbersetzer(art) { k ->
+            if (orientierungFürOrientierungsKnoten(k.knoten) == VEKTOR_ORIENTIERUNG_ZEILE) ÜbersetzungsZiel.ZEILE else ÜbersetzungsZiel.SPALTE
+        }
     }
-    if (finde("mathematik.tupelZuZeile") != null) bezeugeÜbersetzer("mathematik.tupelZuZeile") { ÜbersetzungsZiel.ZEILE }
     if (finde("mathematik.termZuMethode") != null) bezeugeÜbersetzer("mathematik.termZuMethode") { ÜbersetzungsZiel.METHODE }
     if (finde("mathematik.geometrie.zuTrägermenge") != null) bezeugeÜbersetzer("mathematik.geometrie.zuTrägermenge") { ÜbersetzungsZiel.KOORDINATENMENGE }
+}
+
+/** Strukturänderung und Zeugnis entstehen gemeinsam im vorhandenen Fachkern. */
+private fun übersetzeStrukturMitZeugnis(k:KnotenAuswertungsKontext,ziel:ÜbersetzungsZiel):KnotenAuswertungsErgebnis {
+    val kanonisch = k.knoten.art == ÜBERSETZER_ART
+    val zuVektor = k.knoten.art in setOf("mathematik.tupelZuSpalte","mathematik.tupelZuZeile")
+    if (zuVektor) require(k.knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] in setOf(null,VEKTOR_ORIENTIERUNG_SPALTE,VEKTOR_ORIENTIERUNG_ZEILE)) {
+        "Unbekannte gespeicherte Vektororientierung."
+    }
+    val eingang = if (kanonisch) "wert" else if (zuVektor || k.knoten.art == TUPEL_ABFLACHEN_ART) "tupel" else "vektor"
+    val ausgang = if (kanonisch) "ergebnis" else if (zuVektor) "vektor" else "tupel"
+    val quelle = k.eingänge[eingang] ?: error("Übersetzungsquelle '$eingang' fehlt.")
+    val übersetzt = when (val r = ÜbersetzungsDienst.übersetze(ÜbersetzungsAnfrage(
+        quelle.mathematischesObjekt("Übersetzungsquelle"),ziel,quelle.übersetzungsKontext(),k.knoten.parameter))) {
+        is ÜbersetzungsErgebnis.NichtDefiniert -> throw ÜbersetzungsFehler(r)
+        is ÜbersetzungsErgebnis.Erfolg -> r
+    }
+    val basis = übersetzterWert(if (ziel == ÜbersetzungsZiel.ABFLACHEN)
+        quelle.copy(zielMenge = null,werteVorrat = null,komponentenMengen = null) else quelle,übersetzt.wert)
+    val metadaten = quelle.übersetzungen.mit(übersetzt.zeugnis,übersetzt.kontext)
+    val annahmen = quelle.annahmen + übersetzt.zeugnis.voraussetzungen
+    val wert = basis.copy(annahmen = annahmen,
+        zielMenge = übersetzt.zeugnis.zielTräger ?: basis.zielMenge,
+        werteVorrat = if (quelle.werteVorrat != null) übersetzt.kontext.werteBereich else null,
+        komponentenMengen = übersetzt.kontext.komponentenRäume ?: basis.komponentenMengen,
+        übersetzungen = metadaten,
+        gebundeneFormel = quelle.gebundeneFormel?.copy(
+            wurzel = FormelAusdruck.Literal("übersetzung",übersetzt.wert,formelTypFürWert(übersetzt.wert),metadaten),
+            variablenVorkommen = emptyMap(),annahmen = annahmen))
+    return KnotenAuswertungsErgebnis(mapOf(ausgang to wert),eingänge = k.eingänge,bezeugteAusgaben = setOf(ausgang))
+        .führeÜbersetzungsHerkunftFort(k.eingänge.values)
 }

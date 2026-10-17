@@ -656,3 +656,16 @@ M3 ist anschließend als v3.4.6/x auf `samai/v3.4.6/konsolidierung-m3` ab exakt
 `e6760b9a41aaeb186dee7ee7c13254430cb47ee8` reserviert; Reservierungscommit
 `63acb023c1bc33b8e38016834f480563faee8e3d`, ausschließlich Roadmap, SamAI/SamAI.
 M4–M7 bleiben unreserviert.
+
+M3-Implementierungsstand 17.10.2026: v3.4.6/x reserviert auf e6760b9a,
+Branch samai/v3.4.6/konsolidierung-m3. Vier Strukturadapter werden in vorhandene
+Übersetzerziele integriert; Sollkatalog 124 mathematische/126 vollständige
+Androidtypen. Gerichtete strenge Migration, Quellenidentitäten und vorhandene
+Zeugnisse/Rückführungspläne werden geprüft. Gezielte Knoten-/App-Prüfungen
+bestanden vor abschließender Identitätsregression; Gesamt-/Laufzeitfreigabe offen.
+[ADR](decisions/2026-10-17-explizite-strukturuebersetzungen.md).
+
+M3 lokale Gesamtprüfung abgeschlossen: 2.193 Tests ohne Fehler, ein bestehender
+Opt-in-Skip, Lint, APK-/Test-APK- und Desktopprüfungen grün. APK 3.4.6/3004006;
+Manifest 126, gemeinsamer Katalog 124. Unabhängiger Review ohne offene Findings.
+Veröffentlichung und finale SHA-bezogene CI-Laufzeitabnahme weiterhin offen.
