@@ -44,6 +44,8 @@ data class SamplingKonfiguration(
     val maximaleOrbitSchritte: Int = 256,
     /** Nur Laufzeitdarstellung, wird nicht persistiert. */
     val vorschau: Boolean = false,
+    val automatisch: Boolean = false,
+    val interaktion: Boolean = false,
     val bildBreite: Double = 0.0,
     val bildHöhe: Double = 0.0,
     val sichtBereiche: AchsenBereiche? = null,
@@ -52,6 +54,12 @@ data class SamplingKonfiguration(
 
 const val MAXIMALES_VISUALISIERUNGS_DETAIL_BUDGET = 8_000
 internal const val VISUALISIERUNGS_VORSCHAU_BUDGET = 192
+// Konservative Materialisierungsgrenze: 64 MiB / 256 Bytes je Eintrag.
+internal const val AUTOMATISCHE_MATERIALISIERUNGS_GRENZE = 262_144
+internal fun VisualisierungsKonfiguration.automatischeDarstellung() = copy(sampling = sampling.copy(
+    automatisch = true, vorschau = false, maximalesRasterBudget = Int.MAX_VALUE,
+    zielFehlerPixel = (if(sampling.interaktion) 3.0 else if (qualität == DarstellungsQualität.Hoch) .5 else 1.0) / if(dimension==RaumDimension.R3) kamera.zoom else 1.0,
+))
 
 /**
  * Erster progressiver Zeichenschritt. Die persistierte Qualitätskonfiguration bleibt
@@ -175,7 +183,7 @@ data class VisualisierungsKonfiguration(
             val gespeicherteProjektion = (eigenschaften["ausgabeKoordinaten"] as? KnotenEigenschaft.Liste)?.werte.orEmpty()
             val projektion = gespeicherteProjektion.takeIf { werte -> werte.all { it is KnotenEigenschaft.Ganzzahl } }
                 ?.map { (it as KnotenEigenschaft.Ganzzahl).wert }.orEmpty()
-                .takeIf { it.size in 2..3 && it.all { index -> index > 0 } && it.distinct().size == it.size }.orEmpty()
+                .takeIf { it.size in 1..3 && it.all { index -> index > 0 } && it.distinct().size == it.size }.orEmpty()
             return VisualisierungsKonfiguration(dimension, achsen, bereiche, farbe, sampling, kamera, methodenModus, festeSchnitte, dimensionsModus, projektion,
                 eigenschaften.text("achsenSichtbar", "true").toBooleanStrictOrNull() ?: true,
                 eigenschaften.text("rasterSichtbar", "true").toBooleanStrictOrNull() ?: true,

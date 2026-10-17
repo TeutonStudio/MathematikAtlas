@@ -25,63 +25,57 @@ internal fun pieKartenEinträge(karten: List<KartenDaten>, vorlage: (KartenDaten
         }
     }
 
-/** Gruppen belegen Kreissektoren; ihre Einträge verteilen sich auf radiale Reihen.
- * Die beiden Kartendarstellungen belegen dadurch jeweils eine volle Kreishälfte.
- * Große Knoten rücken nach außen, ohne ihre Zoomgröße oder den Ursprung zu ändern.
- */
+/** Vollständige Hexringe mit 6k Plätzen einschließlich der Kantenzwischenplätze. */
 internal fun planePieFächer(einträge: List<PieEintrag>, größen: Map<String, GraphGröße>, zoom: Float,
     richtung: Float, abstand: Float = 24f): List<PiePlatz> {
+    if (einträge.isEmpty()) return emptyList()
     val gruppen = einträge.groupBy { it.gruppe }
+    val maße = einträge.associate { e -> e.id to (größen[e.id] ?: e.vorlage.standardGröße) }
+    val schritt = hypot(maße.values.maxOf { it.breite * zoom } + abstand * 2f,
+        maße.values.maxOf { it.höhe * zoom } + abstand * 2f)
+    val sektor = 360f / gruppen.size
     val platziert = mutableListOf<PiePlatz>()
-    val sektor = 360f / gruppen.size.coerceAtLeast(1)
     gruppen.entries.forEachIndexed { index, (_, inhalt) ->
-        val spalten = minOf(inhalt.size, maxOf(1, ceil(8f / gruppen.size).toInt()))
-        inhalt.forEachIndexed { nummer, e ->
-            val winkel = richtung + index * sektor + (nummer % spalten + .5f) * sektor / spalten
-            val rad = winkel * PI.toFloat() / 180f
-            val strahl = Offset(cos(rad), sin(rad))
-            val größe = größen[e.id] ?: e.vorlage.standardGröße
-            val b = größe.breite * zoom
-            val h = größe.höhe * zoom
-            val sektorMitte = (richtung + (index + .5f) * sektor) * PI.toFloat() / 180f
-            val halbkreisNormal = Offset(cos(sektorMitte), sin(sektorMitte))
-            var radius = abstand * 4f
-            var rahmen: Rect
-            do {
-                val mitte = strahl * radius
-                rahmen = Rect(mitte.x - b / 2f, mitte.y - h / 2f, mitte.x + b / 2f, mitte.y + h / 2f)
-                radius += maxOf(abstand, 16f)
-            } while (platziert.any { it.rahmen.inflate(abstand).overlaps(rahmen) } || rahmen.inflate(abstand).contains(Offset.Zero) ||
-                (gruppen.size == 2 && rahmen.center.x * halbkreisNormal.x + rahmen.center.y * halbkreisNormal.y -
-                    abs(halbkreisNormal.x) * b / 2f - abs(halbkreisNormal.y) * h / 2f < abstand / 2f))
-            platziert += PiePlatz(e, rahmen)
+        var nächster = 0
+        var ring = 1
+        val mitteWinkel = (richtung + (index + .5f) * sektor) * PI.toFloat() / 180f
+        val normal = Offset(cos(mitteWinkel), sin(mitteWinkel))
+        while (nächster < inhalt.size) {
+            for (punkt in pieHexRing(ring, schritt)) {
+                val grad = ((atan2(punkt.y, punkt.x) * 180f / PI.toFloat() - richtung) % 360f + 360f) % 360f
+                if (gruppen.size > 1 && floor(grad / sektor).toInt().coerceAtMost(gruppen.size - 1) != index) continue
+                val e = inhalt[nächster]
+                val g = maße.getValue(e.id)
+                val b = g.breite * zoom
+                val h = g.höhe * zoom
+                val rahmen = Rect(punkt.x - b / 2f, punkt.y - h / 2f, punkt.x + b / 2f, punkt.y + h / 2f)
+                if (rahmen.inflate(abstand).contains(Offset.Zero)) continue
+                if (gruppen.size == 2 && punkt.x * normal.x + punkt.y * normal.y -
+                    abs(normal.x) * b / 2f - abs(normal.y) * h / 2f < abstand / 2f) continue
+                platziert += PiePlatz(e, rahmen)
+                nächster++
+                if (nächster == inhalt.size) break
+            }
+            ring++
         }
     }
     return platziert
 }
 
-/** Echte konzentrische Kreise; Beschriftungen sind in den Hüllkreisen enthalten. */
-internal fun planePieKreise(einträge: List<PieEintrag>, größen: Map<String, GraphGröße>, zoom: Float,
-    abstand: Float = 56f): List<PiePlatz> {
-    var außen = abstand * 2f
-    return einträge.chunked(8).flatMap { ring ->
-        val radien = ring.map { e ->
-            val g = größen[e.id] ?: e.vorlage.standardGröße
-            hypot(g.breite * zoom, g.höhe * zoom + abstand) / 2f
-        }
-        val hülle = radien.max()
-        val radius = maxOf(außen + abstand + hülle,
-            if (ring.size > 1) (hülle + abstand / 2f) / sin(PI.toFloat() / ring.size) else 0f)
-        außen = radius + hülle
-        ring.mapIndexed { i, e ->
-            val g = größen[e.id] ?: e.vorlage.standardGröße
-            val winkel = -PI.toFloat() / 2f + i * 2f * PI.toFloat() / ring.size
-            val mitte = Offset(cos(winkel), sin(winkel)) * radius
-            PiePlatz(e, Rect(mitte.x - g.breite * zoom / 2f, mitte.y - g.höhe * zoom / 2f,
-                mitte.x + g.breite * zoom / 2f, mitte.y + g.höhe * zoom / 2f))
-        }
+internal fun pieHexRing(ring: Int, schritt: Float): List<Offset> {
+    require(ring > 0 && schritt > 0f)
+    val ecken = List(6) { i ->
+        val winkel = -PI.toFloat() / 2f + i * PI.toFloat() / 3f
+        Offset(cos(winkel), sin(winkel)) * (ring * schritt)
+    }
+    return ecken.indices.flatMap { i ->
+        List(ring) { j -> ecken[i] + (ecken[(i + 1) % 6] - ecken[i]) * (j.toFloat() / ring) }
     }
 }
+
+/** Anschlussbezogene Auswahl verwendet dieselbe Geometrie wie die normale Auswahl. */
+internal fun planePieKreise(einträge: List<PieEintrag>, größen: Map<String, GraphGröße>, zoom: Float,
+    abstand: Float = 56f): List<PiePlatz> = planePieFächer(einträge, größen, zoom, -90f, abstand)
 
 /** Flüchtiger Menüzoom; der Punkt unter dem Fingermittelpunkt bleibt dort liegen. */
 internal data class PieTransformation(val position: Offset, val zoom: Float)

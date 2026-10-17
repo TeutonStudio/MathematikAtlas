@@ -106,7 +106,7 @@ class MengenKonsolidierungTest {
 
     @Test fun `Mengenbegriffe erzeugen unmittelbar kanonische Konfigurationen`() {
         val katalog=KanonischerMathematikKnotenKatalog.alle()
-        assertEquals(121,katalog.map {it.art}.toSet().size)
+        assertEquals(120,katalog.map {it.art}.toSet().size)
         assertTrue(katalog.none {it.art in mengenKonsolidierungAltarten})
         assertTrue(alleMathematikDefinitionsVorlagen().none {it.art in mengenKonsolidierungAltarten})
         assertTrue(OperatorKnotenSuchindex.suche("Einzelmenge",katalog).any {it.art==ENDLICHE_MENGE_ART && it.standardParameter[ENDLICHE_MENGE_EINGABE]==ENDLICHE_MENGE_GRAPH && it.standardParameter[ENDLICHE_MENGE_ANZAHL]=="1"})

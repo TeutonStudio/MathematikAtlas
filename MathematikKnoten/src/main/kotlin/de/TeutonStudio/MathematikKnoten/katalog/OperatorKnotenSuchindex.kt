@@ -148,6 +148,9 @@ object OperatorKnotenSuchindex {
         .trim()
 
     private fun mengenAliase(operator: MengenRechnerOperator): Set<String> = when (operator) {
+        MengenRechnerOperator.TENSORRAUM -> setOf("Matrix", "Matrizen", "Matrizenraum", "Matrizenmenge", "beliebige Stufe", "Tensorraum")
+        MengenRechnerOperator.TUPELRAUM -> setOf("Tupelraum", "kartesische Potenz")
+        MengenRechnerOperator.MATRIZENMENGE -> setOf("Matrizenraum", "Matrixraum", "A hoch n mal m")
         MengenRechnerOperator.VEREINIGUNG -> setOf("union", "vereinen")
         MengenRechnerOperator.SCHNITT -> setOf("intersection", "durchschnitt")
         MengenRechnerOperator.KARTESISCHES_PRODUKT -> setOf("produktmenge", "kartesisch")

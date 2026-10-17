@@ -78,6 +78,15 @@ private fun vergleicheObjekte(links: MathematischesObjekt, rechts: Mathematische
             if (basis.wahrheitswert == Wahrheitswert.Wahr) return basis
         }
     }
+    val lm = (l as? MengenAusdruck)?.konkreterMatrizenraumOderNull()
+    val rm = (r as? MengenAusdruck)?.konkreterMatrizenraumOderNull()
+    if (lm != null && rm != null) return if (lm.zeilen != rm.zeilen || lm.spalten != rm.spalten)
+        vergleichsWert(false) else paar(lm.skalarMenge, rm.skalarMenge)
+    if (l is Tensorraum && r is Tensorraum && l.matrixForm == r.matrixForm) {
+        return Konjunktion(listOf(Gleichheit(l.elementMenge, r.elementMenge)) +
+            if (l.dimensionen.size == r.dimensionen.size) l.dimensionen.zip(r.dimensionen).map { (a,b) -> Gleichheit(a,b) }
+            else return vergleichsWert(false)).entscheide(kontext)
+    }
     val lk = komponenten(l)
     val rk = komponenten(r)
     if (lk != null && rk != null) return folge(lk, rk)

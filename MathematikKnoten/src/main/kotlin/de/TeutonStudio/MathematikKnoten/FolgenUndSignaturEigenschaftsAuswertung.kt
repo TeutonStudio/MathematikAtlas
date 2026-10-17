@@ -109,7 +109,7 @@ private fun wertArtDefinition(methode: Methode): MathematischeEigenschaftDefinit
         mathematisch.zielMenge in setOf(NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen) ->
             MathematischeEigenschaftRegister.Reellwertig
         mathematisch.zielMenge == KomplexeZahlen -> MathematischeEigenschaftRegister.Komplexwertig
-        mathematisch.zielMenge is Vektorraum || mathematisch.zielMenge is Matrizenraum || mathematisch.zielMenge is Tupelraum ->
+        mathematisch.zielMenge is Vektorraum || mathematisch.zielMenge is Matrizenraum || (mathematisch.zielMenge as? de.TeutonStudio.MathematikRechenSystem.kern.Tensorraum)?.matrixForm == true || mathematisch.zielMenge is Tupelraum ->
             MathematischeEigenschaftRegister.Vektorwertig
         mathematisch.vorschrift is SpaltenVektor || mathematisch.vorschrift is ZeilenVektor ->
             MathematischeEigenschaftRegister.Vektorwertig

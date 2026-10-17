@@ -57,21 +57,37 @@ class PieModellTest {
             assertTrue(neu.zoom in .2f..4f)
         }
     }
-    @Test fun kreiseSindKonzentrischUndBeiVerschiedenenGroessenKollisionsfrei() {
+    @Test fun hexringeSindBeiVerschiedenenGroessenKollisionsfrei() {
         val einträge = (0..24).map { PieEintrag("$it", "G", vorlage("K$it", GraphGröße(120f + it * 7, 80f + it * 4))) }
         for (zoom in listOf(.25f, 1f, 3.5f)) {
             val plätze = planePieKreise(einträge, emptyMap(), zoom)
             assertEquals(plätze, planePieKreise(einträge, emptyMap(), zoom))
-            plätze.chunked(8).forEach { ring ->
-                val radius = ring.first().rahmen.center.getDistance()
-                ring.forEach { assertEquals(radius, it.rahmen.center.getDistance(), .01f) }
-            }
+            assertEquals(planePieFächer(einträge, emptyMap(), zoom, -90f, 56f), plätze)
             plätze.forEachIndexed { i, p ->
                 assertEquals(p.eintrag.vorlage.standardGröße.breite * zoom, p.rahmen.width, .01f)
                 plätze.drop(i + 1).forEach { assertFalse(p.rahmen.inflate(24f).overlaps(it.rahmen)) }
             }
         }
         assertTrue(planePieKreise(emptyList(), emptyMap(), 1f).isEmpty())
+    }
+    @Test fun hexringeBelegenAuchDieKantenZwischenDenEcken() {
+        for (ring in 1..5) {
+            val punkte = pieHexRing(ring, 100f)
+            assertEquals(6 * ring, punkte.size)
+            assertEquals(punkte.size, punkte.distinct().size)
+            punkte.forEachIndexed { index, punkt ->
+                assertEquals(100f, (punkt - punkte[(index + 1) % punkte.size]).getDistance(), .001f)
+            }
+            assertEquals(6, punkte.count { kotlin.math.abs(it.getDistance() - ring * 100f) < .01f })
+            if (ring > 1) assertTrue(punkte.any { it.getDistance() < ring * 100f - 1f })
+        }
+        val einträge = (0 until 36).map { PieEintrag("$it", "G", vorlage("K$it")) }
+        val plätze = planePieFächer(einträge, emptyMap(), 1f, -90f)
+        val schritt = plätze.first().rahmen.center.getDistance()
+        (pieHexRing(1, schritt) + pieHexRing(2, schritt) + pieHexRing(3, schritt)).zip(plätze).forEach { (punkt, platz) ->
+            assertEquals(punkt.x, platz.rahmen.center.x, .001f)
+            assertEquals(punkt.y, platz.rahmen.center.y, .001f)
+        }
     }
     @Test fun gemesseneVorschaugroesseBestimmtLayoutOhneVerkleinerung() {
         val e = PieEintrag("a", "G", vorlage("A"))

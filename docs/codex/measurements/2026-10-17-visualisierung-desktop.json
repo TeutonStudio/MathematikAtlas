@@ -1,0 +1,132 @@
+{
+  "datum": "2026-10-17",
+  "projekt": "Mathematik Atlas",
+  "branch": "samai/v3.4.12/pie-methoden-matrizen",
+  "head": "20356f1c3c8e996fae03ed10ff10d9fe8005debe",
+  "arbeitsbaumAenderungen": true,
+  "pruefungen": {
+    "tests": 2333,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2,
+    "neueRegressionsTests": 19,
+    "gradleGesamtpruefung": "erfolgreich",
+    "androidLint": "erfolgreich",
+    "androidAppUndTestApk": "erfolgreich",
+    "desktopInteraktionen": "erfolgreich",
+    "repositoryGuards": "erfolgreich",
+    "unabhaengigeCodeUndFunktionaleAbnahme": "bestanden"
+  },
+  "desktop": {
+    "messungen": [
+      {
+        "detailBisBildP95Ms": 32.639641,
+        "fall": "Kurve",
+        "lauf": 1,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 0,
+        "eingabeBisBildP95Ms": 7.906763,
+        "zeichenCpuP95Ms": 0.20418,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      },
+      {
+        "detailBisBildP95Ms": 15.794515,
+        "fall": "Kurve",
+        "lauf": 2,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 0,
+        "eingabeBisBildP95Ms": 6.32985,
+        "zeichenCpuP95Ms": 0.09616,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      },
+      {
+        "detailBisBildP95Ms": 12.124179,
+        "fall": "Kurve",
+        "lauf": 3,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 0,
+        "eingabeBisBildP95Ms": 6.183249,
+        "zeichenCpuP95Ms": 0.07162,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      },
+      {
+        "detailBisBildP95Ms": 100.434297,
+        "fall": "KurveUndGebiet",
+        "lauf": 1,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 0,
+        "eingabeBisBildP95Ms": 13.398371,
+        "zeichenCpuP95Ms": 0.193891,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      },
+      {
+        "detailBisBildP95Ms": 51.255951,
+        "fall": "KurveUndGebiet",
+        "lauf": 2,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 0,
+        "eingabeBisBildP95Ms": 13.05973,
+        "zeichenCpuP95Ms": 0.1643,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      },
+      {
+        "detailBisBildP95Ms": 48.887227,
+        "fall": "KurveUndGebiet",
+        "lauf": 3,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 0,
+        "eingabeBisBildP95Ms": 13.069081,
+        "zeichenCpuP95Ms": 0.16763,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      },
+      {
+        "detailBisBildP95Ms": 258.728536,
+        "fall": "Flaeche3D",
+        "lauf": 1,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 1024,
+        "eingabeBisBildP95Ms": 14.472763,
+        "zeichenCpuP95Ms": 3.638316,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      },
+      {
+        "detailBisBildP95Ms": 256.296832,
+        "fall": "Flaeche3D",
+        "lauf": 2,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 1024,
+        "eingabeBisBildP95Ms": 14.576573,
+        "zeichenCpuP95Ms": 3.614486,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      },
+      {
+        "detailBisBildP95Ms": 255.750691,
+        "fall": "Flaeche3D",
+        "lauf": 3,
+        "eingaben": 300,
+        "maximaleInteraktionsDreiecke": 1024,
+        "eingabeBisBildP95Ms": 14.215092,
+        "zeichenCpuP95Ms": 3.720146,
+        "kalteAnfragen": 20,
+        "zeichenAufrufe": 300
+      }
+    ],
+    "plattform": "Linux amd64",
+    "hinweis": "Native Compose/Skia-Tests; CPU-Zeichnung und Test-Eingabe bis Capture enthalten Testaufwand, keine Display-Present-Framezeit. Detailmessung kann Cachetreffer enthalten."
+  },
+  "einschraenkungen": [
+    "Canvas-CPU-Zeit und Eingabe-bis-Capture enthalten keine vollständige Display-/Present-Framezeit; keine allgemeine 60-Hz-Garantie.",
+    "Android-Referenzgerät SM-X920 gesperrt; Nutzer kann es derzeit nicht entsperren. Android-Laufzeit- und Frameabnahme offen.",
+    "Detail-bis-Bild ist keine separate Messung der ersten Vorschau und kann Funktionsproben-Cachetreffer enthalten.",
+    "Speicherreservierungen begrenzen geschätzte verwaltete Geometrie, nicht den exakten Prozess-RSS.",
+    "Keine Commits, Pushes, PRs oder Veröffentlichung aus diesem Auftrag."
+  ]
+}

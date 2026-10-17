@@ -80,6 +80,22 @@ internal fun anschlussSymbolPlan(anschluss: AnschlussDaten): AnschlussSymbolPlan
     return AnschlussSymbolPlan.Standard
 }
 
+/** Stabile Beschreibung des sichtbaren Symbols, gemeinsam für Editor und Legende. */
+data class AnschlussSymbolBeschreibung(
+    val schlüssel: String,
+    val methodenArgumente: List<String> = emptyList(),
+    val methodenAusgaben: List<String> = emptyList(),
+)
+
+fun anschlussSymbolBeschreibung(anschluss: AnschlussDaten): AnschlussSymbolBeschreibung = when (val plan = anschlussSymbolPlan(anschluss)) {
+    is AnschlussSymbolPlan.Methode -> AnschlussSymbolBeschreibung(
+        "methode:${plan.argumentFarben.joinToString("|")}->${plan.ausgabeFarben.joinToString("|")}",
+        plan.argumentFarben, plan.ausgabeFarben,
+    )
+    is AnschlussSymbolPlan.Tupel -> AnschlussSymbolBeschreibung("tupel:${plan.ringe}")
+    AnschlussSymbolPlan.Standard -> AnschlussSymbolBeschreibung("standard:${sichtbareAnschlussArtIds(anschluss)}")
+}
+
 /** Zeigt die fließende Methodensignatur, ohne die deklarierte Eingangsanforderung zu verengen. */
 fun KartenDaten.symbolAnschluss(knotenId: KnotenId, anschluss: AnschlussDaten): AnschlussDaten {
     if (anschluss.richtung != AnschlussRichtung.Eingang) return anschluss
@@ -200,6 +216,7 @@ fun AnschlussSymbol(
     farbeFürAnschluss: @Composable (AnschlussDaten) -> Color,
 ) {
     val plan = anschlussSymbolPlan(anschluss)
+    val farbenErhalten = aktiviert || plan is AnschlussSymbolPlan.Methode
     val fallback = fallbackFarben.ifEmpty { listOf(MaterialTheme.colorScheme.primary) }
     val farbeFürId: @Composable (String) -> Color = { id ->
         farbeFürAnschluss(
@@ -207,10 +224,10 @@ fun AnschlussSymbol(
                 art = AnschlussArtId(normalisiereFarbId(id)),
                 zulässigeArten = emptySet(),
             ),
-        ).let { if (aktiviert) it else it.copy(alpha = .2f) }
+        ).let { if (farbenErhalten) it else it.copy(alpha = .2f) }
     }
 
-    val standardFarben = fallback.map { if (aktiviert) it else it.copy(alpha = .2f) }
+    val standardFarben = fallback.map { if (farbenErhalten) it else it.copy(alpha = .2f) }
     val ringFarben = mutableListOf<List<Color>>()
     if (plan is AnschlussSymbolPlan.Tupel) {
         for (ring in plan.ringe) {
@@ -304,6 +321,11 @@ fun AnschlussSymbol(
             }
         }
         Canvas(Modifier.fillMaxSize()) {
+            if (!aktiviert && plan is AnschlussSymbolPlan.Methode) {
+                val strich = (1.5f / zoom).dp.toPx()
+                drawCircle(color = pfeil, radius = size.minDimension / 2f + strich,
+                    style = Stroke(width = strich, pathEffect = PathEffect.dashPathEffect(floatArrayOf(strich * 2f, strich * 2f))))
+            }
             drawCircle(
                 color = rahmen,
                 radius = size.minDimension / 2f - .5f,

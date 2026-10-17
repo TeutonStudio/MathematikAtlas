@@ -58,6 +58,7 @@ fun BedingterWert.anzeigeLatex(): String = when {
     latexDarstellung == DEFINITIONSMENGE_DOPPELPUNKT_DARSTELLUNG && objekt is DefinierteMenge ->
         objekt.zuDoppelpunktLatex()
     !latexDarstellung.isNullOrBlank() -> latexDarstellung
+    objekt is ZahlAusdruck -> objekt.zuLatex(RechenKontext(annahmen = annahmen))
     objekt is MathematischesObjekt -> objekt.zuStrukturLatex()
     objekt is LatexDarstellbar -> objekt.zuLatex()
     else -> objekt.toString()

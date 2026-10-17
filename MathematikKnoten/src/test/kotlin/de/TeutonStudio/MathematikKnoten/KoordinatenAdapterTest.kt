@@ -61,7 +61,7 @@ class KoordinatenAdapterTest {
 
     @Test
     fun `echte Matrix wird nicht stillschweigend als Vektor abgeflacht`() {
-        assertIs<KoordinatenErgebnis.NichtDarstellbar>(
+        assertIs<KoordinatenErgebnis.ProjektionErforderlich>(
             KoordinatenAdapter.extrahiere(
                 Matrix(
                     listOf(

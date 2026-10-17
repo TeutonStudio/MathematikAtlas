@@ -26,7 +26,7 @@ import com.hrm.latex.renderer.font.MathFont
 import com.hrm.latex.renderer.model.LatexConfig
 import de.TeutonStudio.MathematikKnoten.mathematikschrift.integral.AtlasIntegralGlyph
 
-private const val ATLAS_SET_MACRO = "\\newcommand{\\Set}[1]{\\left\\lbrace #1\\right\\rbrace}"
+private const val ATLAS_SET_MACRO = "\\newcommand{\\Set}[1]{\\left\\{ #1\\right\\}}"
 private const val ATLAS_IMPLIES_MACRO = "\\newcommand{\\implies}{\\Rightarrow}"
 private const val ATLAS_IFF_MACRO = "\\newcommand{\\iff}{\\Leftrightarrow}"
 private const val ATLAS_LONGTO_MACRO = "\\newcommand{\\longto}{\\longrightarrow}"
@@ -47,10 +47,11 @@ private val STANDARD_LÜGE_FARBE = Color(0xFFC62828)
  * Compose-Multiplatform-Renderer delegiert. Der Atlas interpretiert insbesondere
  * keine Brüche, Matrizen, skalierenden Klammern oder großen Operatoren selbst.
  *
- * Zwei Atlas-spezifische Kompatibilitätsregeln bleiben bewusst erhalten:
+ * Atlas-spezifische Kompatibilitätsregeln bleiben bewusst erhalten:
  * - die Atlas-Integralglyphe für einfache Formeln außerhalb komplexer Umgebungen;
  * - historische nicht-bedingte `cases`-Blöcke von Methoden werden als linke große
- *   Klammer mit einer Matrix gerendert, damit der Renderer kein „if“ ergänzt.
+ *   Klammer mit einer Matrix gerendert, damit der Renderer kein „if“ ergänzt;
+ * - Mengenklammern und indizierte Kreuzprodukte erhalten rendererkompatible Befehle.
  */
 @Composable
 fun LatexText(
@@ -120,14 +121,20 @@ private fun EchterLatexText(
 }
 
 /**
- * Ergänzt nur Atlas-eigene Kompatibilitätsmakros und die bisherigen farbigen
- * Wahrheitswerte. Mathematisches Layout wird ansonsten nicht mehr umgeschrieben.
+ * Ergänzt Atlas-Makros und Wahrheitsfarben und normalisiert die vom gebündelten
+ * Renderer unterschiedlich behandelten Klammer- und Operatorbefehle. Die
+ * mathematische Bedeutung bleibt im Rechenkern definiert.
  */
 internal fun atlasLatexQuelltext(latex: String, dunklesSchema: Boolean): String {
     val wahr = if (dunklesSchema) "#81C784" else "#1B5E20"
     val lüge = if (dunklesSchema) "#EF9A9A" else "#B71C1C"
     val rendererKompatibel = ersetzeNichtBedingteCases(latex)
+        .replace(Regex("""\\times\s*\\limits(?![A-Za-z])""")) { "\\mathop{×}\\limits" }
+        .replace(Regex("""\\mathop\{(?:\\Large\s*)?\\times\}""")) { "\\mathop{×}" }
         .replace("\\{", "\\lbrace ").replace("\\}", "\\rbrace ")
+        .replace(Regex("""\\(left|right|big|Big|bigg|Bigg|bigl|bigr|bigm|Bigl|Bigr|Bigm|biggl|biggr|biggm|Biggl|Biggr|Biggm)\s*\\(lbrace|rbrace)(?![A-Za-z])""")) {
+            "\\${it.groupValues[1]}\\${if (it.groupValues[2] == "lbrace") "{" else "}"}"
+        }
         .replace(Regex("""\\mathbb\s*([A-Za-z])""")) { "\\mathbb{${it.groupValues[1]}}" }
     val farbig = rendererKompatibel.replace("\\mathcal{Lüge}", "\\mathcal{Falsch}")
         .replace("\\mathcal{Wahr}", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
@@ -506,7 +513,7 @@ private class LatexParser(
     private fun zeichenFürBefehl(befehl: String) = mapOf(
         "cdot" to "·", "times" to "×", "div" to "÷", "pi" to "π", "dots" to "…", "ldots" to "…", "in" to "∈", "cup" to "∪", "cap" to "∩", "triangle" to "△",
         "subseteq" to "⊆", "subset" to "⊂", "setminus" to "∖", "ne" to "≠", "neq" to "≠", "le" to "≤", "leq" to "≤", "ge" to "≥", "geq" to "≥",
-        "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
+        "lbrace" to "{", "rbrace" to "}", "varnothing" to "∅", "vert" to "|", "neg" to "¬", "land" to "∧", "lor" to "∨",
         "sum" to "∑", "prod" to "∏", "bigcup" to "⋃", "bigcap" to "⋂", "bigwedge" to "⋀", "bigvee" to "⋁", "int" to "∫",
         "circ" to "∘", "bullet" to "•", "forall" to "∀", "exists" to "∃", "rightarrow" to "→", "longrightarrow" to "→", "longto" to "→", "to" to "→", "mapsto" to "↦", "hookrightarrow" to "↪",
         "Rightarrow" to "⇒", "Leftrightarrow" to "⇔", "implies" to "⇒", "iff" to "⇔",

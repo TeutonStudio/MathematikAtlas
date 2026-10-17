@@ -56,6 +56,18 @@ object KoordinatenAdapter {
     ): KoordinatenErgebnis {
         require(erwarteteDimension > 0) { "Die erwartete Koordinatendimension muss positiv sein." }
 
+        if (objekt is Tupel && ausgabeKoordinaten.isNotEmpty()) {
+            fun blätter(wert: MathematischesObjekt): List<MathematischesObjekt> = when (wert) {
+                is Tupel -> wert.elemente.flatMap(::blätter)
+                is Matrix -> wert.zeilen.flatten()
+                is Tensor -> wert.werte
+                is ZeilenVektor -> wert.werte
+                is SpaltenVektor -> wert.werte
+                else -> listOf(wert)
+            }
+            if (objekt.elemente.any { it is Tupel || it is Matrix || it is Tensor || it is ZeilenVektor || it is SpaltenVektor })
+                return extrahiere(Tupel(blätter(objekt)), erwarteteDimension, umgebung, werteVorraete, domänenUmgebung, ausgabeKoordinaten)
+        }
         if(objekt is Tupel && objekt.elemente.any {it is Tupel}) {
             val flach=tupelAbflachen(objekt)
             if(ausgabeKoordinaten.isEmpty()) return KoordinatenErgebnis.ProjektionErforderlich(flach.anzahl,erwarteteDimension,
@@ -119,10 +131,16 @@ object KoordinatenAdapter {
             is Matrix -> when {
                 objekt.zeilenAnzahl == 1 -> objekt.zeilen.single()
                 objekt.spaltenAnzahl == 1 -> objekt.zeilen.map(List<ZahlAusdruck>::single)
-                else -> return KoordinatenErgebnis.NichtDarstellbar(
-                    "Eine ${objekt.zeilenAnzahl}×${objekt.spaltenAnzahl}-Matrix ist kein Zeilen- oder Spaltenvektor und benötigt eine ausdrückliche Projektion.",
+                ausgabeKoordinaten.isNotEmpty() -> objekt.zeilen.flatten()
+                else -> return KoordinatenErgebnis.ProjektionErforderlich(
+                    objekt.zeilenAnzahl * objekt.spaltenAnzahl, erwarteteDimension,
+                    "Eine Matrix benötigt eine ausdrückliche Projektion ihrer Koordinaten in Zeilenreihenfolge.",
                 )
             }
+
+            is Tensor -> if (objekt.dimensionen.count { it > 1 } <= 1 || ausgabeKoordinaten.isNotEmpty()) objekt.werte
+                else return KoordinatenErgebnis.ProjektionErforderlich(objekt.werte.size, erwarteteDimension,
+                    "Ein Tensor benötigt eine ausdrückliche Projektion seiner Koordinaten in Speicherreihenfolge.")
 
             is Tupel, is ZeilenVektor, is SpaltenVektor -> when (
                 val ansicht = runCatching {
@@ -182,11 +200,15 @@ object KoordinatenAdapter {
                             "Im(${ausdruck.zuLatex()})",
                         ) ?: return KoordinatenErgebnis.NichtDarstellbar("Imaginärteil ist nicht endlich.")
                     }
-                    is DomaenenWert.Quaternion -> return KoordinatenErgebnis.ProjektionErforderlich(
-                        vorhandeneDimension = komponenten.size + 4 + (ausdruecke.size - quellIndex - 1),
-                        erwarteteDimension = erwarteteDimension,
-                        grund = "Koordinate ${quellIndex + 1} ist quaternionisch und benötigt eine ausdrückliche R⁴-Projektion.",
-                    )
+                    is DomaenenWert.Quaternion -> {
+                        if (ausgabeKoordinaten.isEmpty()) return KoordinatenErgebnis.ProjektionErforderlich(
+                            komponenten.size + 4 + (ausdruecke.size - quellIndex - 1), erwarteteDimension,
+                            "Quaternionen benötigen eine ausdrückliche Auswahl aus Re, i, j, k.")
+                        listOf(wert.reell, wert.i, wert.j, wert.k).zip(listOf("Re", "i", "j", "k")).forEach { (x, rolle) ->
+                            komponenten += komponentenKomponente(komponenten.size, ausdruck, x, rolle)
+                                ?: return KoordinatenErgebnis.NichtDarstellbar("Quaternionenkomponente ist nicht endlich.")
+                        }
+                    }
                 }
                 is DomaenenErgebnis.Unentscheidbar -> return KoordinatenErgebnis.BedingtDarstellbar(
                     grund = "Koordinate ${quellIndex + 1} ist noch nicht entscheidbar: ${ergebnis.grund.nachricht}",
@@ -204,11 +226,11 @@ object KoordinatenAdapter {
         }
 
         if (ausgabeKoordinaten.isNotEmpty()) {
-            if (ausgabeKoordinaten.size !in 2..3 || ausgabeKoordinaten.size != erwarteteDimension ||
+            if (ausgabeKoordinaten.size !in 1..3 || ausgabeKoordinaten.size != erwarteteDimension ||
                 ausgabeKoordinaten.distinct().size != ausgabeKoordinaten.size ||
                 ausgabeKoordinaten.any { it !in 1..komponenten.size }) {
                 return KoordinatenErgebnis.NichtDarstellbar(
-                    "Die Projektion benötigt zwei oder drei verschiedene vorhandene Ausgabekoordinaten passend zum Darstellungsraum.",
+                    "Die Projektion benötigt ein bis drei verschiedene vorhandene Ausgabekoordinaten passend zum Darstellungsraum.",
                 )
             }
             return KoordinatenErgebnis.Darstellbar(ausgabeKoordinaten.mapIndexed { index, quellIndex ->

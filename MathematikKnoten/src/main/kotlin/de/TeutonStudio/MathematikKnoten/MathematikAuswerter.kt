@@ -160,7 +160,7 @@ object StandardMathematikAuswerter {
                     inferiereZielmenge(wert.mathematischesObjekt("Tupelelement"), wert.variablenQuellen.associate { it.name to it.werteVorrat }, wert.annahmen)
                 }.getOrElse { FehlendeObermenge("mathematik.objekt") } })
             }
-            KnotenAuswertungsErgebnis(mapOf("tupel" to BedingterWert(tupel, annahmen(k), zielMenge = komponentenRaum, komponentenMengen = (komponentenRaum as? Tupelraum)?.komponenten)))
+            KnotenAuswertungsErgebnis(mapOf("tupel" to k.rechnerErgebnisWert(tupel, zielMenge = komponentenRaum).copy(komponentenMengen = (komponentenRaum as? Tupelraum)?.komponenten)))
         }
 
 

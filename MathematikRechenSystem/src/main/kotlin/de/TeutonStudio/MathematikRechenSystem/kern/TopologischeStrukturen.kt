@@ -409,6 +409,8 @@ object StandardTopologieRegister {
             ReelleZahlen, KomplexeZahlen -> StandardTopologie(traeger, StandardTopologieKennung.EUKLIDISCH)
             else -> null
         }
+        is Tensorraum -> if (traeger.matrixForm && traeger.konkreterMatrizenraumOderNull() != null && traeger.elementMenge in setOf(ReelleZahlen, KomplexeZahlen))
+            StandardTopologie(traeger, StandardTopologieKennung.EUKLIDISCH) else null
         is Matrizenraum -> when (traeger.skalarMenge) {
             ReelleZahlen, KomplexeZahlen -> StandardTopologie(traeger, StandardTopologieKennung.EUKLIDISCH)
             else -> null

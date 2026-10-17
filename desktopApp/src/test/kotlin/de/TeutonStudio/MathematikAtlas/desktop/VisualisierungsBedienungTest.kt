@@ -177,6 +177,30 @@ class VisualisierungsBedienungTest {
         assertEquals(FüllArt.entries.size,bilder.size)
     }
 
+    @Test fun mengenraeumeVorzeichenUndKlammernInBeidenThemes() {
+        var dunkel by mutableStateOf(false)
+        val formeln = listOf(
+            "\\lbrace x\\rbrace", "\\left\\lbrace\\frac{a}{b}\\right\\rbrace",
+            "\\bigl\\lbrace x\\bigr\\rbrace", "\\Set{x\\in\\mathbb{R}}",
+            "A^{\\times\\limits_k n(k)}", "A^{2\\times3\\times4}",
+            addition(Variable("a"),multiplikation(RationaleZahl.von(-1),addition(Variable("b"),Variable("c")))).zuLatex(),
+        )
+        compose.setContent { MaterialTheme(colorScheme = if(dunkel) androidx.compose.material3.darkColorScheme() else androidx.compose.material3.lightColorScheme()) {
+            androidx.compose.material3.Surface { Column(Modifier.width(600.dp).testTag("mengen-vorzeichen")) {
+                formeln.forEach { LatexText(it, style=androidx.compose.ui.text.TextStyle(fontSize=24.sp)) }
+            } }
+        } }
+        for(theme in listOf(false,true)) {
+            compose.runOnIdle { dunkel=theme }; compose.waitForIdle()
+            val p=compose.onNodeWithTag("mengen-vorzeichen").captureToImage().toPixelMap()
+            val rot=(0 until p.height).sumOf {y -> (0 until p.width).count {x -> val c=p[x,y];c.red>.6f && c.green<.35f && c.blue<.35f}}
+            val bild=java.awt.image.BufferedImage(p.width,p.height,java.awt.image.BufferedImage.TYPE_INT_ARGB)
+            for(y in 0 until p.height) for(x in 0 until p.width) bild.setRGB(x,y,p[x,y].toArgb())
+            javax.imageio.ImageIO.write(bild,"png",java.io.File("/tmp/atlas-mengen-vorzeichen-${if(theme) "dunkel" else "hell"}.png"))
+            assertEquals(0,rot)
+        }
+    }
+
     @Test fun mengenLatexEnthaeltKeineRotenFehlerglyphen() {
         compose.setContent {MaterialTheme {Box(Modifier.background(Color.White).testTag("latex-mengen")) {
             LatexText("\\mathbb R \\cup \\{x\\mid x>0\\}",style=androidx.compose.ui.text.TextStyle(color=Color.Black,fontSize=24.sp))

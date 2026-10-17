@@ -16,6 +16,7 @@ fun planeKonfiguration(
 ): KonfigurationsPlan {
     val wechsel = bereiteEingangsRollenWechselVor(bereiteJoinWechselVor(bisher, kandidat))
     val direkte = wechsel.karte.vorschauKnotenErsetzen(wechsel.kandidat, prüfung).copy(entfallendeLokaleWerte = wechsel.entfernteLokale)
+    val lokaleVerluste = wechsel.entfernteLokale.toMutableList()
     var neu = wechsel.karte.wendeAn(KartenAktion.KnotenErsetzen(wechsel.kandidat, direkte.entfallendeVerbindungen.map { it.id }.toSet()))
     // Signaturen können weitere Signaturen bestimmen. Jede Runde wird aus dem
     // tatsächlich vorgeschlagenen Stand ausgewertet, nie aus dem sichtbaren Altstand.
@@ -23,11 +24,21 @@ fun planeKonfiguration(
         val ergebnis = auswerten(neu)
         val restriktion = synchronisiereRestriktionsAnschlüsse(neu, ergebnis)
         val bildmenge = synchronisiereBildmengenAnschlüsse(restriktion, ergebnis)
-        val zerleger = synchronisiereStrukturZerleger(bildmenge, ergebnis, prüfung)
+        val urbild = synchronisiereUrbildAnschluesse(bildmenge, ergebnis, prüfung, verlustVorschau = true)
+        for (alt in bildmenge.knoten.filter(::istUrbildKnoten)) {
+            val aktuell = urbild.knoten.single { it.id == alt.id }
+            (alt.parameter.keys - aktuell.parameter.keys).filter { it.startsWith("standardwert.") }.forEach {
+                lokaleVerluste += "${alt.name}: Standardwert ${it.removePrefix("standardwert.")}: ${alt.parameter[it]}"
+            }
+            (alt.eingangsKartenVerweise.keys - aktuell.eingangsKartenVerweise.keys).forEach {
+                lokaleVerluste += "${alt.name}: Kartenfallback $it"
+            }
+        }
+        val zerleger = synchronisiereStrukturZerleger(urbild, ergebnis, prüfung)
         val synchronisiert = synchronisiereMethodenAufrufe(zerleger, ergebnis, prüfung)
         if (synchronisiert == neu) {
             val neueIds = neu.verbindungen.map { it.id }.toSet()
-            return KonfigurationsPlan(neu, direkte.copy(entfallendeVerbindungen = bisher.verbindungen.filter { it.id !in neueIds }))
+            return KonfigurationsPlan(neu, direkte.copy(entfallendeVerbindungen = bisher.verbindungen.filter { it.id !in neueIds }, entfallendeLokaleWerte = lokaleVerluste.distinct()))
         }
         neu = synchronisiert
     }

@@ -42,7 +42,8 @@ object KanonischerMathematikKnotenKatalog {
             .map(::methodenfaehigeRechnerVorlage)
             .map(::joinVorlage)
         val bereinigt = basis.filterNot { vorlage ->
-            vorlage.art in RechnerEinzeloperationMigration.zuordnungen ||
+            vorlage.art == "mathematik.matrizenraum" ||
+                vorlage.art in RechnerEinzeloperationMigration.zuordnungen ||
                 vorlage.art == TENSORPRODUKT_ART ||
                 vorlage.art in historischeOrientierungsDuplikate ||
                 vorlage.art in historischeMengenEinzelknoten ||
@@ -80,6 +81,7 @@ object KanonischerMathematikKnotenKatalog {
             .distinctBy { vorlage ->
                 if (vorlage.art in setOf("mathematik.methodenDifferentieren", "mathematik.methodenIntegrieren", MatrixRechner.KNOTEN_ART, VektorRechner.KNOTEN_ART, ÜBERSETZER_ART)) variantenKennung(vorlage)
                 else vorlage.art to listOf(
+                    vorlage.standardParameter[MENGEN_KNOTEN_AUSWAHL].orEmpty(),
                     vorlage.standardParameter["operator"].orEmpty(),
                     vorlage.standardParameter["eingabeModus"].orEmpty(),
                     vorlage.standardParameter[SVG_OPERATOR_PARAMETER].orEmpty(),
@@ -104,6 +106,7 @@ object KanonischerMathematikKnotenKatalog {
         return vorlagen.flatMap { v ->
             val k = v.erzeuge(GraphPunkt.Zero)
             val varianten: List<Pair<String, KnotenDaten>> = when (v.art) {
+                MENGEN_KNOTEN_ART -> sichtbareMengenAuswahlen().map { it.titel to konfiguriereMengenAuswahl(k, it) }
                 ENDLICHE_MENGE_ART -> listOf(ENDLICHE_MENGE_LOKAL,ENDLICHE_MENGE_GRAPH).map {it to konfiguriereEndlicheMenge(k,it)}
                 "mathematik.tupel" -> listOf(TUPEL_EINZEL_EINGABEN, TUPEL_METHODE).map { it to konfiguriereTupel(k, it) }
                 "mathematik.matrix" -> listOf(MATRIX_EINZEL_EINGABEN, MATRIX_ZEILEN, MATRIX_SPALTEN, MATRIX_METHODE).map {

@@ -23,6 +23,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenRendererAktionen
 import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsKontext
 import de.TeutonStudio.MathematikKnoten.*
+import de.TeutonStudio.MathematikRechenSystem.kern.*
 import de.TeutonStudio.MathematikRechenSystem.kern.RechenKontext
 import org.junit.Assert.*
 import org.junit.Rule
@@ -85,6 +86,10 @@ class LatexDoppelstrichGeraeteTest {
             "\\left(\\begin{pmatrix}1&2\\\\3&4\\end{pmatrix}\\right)",
             "f:\\begin{cases}\\mathbb R\\longrightarrow\\mathbb C\\\\x\\mapsto\\frac{x}{2}\\end{cases}",
             "\\int_{x\\in\\mathbb R}^{b}f(x)",
+            "\\lbrace x\\rbrace\\quad\\left\\lbrace\\frac{a}{b}\\right\\rbrace",
+            "\\bigl\\lbrace x\\bigr\\rbrace\\quad\\Set{x\\in\\mathbb{R}}",
+            "A^{\\times\\limits_k n(k)}\\quad A^{2\\times3\\times4}",
+            addition(Variable("a"),multiplikation(RationaleZahl.von(-1),addition(Variable("b"),Variable("c")))).zuLatex(),
         )
         var dunkel by mutableStateOf(false)
         compose.setContent {
@@ -110,10 +115,39 @@ class LatexDoppelstrichGeraeteTest {
                 val tag = "formel-$index"
                 compose.onNodeWithTag(tag).performScrollTo()
                 warteAufFormel(tag, hintergrund)
+                val pixel = compose.onNodeWithTag(tag).captureToImage().toPixelMap()
+                val fehler = (0 until pixel.height).sumOf { y -> (0 until pixel.width).count { x ->
+                    val c = pixel[x,y]; c.red > .6f && c.green < .35f && c.blue < .35f
+                } }
+                assertEquals("Formel $index: ${formeln[index]}", 0, fehler)
+                if (index >= 5) speichereBild(tag, "mengen-formel-$index-${if (theme) "dunkel" else "hell"}")
             }
             compose.onNodeWithTag("menge").performScrollTo()
             speichereBild("galerie", "mathbb-formeln-${if (theme) "dunkel" else "hell"}")
         }
+    }
+
+    @Test fun dimensionsartSchaltetDenTatsaechlichenEingangstypInBeideRichtungen() {
+        var k by mutableStateOf(MengenKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero))
+        val originalId = k.anschlüsse.single { it.name == "dimension" }.id
+        val aktionen = object : KnotenInspektorAktionen {
+            override fun parameter(schlüssel: String, wert: String) { k = k.copy(parameter=k.parameter+(schlüssel to wert)) }
+            override fun name(wert: String) { k = k.copy(name=wert) }
+            override fun eigenschaften(eigenschaften: Map<String,KnotenEigenschaft>) { k = k.copy(eigenschaften=eigenschaften) }
+            override fun anschlussArt(verweis: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussVerweis, art: de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussArtId) = Unit
+            override fun knoten(knoten: de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten) { k = knoten }
+        }
+        compose.setContent { MaterialTheme { Surface { Column(Modifier.testTag("dimensionsart")) {
+            MengenKnotenInspektor.BereichInhalt(k,null,aktionen,de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten)
+        } } } }
+        compose.onNodeWithText("Tensor").performClick()
+        compose.runOnIdle {
+            assertEquals(MathematikAnschlussArten.Tupel.id,k.anschlüsse.single { it.name=="dimension" }.art)
+            assertEquals(originalId,k.anschlüsse.single { it.name=="dimension" }.id)
+        }
+        speichereBild("dimensionsart","mengen-dimensionsart")
+        compose.onNodeWithText("Tupel").performClick()
+        compose.runOnIdle { assertEquals(MathematikAnschlussArten.Zahl.id,k.anschlüsse.single { it.name=="dimension" }.art) }
     }
 
     private fun warteAufFormel(tag: String, hintergrund: Int) {

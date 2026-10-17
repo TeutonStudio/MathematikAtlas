@@ -223,6 +223,10 @@ private fun nachgewieseneReelleQuellKomponente(k: SymbolischeZahlKomponente,
     }
     val menge=when(raum) {
         is Vektorraum -> if(indizes.size==1 && indizes[0] in 1..raum.dimension) raum.skalarMenge else return false
+        is Tensorraum -> {
+            val matrix = raum.konkreterMatrizenraumOderNull() ?: return false
+            if (indizes.size == 2 && indizes[0] in 1..matrix.zeilen && indizes[1] in 1..matrix.spalten) matrix.skalarMenge else return false
+        }
         is Matrizenraum -> if(indizes.size==2 && indizes[0] in 1..raum.zeilen && indizes[1] in 1..raum.spalten) raum.skalarMenge else return false
         is Tupelraum -> if(indizes.size==1) raum.komponenten.getOrNull(indizes[0]-1) ?: return false else return false
         else -> return false

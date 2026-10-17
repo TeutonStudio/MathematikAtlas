@@ -99,7 +99,7 @@ fun parseFesteSchnitte(text: String): Map<String, Double> {
 fun parseAusgabeKoordinaten(text: String): List<Int> {
     if (text.isBlank()) return emptyList()
     val ids = text.split(',').map { it.trim().toIntOrNull() ?: throw IllegalArgumentException("Ganze Koordinatenindizes erforderlich.") }
-    require(ids.size in 2..3 && ids.all { it > 0 } && ids.distinct().size == ids.size) { "Zwei oder drei verschiedene positive Koordinatenindizes erforderlich." }
+    require(ids.size in 1..3 && ids.all { it > 0 } && ids.distinct().size == ids.size) { "Ein bis drei verschiedene positive Koordinatenindizes erforderlich." }
     return ids
 }
 
@@ -117,4 +117,28 @@ internal fun migriereAlteVisualisierungsKamera(k: KameraZustand, dimension: Raum
     val t = VisualisierungsTransformation(c,100.0,100.0)
     val rotiert = t.bild(2*mx+k.translationX,2*my+k.translationY,2*mz+k.translationZ)
     return k.copy(translationX=(rotiert.x-50)/t.maßstab-ax,translationY=(50-rotiert.y)/t.maßstab-ay,translationZ=0.0)
+}
+
+/** Dimension changes preserve valid axis names and provide the newly required axes together. */
+fun VisualisierungsKonfiguration.mitDarstellungsRaum(raum: RaumDimension): VisualisierungsKonfiguration {
+    val x = if (dimension == RaumDimension.C && raum != RaumDimension.C && achsen.x == "re") "x" else achsen.x.ifBlank { "x" }
+    val y = if (dimension == RaumDimension.C && raum != RaumDimension.C && achsen.y == "im") "y" else achsen.y.ifBlank { "y" }
+    return copy(dimension = raum, dimensionsModus = DimensionsModus.Manuell,
+        ausgabeKoordinaten = ausgabeKoordinaten.takeIf { it.size == when (raum) { RaumDimension.R1 -> 1; RaumDimension.R3 -> 3; else -> 2 } }.orEmpty(),
+        achsen = when (raum) {
+            RaumDimension.R1 -> AchsenZuordnung(x, "", null)
+            RaumDimension.C -> AchsenZuordnung("re", "im", null)
+            RaumDimension.R2 -> AchsenZuordnung(x, y, null)
+            RaumDimension.R3 -> AchsenZuordnung(x, y, achsen.z?.ifBlank { "z" } ?: "z")
+        }, bereiche = if (raum == RaumDimension.R3 && bereiche.z == null) bereiche.copy(z = ZahlenBereich(-10.0, 10.0)) else bereiche)
+}
+
+/** Projection arity and display dimension change atomically, without an invalid intermediate model. */
+fun VisualisierungsKonfiguration.mitAusgabeProjektion(indizes: List<Int>): VisualisierungsKonfiguration {
+    require(indizes.isEmpty() || indizes.size in 1..3 && indizes.all { it > 0 } && indizes.distinct().size == indizes.size) {
+        "Ein bis drei verschiedene positive Koordinatenindizes erforderlich."
+    }
+    if (indizes.isEmpty()) return copy(ausgabeKoordinaten = emptyList())
+    val raum = when (indizes.size) { 1 -> RaumDimension.R1; 2 -> if (dimension == RaumDimension.C) RaumDimension.C else RaumDimension.R2; else -> RaumDimension.R3 }
+    return mitDarstellungsRaum(raum).copy(ausgabeKoordinaten = indizes)
 }

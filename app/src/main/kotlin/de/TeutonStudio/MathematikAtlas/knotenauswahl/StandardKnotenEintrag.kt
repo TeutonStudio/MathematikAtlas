@@ -37,7 +37,8 @@ data class StandardKnotenEintrag(
 }
 
 /** Ausschließlich stabile Modus-/Operator-IDs, niemals Anzeigenamen oder vollständige Parameter. */
-fun stabileAuswahlVariante(parameter: Map<String,String>): String? = listOf(
+fun stabileAuswahlVariante(parameter: Map<String,String>): String? =
+    if (parameter["mengeAuswahl"]?.endsWith(".matrizen") == true) "mengeAuswahl=${parameter.getValue("mengeAuswahl")}" else listOf(
     "operator","eingabeModus","eingabeArt","orientierung","svgOperator","praedikatOperator","struktur","ziel",
     "abflachen.ebenen","relation","methodenAnwendung.ergebnisArt","methodenBereich.operator",
 ).mapNotNull { key -> parameter[key]?.let { "$key=$it" } }.takeIf { it.isNotEmpty() }?.joinToString(";")

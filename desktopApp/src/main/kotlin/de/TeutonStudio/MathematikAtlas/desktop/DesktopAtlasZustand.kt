@@ -52,7 +52,7 @@ class DesktopAtlasZustand(
         rechenAuftrag?.cancel()
         rechenMomentaufnahme = moment
         if (moment.knoten.none { besitztPrädikatsRechenweg(it.art) || it.kartenVerweis != null }) {
-            auswertung = laufzeit.auswerten(moment)
+            übernehmeUrbildAuswertung(moment, laufzeit.auswerten(moment))
             return
         }
         auswertung = KartenAuswertungsErgebnis(emptyMap(), emptyList())
@@ -60,8 +60,19 @@ class DesktopAtlasZustand(
             val berechnet = withContext(Dispatchers.Default) {
                 MathematikKartenLaufzeit(kartenQuelle = KartenQuelle(speicher::lade), nichtAuswertbareKnotenArten = setOf("karte.notiz")).auswerten(moment)
             }
-            if (generation == rechenGeneration && editor.karte == moment) auswertung = berechnet
+            if (generation == rechenGeneration && editor.karte == moment) übernehmeUrbildAuswertung(moment, berechnet)
         }
+    }
+
+    private fun übernehmeUrbildAuswertung(moment: KartenDaten, ergebnis: KartenAuswertungsErgebnis) {
+        val synchron = synchronisiereUrbildAnschluesse(moment, ergebnis, laufzeit.graphPrüfung)
+        if (synchron != moment) {
+            val auswahl = editor.ausgewählteKnoten
+            val aktiv = editor.ausgewählterKnoten
+            editor.ersetzeKarte(synchron, historieLeeren = false)
+            editor.stelleAuswahlWiederHer(auswahl, aktiv)
+            auswertung = laufzeit.auswerten(synchron)
+        } else auswertung = ergebnis
     }
 
     fun berechneKnotenCacheNeu(knotenId: KnotenId) {

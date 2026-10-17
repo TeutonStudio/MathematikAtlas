@@ -71,7 +71,10 @@ internal fun variablenGrundraumWert(k: KnotenDaten, menge: MengenAusdruck): Bedi
         grundraum == Gradmenge -> WinkelParameter(name, bindungsId = id)
         else -> element(grundraum, parameter)
     }
-    return BedingterWert(objekt, werteVorrat = grundraum,
+    val matrixObjekt = if (grundraum is Tensorraum && grundraum.matrixForm) {
+        grundraum.konkreterMatrizenraumOderNull()?.let { element(it, parameter) } ?: objekt
+    } else objekt
+    return BedingterWert(matrixObjekt, werteVorrat = grundraum,
         komponentenMengen = quellenKomponentenRäume(grundraum).orEmpty(),
         variablenQuellen = listOf(VariablenQuelle(k.id, if (skalar || grundraum == Gradmenge) name else intern, grundraum, bindungsId = id, bindungsName = "wert",
             lösungsRolle = LösungsQuellenRolle.Variable,

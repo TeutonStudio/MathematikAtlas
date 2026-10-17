@@ -21,7 +21,7 @@ internal fun BedingterWert.mitSkalarenLösungsUnbekannten(): BedingterWert {
             ersetzungen[bindung.id] = Variable(name)
             return@flatMap listOf(q.copy(name=name,strukturBindung=null))
         }
-        val raum = q.werteVorrat as? Matrizenraum
+        val raum = q.werteVorrat.konkreterMatrizenraumOderNull()
         if (raum == null || bindung == null || q.lösungsRolle != LösungsQuellenRolle.Variable) return@flatMap listOf(q)
         val komponenten = List(raum.zeilen) { i -> List(raum.spalten) { j -> Variable(komponentenName("${namen.getValue(bindung.id)}_${i + 1}_${j + 1}")) } }
         ersetzungen[q.name] = Matrix(komponenten)

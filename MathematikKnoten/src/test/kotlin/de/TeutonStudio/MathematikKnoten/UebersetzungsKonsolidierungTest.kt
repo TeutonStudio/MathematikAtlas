@@ -113,7 +113,7 @@ class UebersetzungsKonsolidierungTest {
 
     @Test fun `Suchbegriffe und Definitionen erzeugen ausschliesslich konfigurierte Uebersetzer`() {
         val katalog=KanonischerMathematikKnotenKatalog.alle()
-        assertEquals(121,katalog.map {it.art}.toSet().size)
+        assertEquals(120,katalog.map {it.art}.toSet().size)
         assertTrue(katalog.none {it.art in übersetzungsKonsolidierungAltarten})
         assertTrue(alleMathematikDefinitionsVorlagen().none {it.art in übersetzungsKonsolidierungAltarten})
         for((suchtext,z) in listOf("Spalte zu Tupel" to "tupel","Zeile zu Tupel" to "tupel","Tupel zu Spalte" to "spalte","Tupel zu Zeile" to "zeile","Abflachen" to "abflachen")) {

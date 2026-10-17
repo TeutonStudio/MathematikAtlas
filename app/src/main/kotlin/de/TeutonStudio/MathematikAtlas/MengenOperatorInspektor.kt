@@ -37,6 +37,19 @@ internal object MengenOperatorInspektorRegistrierung {
 }
 
 internal object MengenRechnerInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich): Boolean =
+        bereich == de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Knotendaten ||
+            bereich == de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten && istUrbildKnoten(knoten)
+
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen,
+        bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich) {
+        when (bereich) {
+            de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Knotendaten -> Inhalt(knoten, ergebnis, aktionen)
+            de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten -> InspektorUrbildEingabe(knoten, aktionen::knotenNachVerlustbestätigung)
+            else -> Unit
+        }
+    }
+
     @Composable
     override fun Inhalt(
         knoten: KnotenDaten,

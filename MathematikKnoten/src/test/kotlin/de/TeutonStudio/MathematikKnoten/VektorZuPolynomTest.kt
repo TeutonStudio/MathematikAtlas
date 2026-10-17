@@ -30,7 +30,7 @@ class VektorZuPolynomTest {
         assertEquals("x", knoten.parameter.getValue("variable"))
         assertEquals(listOf("vektor", "wert"), knoten.anschlüsse.map { it.name })
         assertTrue(MathematikKnotenVorlagen.VektorZuPolynom in MathematikKnotenVorlagen.alle)
-        assertEquals("5 \\cdot {x}^{2} + -3 \\cdot x + 2", spalte.ausgaben.getValue("wert").objekt.zuLatex())
+        assertEquals("5 \\cdot {x}^{2} - 3 \\cdot x + 2", spalte.ausgaben.getValue("wert").objekt.zuLatex())
         assertEquals(spalte.ausgaben.getValue("wert").objekt, zeile.ausgaben.getValue("wert").objekt)
         assertEquals(spalte.ausgaben.getValue("wert").objekt, ohnePersistierteVariable.ausgaben.getValue("wert").objekt)
     }

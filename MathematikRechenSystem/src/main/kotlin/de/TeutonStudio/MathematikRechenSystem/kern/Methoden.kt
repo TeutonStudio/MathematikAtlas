@@ -684,6 +684,8 @@ fun ersetze(objekt: MathematischesObjekt, bindungen: Map<String, MathematischesO
     is Folgenraum -> Folgenraum(ersetze(objekt.elementMenge, bindungen) as MengenAusdruck)
     is Vektorraum -> objekt.copy(skalarMenge = ersetze(objekt.skalarMenge, bindungen) as MengenAusdruck)
     is Matrizenraum -> objekt.copy(skalarMenge = ersetze(objekt.skalarMenge, bindungen) as MengenAusdruck)
+    is Tensorraum -> objekt.copy(elementMenge = ersetze(objekt.elementMenge, bindungen) as MengenAusdruck,
+        dimensionen = objekt.dimensionen.map { ersetze(it, bindungen) as ZahlAusdruck })
     is PrädikatsMenge -> objekt.copy(bedingung = ersetze(objekt.bedingung, bindungen - objekt.element.name))
     is BeschraenkteZahlmenge -> objekt.copy(
         untereGrenze = objekt.untereGrenze?.let { ersetze(it, bindungen) },

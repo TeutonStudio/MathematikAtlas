@@ -101,6 +101,7 @@ object MathematischerWertCodec {
             is Tensor -> { d.writeUTF("Tensor"); d.writeInt(w.dimensionen.size); w.dimensionen.forEach(d::writeInt); liste(d, w.werte, tiefe) }
             is Vektorraum -> { d.writeUTF("Vektorraum"); d.writeUTF(w.orientierung.name); d.writeInt(w.dimension); wert(d, w.skalarMenge, tiefe + 1) }
             is Matrizenraum -> { d.writeUTF("Matrizenraum"); d.writeInt(w.zeilen); d.writeInt(w.spalten); wert(d, w.skalarMenge, tiefe + 1) }
+            is PrädikatsMenge -> { d.writeUTF("PrädikatsMenge"); wert(d, w.element, tiefe + 1); wert(d, w.bedingung, tiefe + 1) }
             is DefinierteMenge -> { d.writeUTF("DefinierteMenge"); d.writeInt(w.variablen.size); w.variablen.forEach { wert(d, it.variable, tiefe + 1); wert(d, it.grundMenge, tiefe + 1) }; wert(d, w.bedingung, tiefe + 1) }
             is MethodenVariable -> {
                 d.writeUTF("MethodenVariable"); d.writeUTF(w.name); d.writeUTF(w.bindungsId)
@@ -132,7 +133,7 @@ object MathematischerWertCodec {
                 liste(d, w.voraussetzungen.toList(), tiefe)
                 ÜbersetzungsCodec.metadaten(d, w.übersetzungen, tiefe + 1)
             }
-            is Tensorraum -> { d.writeUTF("Tensorraum"); wert(d, w.elementMenge, tiefe + 1); liste(d, w.dimensionen, tiefe) }
+            is Tensorraum -> { d.writeUTF(if (w.matrixForm) "MatrizenTensorraum" else "Tensorraum"); wert(d, w.elementMenge, tiefe + 1); liste(d, w.dimensionen, tiefe) }
             is EndlicheIndexMenge -> { d.writeUTF("EndlicheIndexMenge"); wert(d, w.obergrenze, tiefe + 1) }
             is FehlendeObermenge -> { d.writeUTF("FehlendeObermenge"); d.writeUTF(w.anschlussArt) }
             is OffeneDefinitionsBedingung -> { d.writeUTF("OffeneDefinitionsBedingung"); wert(d, w.objekt, tiefe + 1) }
@@ -245,6 +246,7 @@ object MathematischerWertCodec {
             "Tensor" -> Tensor(List(anzahl(d)) { d.readInt() }, liste(d, tiefe, version).map { it as ZahlAusdruck })
             "Vektorraum" -> Vektorraum(VektorOrientierung.valueOf(d.readUTF()), d.readInt(), wert(d, tiefe + 1, version) as MengenAusdruck)
             "Matrizenraum" -> Matrizenraum(d.readInt(), d.readInt(), wert(d, tiefe + 1, version) as MengenAusdruck)
+            "PrädikatsMenge" -> PrädikatsMenge(wert(d, tiefe + 1, version) as MethodenParameter, wert(d, tiefe + 1, version) as Aussage)
             "DefinierteMenge" -> DefinierteMenge(List(anzahl(d)) { GebundeneMengenVariable(wert(d, tiefe + 1, version) as Variable, wert(d, tiefe + 1, version) as MengenAusdruck) }, wert(d, tiefe + 1, version) as Aussage)
             "MethodenVariable" -> MethodenVariable(d.readUTF(), d.readUTF(), FormelKontextCodec.signatur(d))
             "MethodenAufruf" -> StrukturellerMethodenAufruf(wert(d, tiefe + 1, version), wert(d, tiefe + 1, version) as Tupel)
@@ -264,6 +266,7 @@ object MathematischerWertCodec {
                 MathematischeMethode(name, parameter, vorschrift, ziel, räume, ausgaben, domäne,
                     argumentIdentitäten = argumentIds, ergebnisIdentitäten = ergebnisIds, voraussetzungen = bedingungen, übersetzungen = übersetzungen)
             }
+            "MatrizenTensorraum" -> Tensorraum(wert(d, tiefe + 1, version) as MengenAusdruck, liste(d, tiefe, version).map { it as ZahlAusdruck }, matrixForm = true)
             "Tensorraum" -> Tensorraum(wert(d, tiefe + 1, version) as MengenAusdruck, liste(d, tiefe, version).map { it as ZahlAusdruck })
             "EndlicheIndexMenge" -> EndlicheIndexMenge(wert(d, tiefe + 1, version) as ZahlAusdruck)
             "FehlendeObermenge" -> FehlendeObermenge(d.readUTF())

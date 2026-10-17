@@ -157,8 +157,13 @@ fun rechenRegeln(
     bereich: ZahlenRechnerBereich,
 ): List<String> = buildList {
     add("Definition: ${operator.symbolLatex}\\vert_{${bereich.latex}}")
-    if (operator == UniversellerZahlenOperator.MULTIPLIKATION && !bereich.multiplikativKommutativ) {
-        add("Die Faktorordnung bleibt erhalten; Multiplikation ist auf ${bereich.latex} nicht kommutativ.")
+    if (operator == UniversellerZahlenOperator.MULTIPLIKATION) {
+        when {
+            bereich == ZahlenRechnerBereich.UNBEKANNT ->
+                add("Der Zahlbereich ist unbekannt. Kommutativität ist nicht nachgewiesen; die Faktorordnung bleibt erhalten.")
+            !bereich.multiplikativKommutativ ->
+                add("Die Faktorordnung bleibt erhalten; Multiplikation ist auf ${bereich.latex} nicht kommutativ.")
+        }
     }
     if (operator in setOf(UniversellerZahlenOperator.MINIMUM, UniversellerZahlenOperator.MAXIMUM) && !bereich.geordnet) {
         add("Minimum und Maximum benötigen einen geordneten Zahlbereich.")

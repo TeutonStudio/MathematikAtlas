@@ -207,11 +207,12 @@ class VisualisierungsNormalisierungTest {
             listOf(ReelleZahlen, ReelleZahlen, ReelleZahlen),
         )
 
-        val ergebnis = assertIs<VisualisierungsErgebnis.NichtDarstellbar>(
+        val ergebnis = assertIs<VisualisierungsErgebnis.ProjektionErforderlich>(
             VisualisierungsSampler.sample(produkt, konfiguration()),
         )
 
-        assertTrue("genau 2" in ergebnis.grund)
+        assertEquals(3, ergebnis.vorhandeneDimension)
+        assertEquals(2, ergebnis.erwarteteDimension)
         assertTrue("Projektion" in ergebnis.grund)
     }
 

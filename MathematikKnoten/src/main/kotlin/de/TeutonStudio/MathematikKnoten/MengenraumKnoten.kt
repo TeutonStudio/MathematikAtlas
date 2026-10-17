@@ -279,3 +279,88 @@ private fun KnotenAuswertungsKontext.mengenraumDimensionen(): TensorraumDimensio
     require(dimensionen.all { it > 0 }) { "Alle Tensorraumdimensionen müssen positiv sein." }
     return TensorraumDimensionen(dimensionen.map(RationaleZahl::von))
 }
+
+/** Gemeinsame Auswertung der vordefinierten Matrizenmengen und des Mengenoperators. */
+internal fun matrizenMengenErgebnis(kontext: KnotenAuswertungsKontext, grundmenge: MengenAusdruck): KnotenAuswertungsErgebnis {
+    require(kontext.eingänge.values.flatMap { it.annahmen }.none {
+        it.entscheide(kontext.rechenKontext).wahrheitswert == Wahrheitswert.Lüge
+    }) { "Eine Voraussetzung der Matrizenmenge ist widerlegt." }
+    val bedingungen = linkedSetOf<Aussage>()
+    val dimensionen = listOf("n", "m").map { name ->
+        val eingang = kontext.eingänge[name] ?: error("Der Dimensionseingang '$name' fehlt.")
+        when (val zahl = eingang.objekt) {
+            is RationaleZahl -> {
+                require(zahl.nenner == java.math.BigInteger.ONE && zahl.zähler.signum() > 0) {
+                    "Die Dimension '$name' muss eine positive natürliche Zahl sein."
+                }
+                zahl
+            }
+            is Variable -> {
+                val bereiche = eingang.variablenQuellen.filter { quelle ->
+                    if (zahl.bindungsId != null) (quelle.bindungsId ?: quelle.knotenId.wert) == zahl.bindungsId
+                    else quelle.name == zahl.name
+                }
+                require(bereiche.map { it.identität }.distinct().size == 1 && bereiche.all {
+                    it.werteVorrat in setOf(NatürlicheZahlen, NichtnegativeGanzeZahlenSemantik.menge)
+                }) {
+                    "Die Dimension '$name' benötigt eine eindeutig gebundene Quelle mit Wertevorrat ℕ."
+                }
+                val positiv = Vergleich(zahl, VergleichsArt.Größer, RationaleZahl.Null)
+                require((eingang.annahmen + positiv).none { it.entscheide(kontext.rechenKontext).wahrheitswert == Wahrheitswert.Lüge }) {
+                    "Die Voraussetzungen der Dimension '$name' sind widerlegt."
+                }
+                if (positiv !in eingang.annahmen) bedingungen += positiv
+                zahl
+            }
+            else -> error("Die Dimension '$name' muss eine positive natürliche Zahl oder eine gebundene natürliche Variable sein.")
+        }
+    }
+    return KnotenAuswertungsErgebnis(
+        mapOf("menge" to kontext.rechnerErgebnisWert(Tensorraum(grundmenge, dimensionen, matrixForm = true), bedingungen)),
+        eingänge = kontext.eingänge,
+    )
+}
+
+
+/** Dimensionsverträge für die kanonischen Mengenquellen und Raumoperatoren. */
+internal fun mengenDimensionsErgebnis(
+    kontext: KnotenAuswertungsKontext,
+    grundmenge: MengenAusdruck,
+    tensor: Boolean,
+): KnotenAuswertungsErgebnis {
+    val eingang = kontext.eingänge["dimension"] ?: error("Der Dimensionseingang fehlt.")
+    val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
+    require(annahmen.none { it.entscheide(kontext.rechenKontext).wahrheitswert == Wahrheitswert.Lüge }) {
+        "Eine Voraussetzung des Raumes ist widerlegt."
+    }
+    val elemente = if (tensor) (eingang.objekt as? Tupel)?.elemente
+        ?: error("Tensorraum erwartet ein Zahlentupel als Dimension.") else listOf(eingang.objekt)
+    require(elemente.isNotEmpty()) { "Ein Tensorraum benötigt mindestens eine Dimension." }
+    val bedingungen = linkedSetOf<Aussage>()
+    val dimensionen = elemente.mapIndexed { index, element ->
+        val zahl = (element as? ZahlAusdruck)?.let { vereinfache(it, kontext.rechenKontext) }
+            ?: error("Dimension ${index + 1} ist keine Zahl.")
+        when (zahl) {
+            is RationaleZahl -> require(zahl.nenner == java.math.BigInteger.ONE &&
+                if (tensor) zahl.zähler.signum() > 0 else zahl.zähler.signum() >= 0) {
+                "Dimension ${index + 1} muss ${if (tensor) "positiv" else "nichtnegativ"} und ganzzahlig sein."
+            }
+            is Variable -> {
+                val quellen = eingang.variablenQuellen.filter { q ->
+                    if (zahl.bindungsId != null) (q.bindungsId ?: q.knotenId.wert) == zahl.bindungsId else q.name == zahl.name
+                }
+                require(quellen.map { it.identität }.distinct().size == 1 && quellen.all {
+                    it.werteVorrat in setOf(NatürlicheZahlen, NichtnegativeGanzeZahlenSemantik.menge)
+                }) { "Die symbolische Dimension benötigt eine eindeutig gebundene natürliche Quelle." }
+                val voraussetzung = Vergleich(zahl, if (tensor) VergleichsArt.Größer else VergleichsArt.GrößerGleich, RationaleZahl.Null)
+                val gegenteil = Vergleich(zahl, if (tensor) VergleichsArt.KleinerGleich else VergleichsArt.Kleiner, RationaleZahl.Null)
+                require(Negation(voraussetzung) !in annahmen && gegenteil !in annahmen && voraussetzung.entscheide(kontext.rechenKontext).wahrheitswert != Wahrheitswert.Lüge) { "Die Dimensionsvoraussetzung ist widerlegt." }
+                if (voraussetzung !in annahmen) bedingungen += voraussetzung
+            }
+            else -> error("Die symbolische Dimension besitzt keinen nachgewiesenen natürlichen Dimensionsvertrag.")
+        }
+        zahl
+    }
+    val raum = if (tensor) Tensorraum(grundmenge, dimensionen, matrixForm = kontext.knoten.parameter["raum.matrixHistorisch"] == "true") else kartesischePotenz(grundmenge, dimensionen.single())
+    return KnotenAuswertungsErgebnis(mapOf("menge" to kontext.rechnerErgebnisWert(raum, bedingungen)), eingänge = kontext.eingänge)
+}

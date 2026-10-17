@@ -195,6 +195,46 @@ class UniversellerZahlenRechnerKnotenTest {
     }
 
     @Test
+    fun `Multiplikationswarnung unterscheidet ganze Zahlen unbekannte Faktoren und Quaternionen`() {
+        val knoten = ZahlenRechnerKnotenVorlagen.alle.first {
+            it.standardParameter[ZAHLENRECHNER_OPERATOR] == UniversellerZahlenOperator.MULTIPLIKATION.stabileId
+        }.erzeuge(GraphPunkt.Zero)
+        val quaternionen = FundamentalerZahlbereich.QUATERNION.alsMenge()
+        val fälle = listOf(
+            GanzeZahlen to GanzeZahlen,
+            null to null,
+            GanzeZahlen to null,
+            null to GanzeZahlen,
+            quaternionen to quaternionen,
+        )
+        fälle.forEach { (links, rechts) ->
+            val a = Variable("a")
+            val b = Variable("b")
+            val ergebnis = register.finde(ZAHLENRECHNER_ART)!!.auswerten(
+                kontext(knoten, mapOf(
+                    "a" to BedingterWert(a, werteVorrat = links),
+                    "b" to BedingterWert(b, werteVorrat = rechts),
+                )),
+            )
+            assertNull(ergebnis.fehler)
+            val ausgabe = assertNotNull(ergebnis.ausgaben["wert"])
+            val hinweise = ergebnis.warnungen.filterNot { it.startsWith("Definition: ") }
+            when {
+                links == null || rechts == null -> assertEquals(listOf(
+                    "Der Zahlbereich ist unbekannt. Kommutativität ist nicht nachgewiesen; die Faktorordnung bleibt erhalten.",
+                ), hinweise)
+                links == quaternionen -> {
+                    assertEquals(listOf(
+                        "Die Faktorordnung bleibt erhalten; Multiplikation ist auf \\mathbb H nicht kommutativ.",
+                    ), hinweise)
+                    assertEquals(listOf(a, b), assertIs<Multiplikation>(ausgabe.objekt).faktoren)
+                }
+                else -> assertTrue(hinweise.isEmpty(), hinweise.toString())
+            }
+        }
+    }
+
+    @Test
     fun `Quaternionische Multiplikation behaelt Faktorordnung als Regel`() {
         val definition = ZahlenRechnerDefinition(
             UniversellerZahlenOperator.MULTIPLIKATION,
