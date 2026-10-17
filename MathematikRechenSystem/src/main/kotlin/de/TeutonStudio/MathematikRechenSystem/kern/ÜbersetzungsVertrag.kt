@@ -1,6 +1,6 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
-/** Einzige Liste der bestehenden Übersetzerziele; Abflachen hat einen eigenen vorhandenen Knoten. */
+/** Einzige Liste der bestehenden expliziten Übersetzerziele. */
 enum class ÜbersetzungsZiel(val id: String) {
     TUPEL("tupel"), ZEILE("zeile"), SPALTE("spalte"), METHODE("methode"), INDEXMETHODE("indexmethode"),
     MATRIXZERLEGEN("matrixzerlegen"), POLAR("polar"), KARTESISCH("kartesisch"), GRAD("grad"), BOGENMASS("bogenmass"),
@@ -9,7 +9,7 @@ enum class ÜbersetzungsZiel(val id: String) {
     val regelVersion: Int get() = 1
     companion object {
         fun vonId(id: String) = entries.singleOrNull { it.id == id } ?: error("Unbekanntes Übersetzungsziel '$id'.")
-        val knotenZiele: List<String> get() = entries.filter { it != ABFLACHEN }.map { it.id }
+        val knotenZiele: List<String> get() = entries.map { it.id }
     }
 }
 

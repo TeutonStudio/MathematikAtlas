@@ -56,8 +56,9 @@ class KartenSpeicher(private val context: Context) {
 
     fun speichere(karte: KartenDaten): KartenDaten {
         val normalisiert = MathematikKartenMigrationen.vorSpeichern(karte)
-        val zielVersion = if (versionWirdVerwendet(KartenVerweis(normalisiert.id, normalisiert.version))) {
-            maxOf(normalisiert.version + 1, höchsteVersion(normalisiert.id) + 1)
+        val verweis = KartenVerweis(normalisiert.id, normalisiert.version)
+        val zielVersion = if (mussOriginalrevisionBewahren(dateiFür(verweis.kartenId, verweis.version), verweis) || versionWirdVerwendet(verweis)) {
+            Math.addExact(maxOf(normalisiert.version, höchsteVersion(normalisiert.id)), 1)
         } else {
             normalisiert.version
         }
@@ -319,4 +320,16 @@ class KartenSpeicher(private val context: Context) {
     private fun leseDatei(file: File): KartenDaten? = runCatching {
         if (file.exists()) MathematikKartenCodec.lade(file.readText()) else null
     }.getOrNull()
+}
+
+/** Nur der gespeicherte Originalzustand entscheidet; gewöhnliche aktuelle Bearbeitungen bleiben unverändert. */
+internal fun mussOriginalrevisionBewahren(datei:File, erwartet:KartenVerweis):Boolean {
+    if (!datei.exists()) return false
+    return runCatching {
+        val text=datei.readText()
+        val original=KartenDatenJson.lese(text)
+        original.id!=erwartet.kartenId || original.version!=erwartet.version ||
+            KartenDatenJson.formatVersion(text)!=KartenDatenJson.FORMAT_VERSION ||
+            MathematikKartenMigrationen.vorSpeichern(MathematikKartenCodec.lade(text))!=original
+    }.getOrDefault(true)
 }

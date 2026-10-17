@@ -14,7 +14,8 @@ class ÜbersetzungsKnotenTest {
 
     @Test fun `beide Typen registriert und Übersetzer unvermehrbar mit stabilen IDs`() {
         assertTrue(KanonischerMathematikKnotenKatalog.alle().any { it.art == ÜBERSETZER_ART })
-        assertTrue(KanonischerMathematikKnotenKatalog.alle().any { it.art == TUPEL_ABFLACHEN_ART })
+        assertFalse(KanonischerMathematikKnotenKatalog.alle().any { it.art == TUPEL_ABFLACHEN_ART })
+        assertTrue(KanonischerMathematikKnotenKatalog.alle().any { it.art == ÜBERSETZER_ART && (it.standardEigenschaften[ÜBERSETZER_ZIEL] as? KnotenEigenschaft.Text)?.wert == "abflachen" })
         val k = ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero)
         assertEquals("spalte", übersetzerZiel(k))
         assertEquals(listOf("wert", "ergebnis"), k.anschlüsse.map { it.name })
@@ -84,7 +85,7 @@ class ÜbersetzungsKnotenTest {
         val k = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "zeile")
         val f = ÜbersetzungsKnotenVorlagen.Abflachen.erzeuge(GraphPunkt.Zero)
         val karte = KartenDaten(name = "Neu", knoten = listOf(k, f))
-        assertEquals(karte.knoten, MathematikKartenCodec.lade(MathematikKartenCodec.schreibe(karte)).knoten)
+        assertEquals(karte.migriereÜbersetzungsKonsolidierung().klassifiziereAdapter().knoten, MathematikKartenCodec.lade(MathematikKartenCodec.schreibe(karte)).knoten)
     }
     @Test fun `fehlende und widerspruechliche Herkunft wird auch historisch diagnostiziert`() {
         val neu = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero), "methode")

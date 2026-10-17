@@ -4,6 +4,9 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenVorlage
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussRichtung
 import de.TeutonStudio.MathematikKnoten.katalog.OperatorKnotenSuchtreffer
+import de.TeutonStudio.MathematikKnoten.ÜBERSETZER_ART
+import de.TeutonStudio.MathematikKnoten.ÜBERSETZER_ZIEL
+import de.TeutonStudio.KnotenKartenVerwalter.daten.KnotenEigenschaft
 
 enum class StandardSammelAktion { FALTUNG, MENGENDEFINITION, TUPEL_SPALTE, TUPEL_ZEILE }
 data class StandardKnotenEintrag(
@@ -36,17 +39,19 @@ data class StandardKnotenEintrag(
 /** Ausschließlich stabile Modus-/Operator-IDs, niemals Anzeigenamen oder vollständige Parameter. */
 fun stabileAuswahlVariante(parameter: Map<String,String>): String? = listOf(
     "operator","eingabeModus","eingabeArt","orientierung","svgOperator","praedikatOperator","struktur","ziel",
-    "relation","methodenAnwendung.ergebnisArt","methodenBereich.operator",
+    "abflachen.ebenen","relation","methodenAnwendung.ergebnisArt","methodenBereich.operator",
 ).mapNotNull { key -> parameter[key]?.let { "$key=$it" } }.takeIf { it.isNotEmpty() }?.joinToString(";")
 
 private fun termVariante(art: String,termArt: String?): String? = if(art=="mathematik.termZuMethode") termArt?.let { "termart=$it" } else null
-fun stabileKnotenVariante(k: KnotenDaten): String? = termVariante(k.art,k.anschlüsse.firstOrNull { it.richtung==AnschlussRichtung.Eingang && it.name=="term" }?.art?.wert) ?: stabileAuswahlVariante(k.parameter)
+private fun auswahlParameter(art:String,p:Map<String,String>,e:Map<String,KnotenEigenschaft>) =
+    if (art == ÜBERSETZER_ART) p + ("ziel" to ((e[ÜBERSETZER_ZIEL] as? KnotenEigenschaft.Text)?.wert ?: "spalte")) else p
+fun stabileKnotenVariante(k: KnotenDaten): String? = termVariante(k.art,k.anschlüsse.firstOrNull { it.richtung==AnschlussRichtung.Eingang && it.name=="term" }?.art?.wert) ?: stabileAuswahlVariante(auswahlParameter(k.art,k.parameter,k.eigenschaften))
 
 fun standardVorlagenEinträge(basis: List<KnotenVorlage>,operatoren: List<OperatorKnotenSuchtreffer> = emptyList()): List<StandardKnotenEintrag> {
     val mehrfach=basis.groupingBy { it.art }.eachCount()
     return (operatoren.map { StandardKnotenEintrag.vorlage(it.vorlage,it.operatorId) }+
-        basis.map { v -> StandardKnotenEintrag.vorlage(v,variante=if(mehrfach.getValue(v.art)>1) termVariante(v.art,v.anschlüsse.firstOrNull { it.richtung==AnschlussRichtung.Eingang && it.name=="term" }?.art?.wert) ?: stabileAuswahlVariante(v.standardParameter) else null) })
-        .distinctBy { e -> e.vorlage!!.let { v -> v.art to v.standardParameter.toSortedMap().entries.joinToString("|") { "${it.key}=${it.value}" } } }
+        basis.map { v -> StandardKnotenEintrag.vorlage(v,variante=if(mehrfach.getValue(v.art)>1) termVariante(v.art,v.anschlüsse.firstOrNull { it.richtung==AnschlussRichtung.Eingang && it.name=="term" }?.art?.wert) ?: stabileAuswahlVariante(auswahlParameter(v.art,v.standardParameter,v.standardEigenschaften)) else null) })
+        .distinctBy { e -> e.vorlage!!.let { v -> v.art to auswahlParameter(v.art,v.standardParameter,v.standardEigenschaften).toSortedMap().entries.joinToString("|") { "${it.key}=${it.value}" } } }
 }
 
 data class StandardAuswahlTab(val name: String,val eintraege: List<StandardKnotenEintrag>) { val anzahl get()=eintraege.size }

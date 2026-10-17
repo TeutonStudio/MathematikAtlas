@@ -272,10 +272,9 @@ class AtlasZustand(context: Context) {
     /** Fügt ein Tupel und dessen Umwandlung zu einem orientierten Vektor als eine zusammenhängende Knotenfolge ein. */
     fun fügeTupelVektorEin(spalte: Boolean, position: GraphPunkt) {
         val tupel = MathematikKnotenVorlagen.Tupel.erzeuge(position)
-        val umwandlungVorlage = if (spalte) MathematikKnotenVorlagen.TupelZuSpalte else MathematikKnotenVorlagen.TupelZuZeile
-        val umwandlung = umwandlungVorlage.erzeuge(position + GraphPunkt(270f, 0f))
+        val umwandlung = konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(position + GraphPunkt(270f, 0f)),if (spalte) "spalte" else "zeile")
         val tupelAusgang = tupel.anschlüsse.firstOrNull { it.name == "tupel" } ?: return
-        val umwandlungsEingang = umwandlung.anschlüsse.firstOrNull { it.name == "tupel" } ?: return
+        val umwandlungsEingang = umwandlung.anschlüsse.firstOrNull { it.name == "wert" } ?: return
         val vorläufigeKarte = editor.karte.copy(knoten = editor.karte.knoten + listOf(tupel, umwandlung))
         val interneVerbindung = verbindungWennErlaubt(
             vorläufigeKarte,

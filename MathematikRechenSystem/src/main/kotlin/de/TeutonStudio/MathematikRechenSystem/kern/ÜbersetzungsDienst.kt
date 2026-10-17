@@ -5,7 +5,7 @@ object ÜbersetzungsDienst {
     fun übersetze(anfrage: ÜbersetzungsAnfrage): ÜbersetzungsErgebnis = try {
         val wert = when (anfrage.ziel) {
             ÜbersetzungsZiel.TUPEL, ÜbersetzungsZiel.ZEILE, ÜbersetzungsZiel.SPALTE -> übersetzeStruktur(anfrage.wert, anfrage.ziel.id)
-            ÜbersetzungsZiel.ABFLACHEN -> if (anfrage.parameter["abflachen.ebenen"] == "1") strukturEineEbeneAbflachen(anfrage.wert as? Tupel ?: error("Abflachen benötigt ein Tupel."))
+            ÜbersetzungsZiel.ABFLACHEN -> if (abflachenEineEbene(anfrage.parameter)) strukturEineEbeneAbflachen(anfrage.wert as? Tupel ?: error("Abflachen benötigt ein Tupel."))
                 else tupelAbflachen(anfrage.wert as? Tupel ?: error("Abflachen benötigt ein Tupel."))
             ÜbersetzungsZiel.GRAD -> winkelAusBogenmass(anfrage.wert as? ZahlAusdruck ?: error("Bogenmaß muss eine Zahl sein."))
             ÜbersetzungsZiel.BOGENMASS -> winkelBogenmass(anfrage.wert as? WinkelAusdruck ?: error("Winkelwert erforderlich."), WinkelVertreter.vonId(anfrage.parameter["uebersetzer.vertreter"]))
@@ -57,7 +57,9 @@ object ÜbersetzungsDienst {
             }
             ÜbersetzungsZiel.ABFLACHEN -> {
                 val tupel = q as? Tupel ?: return ÜbersetzungsErgebnis.NichtDefiniert("kein_tupel", "Abflachen benötigt ein Tupel.")
-                val eineEbene = anfrage.parameter["abflachen.ebenen"] == "1"
+                val eineEbene = try { abflachenEineEbene(anfrage.parameter) } catch (e: IllegalArgumentException) {
+                    return ÜbersetzungsErgebnis.NichtDefiniert("ungueltige_abflachtiefe",e.message.orEmpty(),bedingungen)
+                }
                 val erwartet = if (eineEbene) strukturEineEbeneAbflachen(tupel) else tupelAbflachen(tupel)
                 if (erwartet != ergebnis) return ÜbersetzungsErgebnis.NichtDefiniert("regel_widerspruch", "Abflachung und Strukturplan widersprechen dem Ergebnis.")
                 plan = StrukturRückführungsplan.fürAbflachen(tupel, eineEbene)
@@ -191,4 +193,11 @@ object ÜbersetzungsDienst {
             ÜbersetzungsErgebnis.Erfolg(quelle, rückKontext, invers)
         } catch (e: RuntimeException) { ÜbersetzungsErgebnis.NichtDefiniert("rueckfuehrung_ungueltig", e.message.orEmpty()) }
     }
+}
+
+/** Fehlende Tiefe ist der historische rekursive Vertrag; unbekannte Werte sind kein Standard. */
+fun abflachenEineEbene(parameter:Map<String,String>):Boolean {
+    val tiefe = parameter["abflachen.ebenen"]
+    require(tiefe in setOf(null,"1","rekursiv","alle")) { "Unbekannte Abflachtiefe '$tiefe'. Erlaubt sind 1 und rekursiv (historisch: alle)." }
+    return tiefe == "1"
 }

@@ -430,9 +430,9 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         verbinde(zertifikat,node,"wert");verbinde(links,node,"links");verbinde(rechts,node,"rechts");exponent?.let { verbinde(it,node,"exponent") };return node
     }
     fun abflachen(quelle:IndexDefinitionsWert):IndexDefinitionsWert {
-        val basis=ÜbersetzungsKnotenVorlagen.Abflachen.erzeuge(GraphPunkt.Zero)
-        val node=add(basis.copy(parameter=basis.parameter+("abflachen.ebenen" to "1")),"tupel")
-        verbinde(quelle,node,"tupel");return node
+        val basis=konfiguriereÜbersetzer(ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero),"abflachen")
+        val node=add(basis.copy(parameter=basis.parameter+("abflachen.ebenen" to "1")),"ergebnis")
+        verbinde(quelle,node,"wert");return node
     }
     fun tupel(werte:List<IndexDefinitionsWert>):IndexDefinitionsWert {
         val basis=konfiguriereTupel(MathematikKnotenVorlagen.Tupel.erzeuge(GraphPunkt.Zero),TUPEL_EINZEL_EINGABEN)

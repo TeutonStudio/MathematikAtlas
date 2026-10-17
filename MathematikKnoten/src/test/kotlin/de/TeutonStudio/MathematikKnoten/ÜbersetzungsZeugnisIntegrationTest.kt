@@ -24,7 +24,7 @@ class ÜbersetzungsZeugnisIntegrationTest {
         val t=Tupel(listOf(z(1),z(2)));val raum=EuklidischerRaum("E",2)
         val punkt=GeometriePunkt("A",raum,t);val strecke=GeometrieStrecke(punkt,GeometriePunkt("B",raum,Tupel(listOf(z(3),z(2)))))
         val matrix=Matrix(listOf(listOf(z(1),z(0)),listOf(z(0),z(1))))
-        val beispiele=mapOf<String,MathematischesObjekt>("tupel" to t,"zeile" to t,"spalte" to t,"methode" to z(3),"indexmethode" to matrix,"matrixzerlegen" to matrix,"polar" to t,"kartesisch" to Tupel(listOf(z(2),Tupel(listOf(z(1),GradWinkel(z(0)))))),"grad" to z(0),"bogenmass" to GradWinkel(z(90)),"koordinatenmenge" to strecke,"mittelpunkt" to strecke,"objektpunkt" to strecke,"geometrie" to t)
+        val beispiele=mapOf<String,MathematischesObjekt>("abflachen" to t,"tupel" to t,"zeile" to t,"spalte" to t,"methode" to z(3),"indexmethode" to matrix,"matrixzerlegen" to matrix,"polar" to t,"kartesisch" to Tupel(listOf(z(2),Tupel(listOf(z(1),GradWinkel(z(0)))))),"grad" to z(0),"bogenmass" to GradWinkel(z(90)),"koordinatenmenge" to strecke,"mittelpunkt" to strecke,"objektpunkt" to strecke,"geometrie" to t)
         assertEquals(ÜBERSETZER_ZIELE.toSet()-"rueckfuehrung",beispiele.keys)
         beispiele.forEach { (ziel,w) ->
             val r=eval(ziel,w,extra=if(ziel=="objektpunkt") mapOf("anker" to BedingterWert(punkt)) else emptyMap())

@@ -183,12 +183,13 @@ fun ÜbersetzungsZeugnis.prüfeÜbertragung(): ÜbersetzungsZeugnis {
         }
         ÜbersetzungsZiel.ABFLACHEN -> {
             require(quelle.art == StrukturArt.TUPEL && ziel.art == StrukturArt.TUPEL && rückführungsplan != null)
+            val eineEbene = abflachenEineEbene(parameter)
             val pfade = mutableListOf<List<Int>>()
             fun öffne(f: ÜbersetzungsStruktur, p: List<Int>) {
                 if(f.art == StrukturArt.TUPEL) f.kinder.forEachIndexed { i,k -> öffne(k,p+(i+1)) } else pfade += p
             }
             quelle.kinder.forEachIndexed { i,f -> val p = listOf(i+1)
-                if(parameter["abflachen.ebenen"] != "1") öffne(f,p)
+                if(!eineEbene) öffne(f,p)
                 else if(f.art in setOf(StrukturArt.TUPEL,StrukturArt.ZEILE,StrukturArt.SPALTE)) f.kinder.indices.forEach { pfade += p+(it+1) }
                 else pfade += p
             }

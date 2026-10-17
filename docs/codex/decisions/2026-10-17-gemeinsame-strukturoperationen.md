@@ -1,6 +1,6 @@
 # Gemeinsame Matrix-, Vektor- und Tensoroperationen
 
-Datum: 2026-10-17. Status: M2 als v3.4.4/x auf master integriert (ec152625); finale Android-Laufzeitabnahme wegen eines bestehenden Such-Resettests offen, Reparatur v3.4.5/x in Umsetzung.
+Datum: 2026-10-17. Status: M2 als v3.4.4/x integriert; Schlussabnahme nach enger separater Testreparatur v3.4.5/e6760b9a vollständig grün. Ursprünglicher Androidfehler bleibt historisch dokumentiert.
 
 ## Kontext
 
@@ -75,3 +75,34 @@ N₀-Grundmengeninferenz meldet keine weiteren Findings. Eine historische
 Matrixdiagonalen-Definitionskarte bleibt unter test/resources/konsolidierung-m2
 unverändert gesichert (SHA-256 763ee69d0e1eb2dce3bc7d504a7eb735fc6d1e9ea5ef14923324751a9f9fe16f).
 Geräte-/RPM-Abnahme und Veröffentlichung werden dem freigegebenen SHA im aktiven Gesamtplan zugeordnet.
+
+
+## M2-Abschluss über Testreparatur v3.4.5 (2026-10-17)
+
+M2 bleibt historisch als v3.4.4 auf `ec152625926698f58e1ddd1d1a1d6420f8b0c6cc`
+integriert; sein ursprünglicher Android-master-Lauf mit einem Suchresetfehler
+wird nicht nachträglich als erfolgreich ausgegeben. Die enge Testreparatur ist
+separat als v3.4.5 auf `e6760b9a41aaeb186dee7ee7c13254430cb47ee8` veröffentlicht
+(PR #459, geprüfter Head `89a1097a5c09531772bccd63934b9fb66df9d0a9`).
+Kein Produktionsverhalten, Katalog, Format oder Gate wurde geändert. Die genaue
+ursprüngliche Fehlerursache bleibt unbewiesen.
+
+Alle sechs Reparatur-PR-Gates sind erfolgreich. Das gesicherte
+[Laufzeitartefakt](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992259351)
+belegt 7 Editor- und 51 App-Tests ohne Fehler oder Skips; der Resettest wurde
+in 6,266 s erfolgreich ausgeführt. Sämtliche finalen master-Workflows am
+Reparaturcommit sind durch die Root-CLI als vollständig erfolgreich bestätigt:
+[Release-Guard](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803512),
+[Linux/RPM/Persistenz](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803457),
+[Android-Build](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803546),
+[Kern/Android-Laufzeit](https://github.com/TeutonStudio/MathematikAtlas/actions/runs/38992803470).
+Der konkrete zusätzliche master-Artefaktexport ist noch nicht gesichert; die
+Workflow-Erfolge sind diesem finalen SHA zugeordnet. Lokale Werkzeug- und
+Gerätesignaturgrenzen bleiben unverändert dokumentiert.
+
+Lokale Arbeitscommits sind SamAI/SamAI verifiziert. Beide finalen GitHub-Squashcommits
+haben Autor Alexander und Committer GitHub/web-flow und sind keine lokalen SamAI-Commits.
+M3 ist anschließend als v3.4.6/x auf `samai/v3.4.6/konsolidierung-m3` ab exakt
+`e6760b9a41aaeb186dee7ee7c13254430cb47ee8` reserviert; Reservierungscommit
+`63acb023c1bc33b8e38016834f480563faee8e3d`, ausschließlich Roadmap, SamAI/SamAI.
+M4–M7 bleiben unreserviert.

@@ -75,6 +75,34 @@ class InspektorBereicheGeraeteTest {
         }
     }
 
+    @Test fun abflachtiefeWechseltImUebersetzerMitEigenemUndoSchritt() {
+        val basis=ÜbersetzungsKnotenVorlagen.Übersetzer.erzeuge(GraphPunkt.Zero)
+        lateinit var atlas:AtlasZustand
+        compose.setContent {
+            val context=LocalContext.current
+            atlas=remember {AtlasZustand(IsolierterInspektorTestContext(context)).also {
+                it.editor.ersetzeKarte(KartenDaten(name="Abflachen",knoten=listOf(basis)))
+                it.editor.wähleKnoten(basis.id);it.aktualisiereAuswertung();InspektorSichtbarkeit.öffnen()
+            }}
+            MaterialTheme {Row(Modifier.fillMaxSize()) {Spacer(Modifier.weight(1f));Inspektor(atlas,Modifier)}}
+        }
+        compose.onNodeWithText("Standarddaten").performClick()
+        compose.onNodeWithText("Gemeinsame Einstellungen").performScrollTo().performClick()
+        compose.onNodeWithText("Tupel abflachen").performScrollTo().performClick()
+        compose.runOnIdle {assertEquals("abflachen",übersetzerZiel(atlas.editor.karte.knoten.single()))}
+        compose.onNodeWithText("Eine Ebene: Tupel und Vektoren").performScrollTo().performClick()
+        compose.runOnIdle {
+            val k=atlas.editor.karte.knoten.single()
+            assertEquals("1",k.parameter["abflachen.ebenen"])
+            assertEquals(basis.anschlüsse.map {it.id},k.anschlüsse.map {it.id})
+            atlas.editor.rückgängig();atlas.aktualisiereAuswertung()
+            assertEquals("abflachen",übersetzerZiel(atlas.editor.karte.knoten.single()))
+            assertNull(atlas.editor.karte.knoten.single().parameter["abflachen.ebenen"])
+            atlas.editor.rückgängig();atlas.aktualisiereAuswertung()
+            assertEquals(basis,atlas.editor.karte.knoten.single());atlas.beendeBerechnungen()
+        }
+    }
+
     @Test fun relationswechselAendertParameterUndStandardnamenInEinemUndoSchritt() {
         val basis = MathematikKnotenVorlagen.Kleiner.erzeuge(GraphPunkt.Zero)
         lateinit var atlas: AtlasZustand

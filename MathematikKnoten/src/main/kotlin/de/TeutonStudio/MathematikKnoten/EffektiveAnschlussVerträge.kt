@@ -99,6 +99,7 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
                 else -> TypAusdruck.Unbekannt
             }
             when (ziel) {
+                "abflachen" -> TypAusdruck.Unbekannt
                 "zeile" -> formTyp(MathematikAnschlussArten.ZeilenVektor.id, listOf(dimension))
                 "spalte" -> formTyp(MathematikAnschlussArten.SpaltenVektor.id, listOf(dimension))
                 "tupel" -> formTyp(MathematikAnschlussArten.Tupel.id, listOf(dimension))

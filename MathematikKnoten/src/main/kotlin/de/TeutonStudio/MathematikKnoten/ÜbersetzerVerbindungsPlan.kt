@@ -88,7 +88,7 @@ fun planeÜbersetzerVerbindungen(
     var ebene = listOf(Zustand(basis, von, emptyList(), setOf(prüfung.effektiveArt(basis, von))))
     // Identität/Koordinaten-Konventionswechsel und zeugnisabhängige Rückführung sind
     // keine impliziten Anschlusskonvertierungen. Die bestehenden Ziele liefern die Ports.
-    val ziele = ÜBERSETZER_ZIELE.filterNot { it in setOf("rueckfuehrung", "polar", "kartesisch", "objektpunkt") }
+    val ziele = ÜBERSETZER_ZIELE.filterNot { it in setOf("rueckfuehrung", "polar", "kartesisch", "objektpunkt", "abflachen") }
     repeat(ziele.size) {
         val nächste = mutableListOf<Zustand>()
         val fertig = mutableListOf<VerbindungsVorschlag>()
