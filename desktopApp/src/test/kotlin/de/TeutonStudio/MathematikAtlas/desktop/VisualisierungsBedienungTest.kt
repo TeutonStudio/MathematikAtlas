@@ -26,6 +26,7 @@ import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
 import de.TeutonStudio.MathematikKnoten.visualisierung.ui.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 import org.junit.Assert.*
+import androidx.compose.ui.semantics.SemanticsProperties
 import org.junit.Rule
 import org.junit.Test
 
@@ -357,7 +358,11 @@ class VisualisierungsBedienungTest {
 
     private fun warteAufNavigationsDetail() {
         compose.waitUntil(20_000) {compose.onAllNodesWithText("Berechne",substring=true).fetchSemanticsNodes().isEmpty() && compose.onAllNodesWithText("Verfeinere",substring=true).fetchSemanticsNodes().isEmpty()}
+        compose.waitUntil(20_000) {
+            compose.onNodeWithTag("visualisierung-plot").fetchSemanticsNode().config.getOrElse(SemanticsProperties.StateDescription) { "" } == "Darstellung fertig"
+        }
         compose.waitForIdle()
+        compose.onNodeWithTag("visualisierung-plot").assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription,"Darstellung fertig"))
     }
     private fun ausschnitt(p:androidx.compose.ui.graphics.PixelMap):List<Int> =
         (p.height/4 until p.height*3/4).flatMap {j -> (p.width/4 until p.width*3/4).map {i -> p[i,j].toArgb()}}

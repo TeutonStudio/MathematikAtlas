@@ -21,6 +21,12 @@ Opt-in-Skip; 3 min 32 s/277 Tasks einschließlich Lint und Builds. Alle 523
 Repositorykarten über vier Codecphasen stabil, ohne neue Sperrdiagnose.
 Unabhängiger finaler Review ohne Blocker. Noch keine PR-/CI-/Laufzeitfreigabe
 oder Veröffentlichung.
+Erster PR-Head e66e0c92 ist wegen eines Desktop-Bildvergleichs im Push-Build
+gesperrt (PR-Build und isolierte 68 Androidfälle erfolgreich). Codebelegte
+Sampling-/Zeichenpaket-Barriere eng korrigiert; 17 Bedienungstests und
+unabhängiger Nachreview grün. Erneute volle lokale Abnahme grün: 3 min 34 s,
+277 Tasks, 2256/0/1. CI-Abnahme am korrigierten Head noch erforderlich;
+kein blinder CI-Retry oder Merge.
 
 M7b entfernt anschließend alte Auswerter und kanonisiert gültige Repositorykarten.
 Dafür ist keine Folgeversion reserviert. Gemeinsamer Katalog bleibt 121 mathematische
@@ -519,6 +525,12 @@ Vollständige lokale Gradle-Tests, Android-Debug-Build, Lint, Desktop-Kompilieru
 - Gesamttests, Android-Debug-Build, Test-APK, Lint und Desktop-Kompilierung wurden erfolgreich ausgeführt. Repository-, Releaseplan- und Versionsfolgeprüfungen sind grün. Die zusätzliche Standalone-Kernprüfung ist wegen fehlendem `kotlinc` nicht ausführbar; Gradle-Kerntests sind grün.
 - Unabhängige statische Prüfung und gezielte Nachprüfung durch `node_verifier`: gefundene Rückführungs-, Bildraumpfad-, Literalbedingungs- und Quellenfehler korrigiert; keine weiteren Blocker in der gezielten Nachprüfung. Dies ist keine Freigabe sämtlicher 77 Punkte des übergeordneten Vertrags.
 - Nachweisübersicht: [ExecPlan Übersetzungszeugnisse](plans/active/2026-10-13-uebersetzungszeugnisse.md), [ADR](decisions/2026-10-13-uebersetzungszeugnisse.md). Kein neuer Knotentyp, keine Produktionsabhängigkeit oder Veröffentlichung.
+Erster PR-Head e66e0c92 ist wegen eines Desktop-Bildvergleichs im Push-Build
+gesperrt (PR-Build und isolierte 68 Androidfälle erfolgreich). Codebelegte
+Sampling-/Zeichenpaket-Barriere eng korrigiert; 17 Bedienungstests und
+unabhängiger Nachreview grün. Erneute volle lokale Abnahme grün: 3 min 34 s,
+277 Tasks, 2256/0/1. CI-Abnahme am korrigierten Head noch erforderlich;
+kein blinder CI-Retry oder Merge.
 
 
 ### Gemeinsame UI-Vertragsintegration (Arbeitsstand 13.10.2026)

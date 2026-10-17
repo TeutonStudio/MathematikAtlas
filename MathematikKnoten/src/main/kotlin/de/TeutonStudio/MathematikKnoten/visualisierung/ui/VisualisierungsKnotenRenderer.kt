@@ -22,6 +22,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.ui.Modifier
@@ -137,14 +139,17 @@ private fun VisualisierungsSzene(mengen: List<Pair<String, MengenAusdruck>>, kon
             val (name, menge) = aktiveMengen[i]
             VisualisierungsZeichenEbene(name, ebenenConfig[i].inhaltsSignatur(menge), e.ergebnis, ebenenConfig[i])
         }
-        Plot(konfiguration, { ändern(konfiguration.copy(kamera = it)) }, Modifier.fillMaxSize(), interaktiv, zeichenEbenen)
+        var zeichenBereit by remember { mutableStateOf(false) }
+        Plot(konfiguration, { ändern(konfiguration.copy(kamera = it)) }, Modifier.fillMaxSize(), interaktiv, zeichenEbenen,
+            berechnungFertig = stand.fertig, beiZeichenBereit = { zeichenBereit = it })
+        val fertig = stand.fertig && zeichenBereit
         val fortschritt = if (ergebnis == null) "Berechne Darstellung …" else "Verfeinere Darstellung …"
         if (beiMeldungen != null) {
             val meldungen = (stände.mapNotNull { it.ergebnis }.ifEmpty { listOfNotNull(ergebnis) })
-                .flatMap(::visualisierungsMeldungen) + if (!stand.fertig) listOf(KnotenMeldung(fortschritt)) else emptyList()
+                .flatMap(::visualisierungsMeldungen) + if (!fertig) listOf(KnotenMeldung(fortschritt)) else emptyList()
             SideEffect { beiMeldungen(meldungen) }
         }
-        if (beiMeldungen == null && !stand.fertig) Text(fortschritt,
+        if (beiMeldungen == null && !fertig) Text(fortschritt,
             modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
         val status = when (val e = ergebnis) {
             is VisualisierungsErgebnis.NichtDarstellbar -> e.grund
@@ -324,7 +329,7 @@ private data class VisualisierungsZeichenEbene(
     val ergebnis: VisualisierungsErgebnis?, val konfiguration: VisualisierungsKonfiguration,
 )
 
-private data class VisualisierungsZeichenPaket(val daten: VisualisierungsZeichenDaten)
+private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErgebnis, val daten: VisualisierungsZeichenDaten)
 
 @Composable private fun Plot(
     konfiguration: VisualisierungsKonfiguration,
@@ -332,6 +337,8 @@ private data class VisualisierungsZeichenPaket(val daten: VisualisierungsZeichen
     modifier: Modifier,
     interaktiv: Boolean,
     ebenen: List<VisualisierungsZeichenEbene>,
+    berechnungFertig: Boolean,
+    beiZeichenBereit: (Boolean) -> Unit,
 ) {
     val textMeasurer = rememberTextMeasurer(cacheSize = 128)
     var plotGröße by remember { mutableStateOf(IntSize(1, 1)) }
@@ -351,12 +358,16 @@ private data class VisualisierungsZeichenPaket(val daten: VisualisierungsZeichen
         LaunchedEffect(ebene.ergebnis) {
             if (ebene.ergebnis != null) {
                 paket = withContext(Dispatchers.Default) {
-                    VisualisierungsZeichenPaket(bereiteZeichenDatenVor(ebene.ergebnis))
+                    VisualisierungsZeichenPaket(ebene.ergebnis, bereiteZeichenDatenVor(ebene.ergebnis))
                 }
             }
         }
         paket
     } }
+    // Samplingabschluss allein garantiert noch kein veröffentlichtes Zeichenpaket.
+    val zeichenFertig = zeichenPakete.zip(ebenen).all { (paket, ebene) -> paket != null && paket.ergebnis == ebene.ergebnis }
+    SideEffect { beiZeichenBereit(zeichenFertig) }
+    val darstellungFertig = berechnungFertig && zeichenFertig
     val unSortierteZeichenDaten = remember(zeichenPakete) {
         val daten = zeichenPakete.mapNotNull { it?.daten }
         VisualisierungsZeichenDaten(daten.flatMap { it.zellen }, daten.flatMap { it.punkte },
@@ -419,7 +430,9 @@ private data class VisualisierungsZeichenPaket(val daten: VisualisierungsZeichen
             }
         }
     }
-    Canvas(modifier.clipToBounds().onSizeChanged { plotGröße = IntSize(it.width.coerceAtLeast(1), it.height.coerceAtLeast(1)) }.testTag(if (interaktiv) "visualisierung-plot" else "visualisierung-vorschau").then(gesten)) {
+    Canvas(modifier.clipToBounds().onSizeChanged { plotGröße = IntSize(it.width.coerceAtLeast(1), it.height.coerceAtLeast(1)) }.testTag(if (interaktiv) "visualisierung-plot" else "visualisierung-vorschau").semantics {
+        stateDescription = if (darstellungFertig) "Darstellung fertig" else "Darstellung wird vorbereitet"
+    }.then(gesten)) {
         if (size.width <= 0 || size.height <= 0) return@Canvas
         val darstellungsKonfiguration = konfiguration.copy(kamera = kamera)
         clipRect {

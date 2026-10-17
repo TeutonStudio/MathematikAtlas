@@ -871,3 +871,44 @@ nicht (/tmp/atlas-m7a-rpm.log). Keine lokale Installation oder Änderung fremd
 signierter Nutzerdaten. Linux-Paketierung, Installation, zwei Starts mit gleichem
 XDG_DATA_HOME, Persistenz und Deinstallation müssen die unveränderten CI-Gates
 am freigegebenen Head belegen. 68 bestehende isolierte Androidfälle erwartet.
+
+
+### M7a CI-Zeichenbarriere korrigieren
+
+Erster PR-Head e66e0c92d51f0dcc267bf81d14956bf52e4fed2a: fünf von sechs
+Gates erfolgreich, Push-Androidlauf 39009524750/job117328827248 fehlgeschlagen.
+Konkreter Fehler: desktopApp VisualisierungsBedienungTest,
+offeneGesteErhaeltAlleDetailsMehrererEbenen, Zeile 301, exakte Bildgleichheit
+vor/nach down. PR-Android am selben Head erfolgreich. Kein Resolverfehler,
+kein blinder Retry oder Merge. Originalprotokoll:
+/tmp/atlas-m7a-android-build-failure.log. Historische isolierte Androidabnahme
+dieses Heads 68/68 ohne Fehler/Skips (/tmp/atlas-m7a-runtime-e66e0c92.zip);
+sie ersetzt keine Abnahme des korrigierten Heads.
+
+Codeprüfung belegt eine unvollständige Fertigbarriere: Samplingabschluss konnte
+Fortschritt verbergen, obwohl Plot seine Zeichenpakete noch separat asynchron
+aufbereitete. Die konkrete Auslösung im gescheiterten CI-Lauf ist ohne dortige
+Screenshots nicht bewiesen. Die notwendige enge Korrektur koppelt Fertigmeldung
+und Canvas-Zustandsbeschreibung an Samplingabschluss und passende veröffentlichte
+Pakete aller aktiven Ebenen. Die Desktop-Testbarriere wartet auf diesen Zustand.
+Sampling-, Geometrie- und Gestenalgorithmen sowie exakte Pixel-/Pan-/Pinchprüfungen
+bleiben erhalten; keine sleeps, größeren Toleranzen oder Testabschaltungen.
+
+Gezielte Desktop-Bedienungsprüfung 17/17 erfolgreich, 10 s/22 Tasks
+(/tmp/atlas-m7a-zeichenstatus.log). Unabhängiger enger Nachreview ohne Blocker:
+aktuelle Ergebnisbindung, Cancellation, leere/terminale Ebenen und fehlende
+Readiness-Dauerschleifen geprüft. Vollständige lokale Abnahme erneut gestartet,
+danach alle sechs CI-Gates am neuen Head zwingend. Diese Korrektur erweitert
+M7a ausschließlich um die belegte notwendige Fertig-/Prüfbarriere.
+
+Finale lokale M7a-Wiederabnahme nach Zeichenbarriere erfolgreich: 3 min 34 s,
+277 Tasks, 2256 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener Opt-in-Skip
+(/tmp/atlas-m7a-zeichenstatus-final.log). Lint und alle angeforderten Builds
+enthalten. Repository-/Architektur- und Diffprüfung erneut grün. Unabhängiger
+Renderer-Nachreview ohne Blocker; keine Sampling-/Gestenalgorithmusänderung.
+Neuer Head benötigt vollständig neue sechs PR-Gates und Geräte-/Linuxabnahme;
+e66e0c92 bleibt ohne Mergefreigabe. Keine Produktänderung nach diesem Lauf.
+
+RPM am korrigierten Stand erneut versucht: 2 s/22 Tasks,
+/tmp/atlas-m7a-zeichenstatus-rpm.log, weiterhin Invalid or unsupported type rpm.
+Lokale Paketinstallation nicht möglich; unveränderte Linux-CI-Abnahme erforderlich.
