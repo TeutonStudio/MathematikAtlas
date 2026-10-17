@@ -17,7 +17,11 @@ Unabhängige Abschlussprüfung ohne weitere Findings. Repository-/Standardkarten
 Releaseprüfungen und 14 Guardregressionen grün. Standalone-Kernskript ohne
 `kotlinc` nicht ausführbar; lokales jpackage meldet weiterhin unsupported rpm
 (2 s, `/tmp/atlas-m4-rpm.log`). Android-/Linux-Laufzeitabnahme am finalen
-Release-SHA steht aus. M5–M7 offen. Nachfolgend historische Einträge.
+Release-SHA steht aus. CI an 974544a8: fünf Gates grün, Android-Laufzeit
+66 Fälle mit zwei Fehlern. Fehlender Android-Aufruf der gemeinsamen
+Mengeneinstellungen korrigiert; historischer Testhash wird plattformgerecht
+aus dem unveränderten Original rekonstruiert, Produktionsschutz unverändert.
+Erneute CI erforderlich, kein Merge. M5–M7 offen. Nachfolgend historische Einträge.
 
 > Releaseprüfung PR #454: Der schmale Operator-Auswahldialog wurde wegen des nachgewiesenen Höhenkonflikts gezielt begrenzt. Scrollbarer Steuerbereich höchstens45Prozent, eigener verbleibender Trefferbereich; Titel und Aktionen bleiben im AtlasDialog-Rahmen. Unabhängig statisch ohne Findings geprüft; Androidregression für Listenhöhe, Auswahl, Abbruch und Übernahme bei Schriftfaktor1/2 ergänzt. Lokale App-Tests/Lint/APKs grün48s; native Laufzeitfreigabe erst nach vollständiger CI auf neuem Head. b22267cc bleibt ohne Mergefreigabe. Optionale Hardwaremessungen bleiben separat und gelten nicht als ausgeführt.
 

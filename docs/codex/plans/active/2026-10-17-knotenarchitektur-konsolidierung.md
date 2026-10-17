@@ -570,3 +570,20 @@ Findings. Erneute lokale RPM-Paketierung scheitert konkret mit
 `jpackage-2026-10-17-05-40-35-err.txt`). Keine lokale RPM-Laufzeit behauptet.
 Produktstand eingefroren für Commit und vollständige CI; M4 bleibt bis zur
 SHA-bezogenen PR-/Masterabnahme unvollständig, M5–M7 offen.
+
+
+M4 CI an 974544a8012be44771ba05eb1a90d576db4cdd4d: fünf Gates grün,
+Android-Laufzeit 66 Fälle (Editor 7/7, App 59 mit zwei Fehlern). Kein Merge.
+Run 38999807874: Android-EndlicheMengeInspektor rief die gemeinsame
+Eingabeformsteuerung nicht auf; Produktaufruf vor der lokalen/Graph-Verzweigung
+ergänzt. Standardkarten-Gerätetest hatte den JVM-Hash als Android-Provenienz
+verwendet. org.json verwendet dort unterschiedliche Schlüsselreihenfolgen.
+Testseed rekonstruiert den damaligen Hash auf Android aus dem unveränderten
+Original mit fachneutralem Codec/Metadatennormalisierung; unveränderte Fixturebytes
+und eingefrorener JVM-Hash bleiben erhalten. Produktionsschutz nicht gelockert.
+Unabhängige Ursachenprüfung bestätigt diesen engen Fix. Fehlerarchiv
+/tmp/atlas-m4-runtime-failed.zip; erneute SHA-bezogene CI erforderlich.
+
+Gezielte lokale Korrekturprüfung bestanden: app:testDebugUnitTest, lintDebug,
+assembleDebug und assembleDebugAndroidTest, 53 s/207 Tasks
+(/tmp/atlas-m4-runtime-fix-local.log). Unabhängige Diffprüfung ohne Blocker.

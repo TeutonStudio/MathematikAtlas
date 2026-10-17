@@ -27,6 +27,7 @@ internal object EndlicheMengeInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
+        InspektorEndlicheMengeEingänge(knoten, aktionen::knoten)
         val modus=runCatching {endlicheMengeEingabe(knoten)}.getOrElse {
             Text(it.message.orEmpty(),color=MaterialTheme.colorScheme.error);return
         }

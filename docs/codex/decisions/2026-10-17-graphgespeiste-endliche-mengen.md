@@ -44,7 +44,11 @@ Eingabeform-/Anzahlsteuerungen.
 Ein vor M4 erfasstes M3-Format-10-Payload samt damaligem Inhaltshash belegt den
 Originalhashpfad. Es wurde mit den damaligen Codecs erzeugt, nicht damals auf
 einem Gerät installiert. Geräteprüfungen setzen diese Bytes als historische
-Installation ein und führen den tatsächlichen Installer aus.
+Installation ein und führen den tatsächlichen Installer aus. Der historische
+Provenienzhash wird dabei aus dem unveränderten Original mit dem fachneutralen
+Android-Serializer und der damaligen Metadatennormalisierung rekonstruiert:
+Android und JVM ordnen JSON-Schlüssel unterschiedlich. Der eingefrorene JVM-Hash
+bleibt separate JVM-Evidenz; ein damals auf Android erfasster Hash liegt nicht vor.
 
 Zur Erkennung einer unveränderten Installation gilt ausschließlich der exakte Hash der höchsten
 physischen Originalrevision verwendet werden. Dazu werden ausschließlich die

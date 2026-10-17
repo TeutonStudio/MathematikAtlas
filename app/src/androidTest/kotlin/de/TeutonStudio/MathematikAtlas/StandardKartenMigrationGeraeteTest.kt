@@ -11,10 +11,18 @@ import org.junit.Test
 import org.junit.Assert.*
 import java.io.File
 import java.util.UUID
+import java.security.MessageDigest
 
 class StandardKartenMigrationGeraeteTest {
     private val source="standard.function.rational.removable-hole"
-    private val alterHash="c9687628d041752314ae125004a5298fc6dca9033f7818efcb23d20664488761"
+    // Vor-M4-Algorithmus auf Android, ohne aktuellen Mathematikcodec/Migration.
+    // org.json ordnet Schlüssel auf JVM und Android unterschiedlich; der im
+    // JVM-Test eingefrorene Hash ist deshalb keine Android-Vorinstallation.
+    private fun vorM4InstallationsHash(original:KartenDaten):String {
+        val normalisiert=original.copy(version=1,erstelltAm=0L,archiviert=false,ansicht=AnsichtsFenster.Standard)
+        val bytes=KartenDatenJson.schreibe(normalisiert).toByteArray(Charsets.UTF_8)
+        return MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") {"%02x".format(it)}
+    }
     private val assets="de/TeutonStudio/MathematikAtlas/standardkarten/"
     private fun isoliert(test:(Context,File)->Unit) {
         val context=InstrumentationRegistry.getInstrumentation().targetContext
@@ -46,7 +54,7 @@ class StandardKartenMigrationGeraeteTest {
             } else speicher.speichere(karte)
             provenienz+=InstallierteStandardKarte(sourceId=e.getString("sourceId"),sourceVersion=manifest.getString("version"),
                 sourceHash=if(ziel) "vor-m4" else e.getString("sourceHash"),lokaleKartenId=gespeichert.id,
-                installierterHash=if(ziel && modus !in setOf("aktuell","rückmigriert")) alterHash else standardKartenInhaltsHash(gespeichert),
+                installierterHash=if(ziel && modus !in setOf("aktuell","rückmigriert")) vorM4InstallationsHash(KartenDatenJson.lese(roh)) else standardKartenInhaltsHash(gespeichert),
                 status=if(ziel && modus=="markiert") StandardKartenStatus.BENUTZERGEÄNDERT else StandardKartenStatus.AKTIV)
         }
         StandardKartenProvenienzSpeicher(context).speichere(provenienz)
@@ -55,6 +63,11 @@ class StandardKartenMigrationGeraeteTest {
     @Test fun unveraenderteMigrierteStandardkarteErhaeltNeueRevisionUndFestesOriginal()=isoliert {context,basis ->
         val (datei,original)=seed(context,basis)
         val speicher=KartenSpeicher(context)
+        val originalDaten=KartenDatenJson.lese(original)
+        assertEquals("mathematik.einzelmenge",originalDaten.knoten.single {it.id.wert=="n4"}.art)
+        val alterHash=vorM4InstallationsHash(originalDaten)
+        assertTrue(standardKarteUnverändert(originalDaten,alterHash))
+        assertNotEquals(alterHash,standardKartenInhaltsHash(originalDaten))
         val bericht=StandardKartenInstaller(context,speicher,bekannteStandardKartenKnotenArten()).installiere()
         assertEquals(1,bericht.aktualisiert);assertEquals(0,bericht.alsGeändertErkannt)
         assertEquals(original,datei.readText())
