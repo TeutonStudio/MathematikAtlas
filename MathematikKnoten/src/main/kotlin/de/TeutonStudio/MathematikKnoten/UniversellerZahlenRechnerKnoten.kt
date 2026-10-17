@@ -205,7 +205,7 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
     "mathematik.potenz" -> UniversellerZahlenOperator.POTENZ
     "mathematik.quadrat" -> UniversellerZahlenOperator.QUADRAT
     "mathematik.kubik" -> UniversellerZahlenOperator.KUBIK
-    "mathematik.wurzel" -> UniversellerZahlenOperator.WURZEL
+    "mathematik.wurzel" -> UniversellerZahlenOperator.QUADRATWURZEL
     "mathematik.quadratwurzel" -> UniversellerZahlenOperator.QUADRATWURZEL
     "mathematik.kubikwurzel" -> UniversellerZahlenOperator.KUBIKWURZEL
     "mathematik.logarithmus" -> UniversellerZahlenOperator.LOGARITHMUS
@@ -216,10 +216,10 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
     "mathematik.iteriertesProdukt" -> UniversellerZahlenOperator.ITERIERTES_PRODUKT
     "mathematik.integrieren" -> UniversellerZahlenOperator.INTEGRAL
     "mathematik.ableiten" -> UniversellerZahlenOperator.DIFFERENTIAL
-    "mathematik.extremwert" -> if (knoten.parameter["modus"] == "minimum") {
-        UniversellerZahlenOperator.MINIMUM
-    } else {
-        UniversellerZahlenOperator.MAXIMUM
+    "mathematik.extremwert" -> when(knoten.parameter["modus"]) {
+        "minimum" -> UniversellerZahlenOperator.MINIMUM
+        "maximum" -> UniversellerZahlenOperator.MAXIMUM
+        else -> null
     }
     "mathematik.norm" -> UniversellerZahlenOperator.NORM
     "mathematik.abrundung" -> UniversellerZahlenOperator.ABRUNDUNG
@@ -230,10 +230,10 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
     "mathematik.imaginärteil", "mathematik.imaginaerteil" -> UniversellerZahlenOperator.IMAGINAERTEIL
     "mathematik.winkel" -> UniversellerZahlenOperator.KOMPLEXER_WINKEL
     "mathematik.komplexerRadius" -> UniversellerZahlenOperator.KOMPLEXER_RADIUS
-    "mathematik.komplexAusTupel" -> if (knoten.parameter["modus"] == "polar") {
-        UniversellerZahlenOperator.KOMPLEX_AUS_POLAR
-    } else {
-        UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH
+    "mathematik.komplexAusTupel" -> when(knoten.parameter["modus"]) {
+        "polar" -> UniversellerZahlenOperator.KOMPLEX_AUS_POLAR
+        null,"kartesisch" -> UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH
+        else -> null
     }
     "mathematik.komplexAusPolar" -> UniversellerZahlenOperator.KOMPLEX_AUS_POLAR
     "mathematik.komplexAusKartesisch" -> UniversellerZahlenOperator.KOMPLEX_AUS_KARTESISCH
@@ -241,107 +241,56 @@ fun historischerZahlenOperator(knoten: KnotenDaten): UniversellerZahlenOperator?
     else -> null
 }
 
-fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = copy(
-    knoten = knoten.map { alt ->
-        if (alt.parameter[ZAHLENRECHNER_OPERATOR]==ZAHLENRECHNER_FORMEL_ID || FORMEL_KONTEXT_EIGENSCHAFT in alt.eigenschaften) return@map alt
-        if (alt.art == ZAHLENRECHNER_ART && alt.parameter.keys.any { it.startsWith("indexmethode.") }) return@map alt
-        if (alt.art == ZAHLENRECHNER_ART) {
-            val operator = UniversellerZahlenOperator.vonId(alt.parameter[ZAHLENRECHNER_OPERATOR])
-            konfiguriereZahlenRechner(
-                knoten = alt.copy(
-                parameter = standardParameter(
-                        operator,
-                ) + alt.parameter,
-                ),
-                operator = operator,
-            )
-        } else {
-            val operator = historischerZahlenOperator(alt) ?: return@map alt
-            val standard = if (
-                operator == UniversellerZahlenOperator.ITERIERTE_SUMME &&
-                alt.parameter["eingabeModus"] == ITERIERTE_SUMME_TUPEL_MODUS
-            ) {
-                listOf(
-                    spezialEingang("tupel", MathematikAnschlussArten.Tupel.id, 0),
-                    zahlenAusgang(),
-                )
-            } else {
-                standardAnschluesse(operator)
-            }
-            val alteEingaenge = alt.anschlüsse
-                .filter { it.richtung == AnschlussRichtung.Eingang }
-                .sortedBy { it.reihenfolge }
-            val alterAusgang = alt.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
-            val umbenannt = alteEingaenge.mapIndexed { index, anschluss ->
-                val zielName = kanonischerEingangsName(operator, anschluss.name, index)
-                val zielArt = standard.firstOrNull {
-                    it.richtung == AnschlussRichtung.Eingang && it.name == zielName
-                }?.art ?: anschluss.art
-                val standardEingang = standard.firstOrNull {
-                    it.richtung == AnschlussRichtung.Eingang && it.name == zielName
-                }
-                anschluss.copy(
-                    name = zielName,
-                    richtung = AnschlussRichtung.Eingang,
-                    kante = AnschlussKante.Links,
-                    art = zielArt,
-                    reihenfolge = index,
-                    kannSichErweitern = operator in setOf(
-                        UniversellerZahlenOperator.ADDITION,
-                        UniversellerZahlenOperator.MULTIPLIKATION,
-                        UniversellerZahlenOperator.MINIMUM,
-                        UniversellerZahlenOperator.MAXIMUM,
-                    ),
-                    zulässigeArten = standardEingang?.zulässigeArten.orEmpty(),
-                )
-            }
-            val rollenUmbenennung = alteEingaenge.zip(umbenannt).associate { (alt, neu) -> alt.name to neu.name }
-            val standardwerte = alt.parameter.filterKeys { it.startsWith("standardwert.") }.map { (key, value) ->
-                val name = key.removePrefix("standardwert.")
-                "standardwert.${rollenUmbenennung[name] ?: name}" to value
-            }
-            val kartenQuellen = alt.eingangsKartenVerweise.map { (name, quelle) -> (rollenUmbenennung[name] ?: name) to quelle }
-            if (standardwerte.map { it.first }.distinct().size != standardwerte.size ||
-                kartenQuellen.map { it.first }.distinct().size != kartenQuellen.size) return@map alt.copy(
-                parameter = alt.parameter + (RECHNER_MIGRATION_DIAGNOSE to "${alt.art} bleibt erhalten: Mehrdeutige gespeicherte Eingangsquellen."))
-            val vorhanden = umbenannt.mapTo(mutableSetOf()) { it.name }
-            val ergaenzt = standard.filter {
-                it.richtung == AnschlussRichtung.Eingang && it.name !in vorhanden
-            }
-            val ausgang = (alterAusgang ?: zahlenAusgang()).copy(
-                name = "wert",
-                richtung = AnschlussRichtung.Ausgang,
-                kante = AnschlussKante.Rechts,
-                art = MathematikAnschlussArten.Zahl.id,
-                reihenfolge = 0,
-                kannSichErweitern = false,
-                dynamischErzeugt = false,
-                artFolgtEingang = null,
-                artVereinigtEingänge = emptyList(),
-                zulässigeArten = emptySet(),
-                artAbbildungVonEingang = null,
-                artPriorisiertEingänge = standard.firstOrNull {
-                    it.richtung == AnschlussRichtung.Ausgang
-                }?.artPriorisiertEingänge,
-            )
-            alt.copy(
-                art = ZAHLENRECHNER_ART,
-                name = if (alt.name in alteStandardNamen) operator.titel else alt.name,
-                anschlüsse = umbenannt + ergaenzt + ausgang,
-                eingangsKartenVerweise = kartenQuellen.toMap(),
-                parameter = standardParameter(operator) + alt.parameter.filterKeys { !it.startsWith("standardwert.") } + standardwerte.toMap() + mapOf(
-                    ZAHLENRECHNER_OPERATOR to operator.stabileId,
-                    ZAHLENRECHNER_KOMPLEX_EINGABE to if (alt.art == "mathematik.komplexAusTupel") {
-                        ZAHLENRECHNER_KOMPLEX_TUPEL
-                    } else {
-                        alt.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE]
-                            ?: ZAHLENRECHNER_KOMPLEX_SEPARIERT
-                    },
-                ),
-            )
+fun KartenDaten.migriereUniversellenZahlenRechner(): KartenDaten = migriereHistorischeKnotenRollen { alt ->
+    if (alt.parameter[ZAHLENRECHNER_OPERATOR]==ZAHLENRECHNER_FORMEL_ID || FORMEL_KONTEXT_EIGENSCHAFT in alt.eigenschaften ||
+        alt.art==ZAHLENRECHNER_ART && alt.parameter.keys.any {it.startsWith("indexmethode.")}) return@migriereHistorischeKnotenRollen alt
+    if (alt.art==ZAHLENRECHNER_ART) {
+        val id=alt.parameter[ZAHLENRECHNER_OPERATOR]
+        require(UniversellerZahlenOperator.entries.any {it.stabileId==id}) {"Die Zahlenoperator-ID fehlt oder ist unbekannt: $id"}
+        return@migriereHistorischeKnotenRollen alt
+    }
+    if (alt.art !in historischeZahlenRechnerArten) return@migriereHistorischeKnotenRollen alt
+    val operator=historischerZahlenOperator(alt) ?: error("Unbekannter gespeicherter Zahlenmodus.")
+    prüfeHistorischeAnschlussForm(alt)
+    val eingänge=alt.anschlüsse.filter {it.richtung==AnschlussRichtung.Eingang}.sortedBy {it.reihenfolge}
+    val ausgang=alt.anschlüsse.single {it.richtung==AnschlussRichtung.Ausgang}
+    require(ausgang.name in setOf("wert","zahl")) {"Die historische Ausgangsrolle ist unbekannt."}
+    val variadisch=operator in setOf(UniversellerZahlenOperator.ADDITION,UniversellerZahlenOperator.MULTIPLIKATION,UniversellerZahlenOperator.MINIMUM,UniversellerZahlenOperator.MAXIMUM)
+    val rollen:Map<String,String> = when {
+        variadisch -> {
+            require((eingänge.size>=2 || eingänge.singleOrNull()?.belegung==AnschlussBelegung.Mehrfach) && eingänge.map {it.reihenfolge}.distinct().size==eingänge.size) {"Die Operandenreihenfolge ist nicht eindeutig."}
+            require(eingänge.all {it.name.matches(Regex("[a-z]")) || it.dynamischErzeugt && it.name.isNotBlank()}) {"Unbekannte historische Operandenrolle."}
+            eingänge.mapIndexed {i,p->p.name to ('a'.code+i).toChar().toString()}.toMap()
         }
-    },
-)
+        alt.art=="mathematik.logarithmus" -> mapOf("basis" to "a","argument" to "b")
+        alt.art=="mathematik.potenz" -> mapOf("basis" to "a","exponent" to "b")
+        alt.art=="mathematik.division" -> mapOf("dividend" to "a","divisor" to "b","fallsNennerNull" to "c")
+        alt.art=="mathematik.subtraktion" -> mapOf("links" to "a","rechts" to "b")
+        alt.art=="mathematik.wurzel" -> mapOf("radikand" to "a")
+        alt.art in setOf("mathematik.ableiten","mathematik.integrieren") -> mapOf("term" to "a")
+        alt.art=="mathematik.komplexAusTupel" -> mapOf("tupel" to "tupel")
+        alt.art in setOf("mathematik.iterierteSumme","mathematik.iteriertesProdukt") -> {
+            require(alt.parameter["eingabeModus"] in setOf(null,"methode",ITERIERTE_SUMME_TUPEL_MODUS)) {"Unbekannter iterierter Eingabemodus."}
+            if(alt.parameter["eingabeModus"]==ITERIERTE_SUMME_TUPEL_MODUS) mapOf("tupel" to "tupel") else mapOf("methode" to "methode","indexmenge" to "indexmenge")
+        }
+        alt.art=="mathematik.komplexAusPolar" -> mapOf("radius" to "a","winkel" to "b")
+        alt.art=="mathematik.komplexAusKartesisch" -> mapOf("realteil" to "a","imaginärteil" to "b")
+        alt.art=="mathematik.modulo" -> mapOf("a" to "a","b" to "b")
+        else -> mapOf("zahl" to "a")
+    }
+    val benötigt=if(alt.art=="mathematik.division") rollen.keys-"fallsNennerNull" else rollen.keys
+    require(eingänge.map {it.name}.toSet().containsAll(benötigt) && eingänge.all {it.name in rollen}) {"Die historischen Eingangsrollen sind unvollständig oder unbekannt."}
+    require(variadisch || eingänge.none {it.belegung==AnschlussBelegung.Mehrfach}) {"Die historische Kardinalität ist nicht eindeutig."}
+    prüfeHistorischenPortTyp(ausgang,setOf(MathematikAnschlussArten.Zahl.id,MathematikAnschlussArten.Methode.id))
+    val neu=eingänge.map {p ->
+        val name=rollen.getValue(p.name)
+        prüfeHistorischenPortTyp(p,when(name) {"tupel" -> setOf(MathematikAnschlussArten.Tupel.id);"methode" -> setOf(MathematikAnschlussArten.Methode.id);"indexmenge" -> setOf(MathematikAnschlussArten.Menge.id);else -> setOf(MathematikAnschlussArten.Zahl.id,MathematikAnschlussArten.Methode.id)},variadisch)
+        p.copy(name=name,kannSichErweitern=variadisch)
+    }
+    normalisiereRechnerMethodenAnschluesse(alt.copy(art=ZAHLENRECHNER_ART,anschlüsse=neu+ausgang.copy(name="wert"),
+        parameter=standardParameter(operator)+alt.parameter+mapOf(ZAHLENRECHNER_OPERATOR to operator.stabileId,
+            ZAHLENRECHNER_KOMPLEX_EINGABE to if(alt.art=="mathematik.komplexAusTupel") ZAHLENRECHNER_KOMPLEX_TUPEL else alt.parameter[ZAHLENRECHNER_KOMPLEX_EINGABE] ?: ZAHLENRECHNER_KOMPLEX_SEPARIERT)))
+}
 
 private fun standardParameter(operator: UniversellerZahlenOperator): Map<String, String> = mapOf(
     ZAHLENRECHNER_OPERATOR to operator.stabileId,
@@ -350,26 +299,6 @@ private fun standardParameter(operator: UniversellerZahlenOperator): Map<String,
     ZAHLENRECHNER_GRADWINKEL to "false",
     ZAHLENRECHNER_GRAD_AUSWERTEN to "true",
 )
-
-private fun kanonischerEingangsName(
-    operator: UniversellerZahlenOperator,
-    alterName: String,
-    index: Int,
-): String = when {
-    alterName == "methode" || alterName == "indexmenge" || alterName == "tupel" -> alterName
-    alterName in setOf(
-        "dividend", "zaehler", "basis", "radikand", "zahl", "term", "argument", "links", "minuend",
-    ) -> "a"
-    alterName in setOf("divisor", "nenner", "exponent", "rechts", "subtrahend", "grad") -> "b"
-    alterName == "fallsNennerNull" -> "c"
-    operator in setOf(
-        UniversellerZahlenOperator.ADDITION,
-        UniversellerZahlenOperator.MULTIPLIKATION,
-        UniversellerZahlenOperator.MINIMUM,
-        UniversellerZahlenOperator.MAXIMUM,
-    ) -> ('a'.code + index).toChar().toString()
-    else -> ('a'.code + index).toChar().toString()
-}
 
 internal val universellerZahlenFachauswerter = de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
         val operator = UniversellerZahlenOperator.vonId(

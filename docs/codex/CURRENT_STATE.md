@@ -1,27 +1,39 @@
 ## Aktueller Konsolidierungsstand, 17. Oktober 2026
 
-M0–M5 veröffentlicht und vollständig abgenommen. Aktuelle Basis v3.4.8,
-fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a. PR #462: geprüfter SamAI-Head
-d31f4cd, alle sechs Prüfungen grün, isolierter Emulator 68/68 ohne Fehler/Skips.
-Finaler Master: Android 39005206217, Linux/RPM/Persistenz 39005206228,
-Kern/Emulator 39005206244 und Guard 39005206226 sämtlich grün. Lokale M5-Suite
-2237/0/1 vorhandener Skip, 3 min 26 s/277 Tasks. Squash Alexander/GitHub.
+M0–M6 veröffentlicht und vollständig abgenommen. Aktuelle Basis v3.4.9,
+49945974dbe96778b70341f29a32bd96747d18d8. PR #463: geprüfter SamAI-Head
+c2b539ef, alle sechs Prüfungen grün, isolierter Emulator 68/68 ohne Fehler/Skips.
+Finaler Master: Android 39006842925, Linux/RPM/Persistenz 39006843006,
+Kern/Emulator 39006842966 und Guard 39006843009 sämtlich grün. Lokale M6-Suite
+2244 Fälle, 0 Fehler, 1 vorhandener Skip; 3 min 47 s/277 Tasks.
+GitHub-Squashidentität Alexander/GitHub, lokale Commits SamAI/SamAI.
 
-M6 als v3.4.9/x direkt auf dieser Basis reserviert, Branch
-samai/v3.4.9/konsolidierung-m6. Registrierte LaTeX-Darstellung, präzisierte
-Maß-/Tensorträger-/Nichtstandard-Cauchybegriffe und erhaltene numerische
-Richtungsgenauigkeit in Umsetzung. Gemeinsamer Katalog bleibt 121 mathematische
-und 123 Androidtypen; keine neuen Typen oder Abhängigkeiten. Die bestehende
-64-Winkel-Grenze wird im Richtungskern vereinheitlicht. Sieben neue Regressionen
-geprüft. Vollständige lokale Suite grün (3 min 47 s/277 Tasks, 2244 Fälle/0 Fehler/
-1 vorhandener Skip). Repository, 15 Standardkarten, Releaseplan, Versionsfolge,
-14 Guardregressionen und Diffprüfung grün; unabhängiger Nachreview ohne Blocker.
-Formel-Snapshots erhalten Genauigkeit über Wire und erneute Auswertung.
-Noch keine M6-CI-/Laufzeitfreigabe; 68 Gerätetests erwartet. M7 bleibt offen.
+M7 wird nach belegten älteren Migrationsfehlern geteilt: M7a v3.4.10/x sichert
+Originaldaten, Sperrdiagnosen und benannte mathematische Rollen. Branch
+samai/v3.4.10/konsolidierung-m7; Androidziel 3.4.10/3004010, Desktop/Linux 3.4.10.
+Unabhängige Prüfung und Regressionen belegen unter anderem doppelte Default-
+Umsetzung, verlorene Originalkanten, ungesicherte Ports und falsche Logarithmus-
+rollen. Der historische einstellige Wurzelknoten wird ausdrücklich als
+Quadratwurzel umgesetzt; kein Gradanschluss wird erfunden. Alte Division mit
+zusätzlichem Nullaussage-Ausgang bleibt unverändert diagnostiziert und gesperrt.
+M7a lokal vollständig geprüft: 2256 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener
+Opt-in-Skip; 3 min 32 s/277 Tasks einschließlich Lint und Builds. Alle 523
+Repositorykarten über vier Codecphasen stabil, ohne neue Sperrdiagnose.
+Unabhängiger finaler Review ohne Blocker. Noch keine PR-/CI-/Laufzeitfreigabe
+oder Veröffentlichung.
+Erster PR-Head e66e0c92 ist wegen eines Desktop-Bildvergleichs im Push-Build
+gesperrt (PR-Build und isolierte 68 Androidfälle erfolgreich). Codebelegte
+Sampling-/Zeichenpaket-Barriere eng korrigiert; 17 Bedienungstests und
+unabhängiger Nachreview grün. Erneute volle lokale Abnahme grün: 3 min 34 s,
+277 Tasks, 2256/0/1. CI-Abnahme am korrigierten Head noch erforderlich;
+kein blinder CI-Retry oder Merge.
 
-Lokale Prüfgrenzen unverändert: zusätzliches Standalone-Skript ohne kotlinc,
-jpackage unterstützt rpm nicht; Nutzersignatur verhindert nichtdestruktive
-Testinstallation. Isolierte CI-Abnahmen sind verpflichtend.
+M7b entfernt anschließend alte Auswerter und kanonisiert gültige Repositorykarten.
+Dafür ist keine Folgeversion reserviert. Gemeinsamer Katalog bleibt 121 mathematische
+und 123 Androidtypen. Der Gesamtabschluss M0–M7 und die abschließende Produkt-
+abnahme bleiben offen. Lokale Prüfgrenzen: Standalone-kotlinc fehlt, jpackage
+unterstützt rpm nicht, Nutzersignatur verhindert nichtdestruktive Testinstallation;
+isolierte CI-Abnahmen sind verpflichtend.
 
 Nachfolgend historische Einträge.
 
@@ -513,6 +525,12 @@ Vollständige lokale Gradle-Tests, Android-Debug-Build, Lint, Desktop-Kompilieru
 - Gesamttests, Android-Debug-Build, Test-APK, Lint und Desktop-Kompilierung wurden erfolgreich ausgeführt. Repository-, Releaseplan- und Versionsfolgeprüfungen sind grün. Die zusätzliche Standalone-Kernprüfung ist wegen fehlendem `kotlinc` nicht ausführbar; Gradle-Kerntests sind grün.
 - Unabhängige statische Prüfung und gezielte Nachprüfung durch `node_verifier`: gefundene Rückführungs-, Bildraumpfad-, Literalbedingungs- und Quellenfehler korrigiert; keine weiteren Blocker in der gezielten Nachprüfung. Dies ist keine Freigabe sämtlicher 77 Punkte des übergeordneten Vertrags.
 - Nachweisübersicht: [ExecPlan Übersetzungszeugnisse](plans/active/2026-10-13-uebersetzungszeugnisse.md), [ADR](decisions/2026-10-13-uebersetzungszeugnisse.md). Kein neuer Knotentyp, keine Produktionsabhängigkeit oder Veröffentlichung.
+Erster PR-Head e66e0c92 ist wegen eines Desktop-Bildvergleichs im Push-Build
+gesperrt (PR-Build und isolierte 68 Androidfälle erfolgreich). Codebelegte
+Sampling-/Zeichenpaket-Barriere eng korrigiert; 17 Bedienungstests und
+unabhängiger Nachreview grün. Erneute volle lokale Abnahme grün: 3 min 34 s,
+277 Tasks, 2256/0/1. CI-Abnahme am korrigierten Head noch erforderlich;
+kein blinder CI-Retry oder Merge.
 
 
 ### Gemeinsame UI-Vertragsintegration (Arbeitsstand 13.10.2026)

@@ -347,14 +347,14 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         verbinde(quelle, node, "wert"); extra.forEach { (name, w) -> verbinde(w, node, name) }; return node
     }
     fun vergleich(a: IndexDefinitionsWert, c: IndexDefinitionsWert, ungleich: Boolean = false): IndexDefinitionsWert {
-        val basis = (if (ungleich) MathematikKnotenVorlagen.Ungleichheit else MathematikKnotenVorlagen.Gleichheit).erzeuge(GraphPunkt.Zero)
-        val node = add(basis.copy(anschlüsse = basis.anschlüsse.map { if (it.richtung == AnschlussRichtung.Eingang) it.copy(art = MathematikAnschlussArten.AtlasWert.id, zulässigeArten = emptySet()) else it }), "aussage")
+        val basis = PraedikatKnotenVorlagen.vorlage(RelationsOperatoren.alle.single { it.stabileId == if (ungleich) "relation.ungleichheit" else "relation.gleichheit" }).erzeuge(GraphPunkt.Zero)
+        val node = add(basis, "aussage")
         verbinde(a, node, "links"); verbinde(c, node, "rechts"); return node
     }
     fun und(werte: List<IndexDefinitionsWert>): IndexDefinitionsWert = werte.reduce { a, c ->
-        val basis = MathematikKnotenVorlagen.Konjunktion.erzeuge(GraphPunkt.Zero)
-        val ports = basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.take(2).map { it.copy(art = MathematikAnschlussArten.AtlasWert.id, zulässigeArten = emptySet()) }
-        val node = add(basis.copy(anschlüsse = ports + basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }), "aussage")
+        val basis = RechnerEinzeloperationMigration.migriere(MathematikKnotenVorlagen.Konjunktion.erzeuge(GraphPunkt.Zero))
+        val ports = basis.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }.take(2)
+        val node = add(basis, "wert")
         verbinde(a, node, ports[0].name); verbinde(c, node, ports[1].name); node
     }
     fun index(quelle: IndexDefinitionsWert, namen: String? = null, präfix: String? = null, matrix: Boolean = false): IndexDefinitionsWert {
@@ -484,5 +484,5 @@ private class IndexDefinitionsBauer(private val original: KnotenDaten, private v
         val node = add(MathematikKnotenVorlagen.KartenAusgang.erzeuge(GraphPunkt.Zero).copy(name = "Ergebnis", parameter = mapOf("name" to name,"rolle" to name), anschlüsse = MathematikKnotenVorlagen.KartenAusgang.erzeuge(GraphPunkt.Zero).anschlüsse.map { it.copy(art = MathematikAnschlussArten.AtlasWert.id) }), "")
         verbinde(quelle, node, node.knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }.name)
     }
-    fun karte() = KartenDaten(id = KartenId(prefix), name = "Indexdefinition: $operator", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen).normalisiereDynamischeRechnerOperanden().normalisiereStrukturierteDivisionVorSpeichern().migrierePolarKonventionen().migriereWinkelraumAufrufe().normalisiereSchnittstellenReihenfolge()
+    fun karte() = KartenDaten(id = KartenId(prefix), name = "Indexdefinition: $operator", erstelltAm = 0L, knoten = knoten, verbindungen = verbindungen).let(MathematikKartenMigrationen::vorSpeichern)
 }

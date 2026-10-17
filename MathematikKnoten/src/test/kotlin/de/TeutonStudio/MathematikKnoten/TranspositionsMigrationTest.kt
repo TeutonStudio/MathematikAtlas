@@ -19,10 +19,10 @@ class TranspositionsMigrationTest {
 
         val migriert = migriereTranspositionsKnoten(karte)
 
-        assertTrue(migriert.knoten.all { it.art == "mathematik.transponieren" })
+        assertTrue(migriert.knoten.all { it.art in setOf("mathematik.transponieren", de.TeutonStudio.MathematikRechenSystem.kern.MatrixRechner.KNOTEN_ART) })
         migriert.knoten.forEach { knoten ->
             assertEquals(vorherigeIds.getValue(knoten.id), knoten.anschlüsse.map(AnschlussDaten::id))
-            assertEquals(listOf("wert", "wert"), knoten.anschlüsse.map(AnschlussDaten::name))
+            assertEquals(if(knoten.art == "mathematik.transponieren") listOf("wert", "wert") else listOf("matrix", "wert"), knoten.anschlüsse.map(AnschlussDaten::name))
         }
         assertEquals(listOf(verbindung), migriert.verbindungen)
     }

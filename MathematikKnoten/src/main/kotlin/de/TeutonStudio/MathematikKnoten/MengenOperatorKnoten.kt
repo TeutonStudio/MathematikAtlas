@@ -366,32 +366,30 @@ private fun werteMengenRelationAus(kontext: KnotenAuswertungsKontext): KnotenAus
     )
 }
 
-fun KartenDaten.migriereMengenOperatorKnoten(): KartenDaten = copy(
-    knoten = knoten.map { alt ->
-        if (RECHNER_MIGRATION_DIAGNOSE in alt.parameter) return@map alt
-        MengenRechnerMigration.alteKnotenArten[alt.art]?.let { operator ->
-            val basis = alt.copy(
-                art = MengenRechner.KNOTEN_ART,
-                parameter = MengenRechnerKnotenVorlagen.standard.standardParameter + alt.parameter +
-                    (MENGENRECHNER_OPERATOR_PARAMETER to operator.stabileId),
-            )
-            return@map konfiguriereMengenRechner(
-                knoten = basis,
-                operator = operator,
-                festeEingänge = alt.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang }.coerceAtLeast(2),
-            )
-        }
-        MengenRelationsMigration.alteKnotenArten[alt.art]?.let { operator ->
-            val basis = alt.copy(
-                art = MengenRelationRechner.KNOTEN_ART,
-                parameter = MengenRelationsKnotenVorlagen.standard.standardParameter + alt.parameter +
-                    (MENGENRELATION_OPERATOR_PARAMETER to operator.stabileId),
-            )
-            return@map konfiguriereMengenRelation(basis, operator)
-        }
-        alt
-    },
-)
+fun KartenDaten.migriereMengenOperatorKnoten(): KartenDaten = migrierePraedikatKnoten().migriereHistorischeKnotenRollen { alt ->
+    val operator=MengenRechnerMigration.alteKnotenArten[alt.art] ?: return@migriereHistorischeKnotenRollen alt
+    prüfeHistorischeAnschlussForm(alt)
+    val eingänge=alt.anschlüsse.filter {it.richtung==AnschlussRichtung.Eingang}.sortedBy {it.reihenfolge}
+    val ausgang=alt.anschlüsse.single {it.richtung==AnschlussRichtung.Ausgang}
+    require(ausgang.name=="menge") {"Unbekannte historische Mengenausgangsrolle."}
+    val variadisch=operator in setOf(MengenRechnerOperator.VEREINIGUNG,MengenRechnerOperator.SCHNITT,MengenRechnerOperator.KARTESISCHES_PRODUKT,MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ)
+    if(variadisch) {
+        require((eingänge.size>=2 || eingänge.singleOrNull()?.belegung==AnschlussBelegung.Mehrfach) && eingänge.map {it.reihenfolge}.distinct().size==eingänge.size) {"Die Mengenoperanden sind nicht eindeutig geordnet."}
+        require(eingänge.all {it.name.matches(Regex("[a-z]")) || operator==MengenRechnerOperator.SYMMETRISCHE_DIFFERENZ && it.name in setOf("links","rechts") || it.dynamischErzeugt && it.name.isNotBlank()}) {"Unbekannte Mengenoperandenrolle."}
+    }
+    val standard=mengenRechnerAnschluesse(operator,eingänge.size)
+    val zielEingänge=standard.filter {it.richtung==AnschlussRichtung.Eingang}
+    require(variadisch || eingänge.map {it.name}.toSet()==zielEingänge.map {it.name}.toSet()) {"Historische Mengenrollen fehlen oder sind unbekannt."}
+    require(variadisch || eingänge.none {it.belegung==AnschlussBelegung.Mehrfach}) {"Mehrfachbelegung ist für diesen Altvertrag nicht eindeutig."}
+    prüfeHistorischenPortTyp(ausgang,setOf(MathematikAnschlussArten.Menge.id))
+    val neu=eingänge.mapIndexed {i,p ->
+        val soll=if(variadisch) zielEingänge.getOrNull(i) ?: error("Unbekannte Operandenposition.") else zielEingänge.single {it.name==p.name}
+        prüfeHistorischenPortTyp(p,setOf(if(soll.name=="methode") MathematikAnschlussArten.Methode.id else MathematikAnschlussArten.Menge.id),variadisch)
+        p.copy(name=soll.name,kannSichErweitern=variadisch)
+    }
+    alt.copy(art=MengenRechner.KNOTEN_ART,anschlüsse=neu+ausgang,
+        parameter=MengenRechnerKnotenVorlagen.standard.standardParameter+alt.parameter+(MENGENRECHNER_OPERATOR_PARAMETER to operator.stabileId))
+}
 
 private fun mengenRechnerAnschluesse(
     operator: MengenRechnerOperator,

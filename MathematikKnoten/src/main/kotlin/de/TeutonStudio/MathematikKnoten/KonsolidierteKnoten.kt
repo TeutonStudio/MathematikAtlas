@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikKnoten
 
+import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussBelegung
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussId
 import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussKante
@@ -299,14 +300,9 @@ private fun vektorQuelle(objekt: MathematischesObjekt): VektorQuelle {
     )
 }
 
-fun KartenDaten.migriereKonsolidierteKnoten(): KartenDaten = copy(
-    knoten = knoten.map { alt ->
-        migriereMengenKnoten(alt)
-            ?: migriereEinheitsvektor(alt)
-            ?: migriereSkalarprodukt(alt)
-            ?: alt
-    },
-)
+fun KartenDaten.migriereKonsolidierteKnoten(): KartenDaten = migriereHistorischeKnotenRollen { alt ->
+    migriereMengenKnoten(alt) ?: migriereEinheitsvektor(alt) ?: migriereSkalarprodukt(alt) ?: alt
+}
 
 private val alteMengenAuswahl = mapOf(
     "mathematik.leereMenge" to MengenKnotenAuswahl.LEERE_MENGE,
@@ -322,23 +318,13 @@ private val alteMengenAuswahl = mapOf(
 
 private fun migriereMengenKnoten(alt: KnotenDaten): KnotenDaten? {
     val auswahl = alteMengenAuswahl[alt.art] ?: return null
+    prüfeHistorischeAnschlussForm(alt)
+    require(alt.anschlüsse.size==1 && alt.anschlüsse.single().name=="menge") {"Historische Mengenquellen benötigen genau ihren Mengenausgang."}
+    prüfeHistorischenPortTyp(alt.anschlüsse.single(),setOf(MathematikAnschlussArten.Menge.id))
     val ausgang = alt.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
         ?: mengenAusgang().copy(id = AnschlussId("${alt.id.wert}-menge"))
-    return alt.copy(
-        art = MENGEN_KNOTEN_ART,
-        anschlüsse = listOf(
-            ausgang.copy(
-                name = "menge",
-                richtung = AnschlussRichtung.Ausgang,
-                kante = AnschlussKante.Rechts,
-                art = MathematikAnschlussArten.Menge.id,
-                kannSichErweitern = false,
-                dynamischErzeugt = false,
-            ),
-        ),
-        parameter = alt.parameter + (MENGEN_KNOTEN_AUSWAHL to auswahl.stabileId),
-        kartenVerweis = null,
-    )
+    return alt.copy(art=MENGEN_KNOTEN_ART,anschlüsse=listOf(ausgang.copy(name="menge")),
+        parameter=alt.parameter+(MENGEN_KNOTEN_AUSWAHL to auswahl.stabileId))
 }
 
 private fun migriereEinheitsvektor(alt: KnotenDaten): KnotenDaten? {
@@ -355,8 +341,12 @@ private fun migriereEinheitsvektor(alt: KnotenDaten): KnotenDaten? {
             "vektor",
             if (zeile) MathematikAnschlussArten.ZeilenVektor.id else MathematikAnschlussArten.SpaltenVektor.id,
         ).copy(id = AnschlussId("${alt.id.wert}-vektor"))
-    val position = alt.parameter["index"]?.toIntOrNull()?.coerceAtLeast(0) ?: 0
-    val dimension = alt.parameter["dimension"]?.toIntOrNull()?.coerceAtLeast(1) ?: 3
+    prüfeHistorischeAnschlussForm(alt)
+    require(alt.anschlüsse.size==1 && alt.anschlüsse.single().name=="vektor") {"Die historische Einheitsvektorform ist nicht eindeutig."}
+    prüfeHistorischenPortTyp(alt.anschlüsse.single(),setOf(if(zeile) MathematikAnschlussArten.ZeilenVektor.id else MathematikAnschlussArten.SpaltenVektor.id))
+    val position = if("index" in alt.parameter) alt.parameter["index"]!!.toIntOrNull() ?: error("Ungültiger Basisindex.") else 0
+    val dimension = if("dimension" in alt.parameter) alt.parameter["dimension"]!!.toIntOrNull() ?: error("Ungültige Basisdimension.") else 3
+    require(position>=0 && dimension>0 && position<dimension) {"Basisindex und Dimension sind ungültig."}
     return alt.copy(
         anschlüsse = listOf(
             zahlEingang(EINHEITSVEKTOR_POSITION, 0).copy(id = AnschlussId("${alt.id.wert}-position")),
@@ -375,34 +365,22 @@ private fun migriereEinheitsvektor(alt: KnotenDaten): KnotenDaten? {
 
 private fun migriereSkalarprodukt(alt: KnotenDaten): KnotenDaten? {
     if (alt.art !in historischeSkalarproduktArten) return null
-    val eingänge = alt.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
-    val ausgang = alt.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
-        ?: VektorRechnerKnotenVorlagen.standard.anschlüsse.last().copy(id = AnschlussId("${alt.id.wert}-$VEKTOR_RECHNER_AUSGANG"))
-    return alt.copy(
-        art = VektorRechner.KNOTEN_ART,
-        name = if (alt.name.startsWith("Skalarprodukt")) "Vektorrechner" else alt.name,
-        anschlüsse = listOf(
-            (eingänge.getOrNull(0) ?: vektorRechnerEingang("links", 0).copy(id = AnschlussId("${alt.id.wert}-links"))).copy(
-                name = "links",
-                art = MathematikAnschlussArten.Objekt.id,
-                zulässigeArten = vektorRechnerEingang("links", 0).zulässigeArten,
-                reihenfolge = 0,
-            ),
-            (eingänge.getOrNull(1) ?: vektorRechnerEingang("rechts", 1).copy(id = AnschlussId("${alt.id.wert}-rechts"))).copy(
-                name = "rechts",
-                art = MathematikAnschlussArten.Objekt.id,
-                zulässigeArten = vektorRechnerEingang("rechts", 1).zulässigeArten,
-                reihenfolge = 1,
-            ),
-            ausgang.copy(name = VEKTOR_RECHNER_AUSGANG, art = MathematikAnschlussArten.Zahl.id),
-        ),
-        parameter = alt.parameter + (VEKTOR_RECHNER_OPERATOR to VektorRechnerOperator.SKALARPRODUKT.stabileId),
-    )
+    prüfeHistorischeAnschlussForm(alt)
+    val rollen=mapOf("a" to "links","b" to "rechts")
+    val eingänge=alt.anschlüsse.filter {it.richtung==AnschlussRichtung.Eingang}
+    require(eingänge.map {it.name}.toSet()==rollen.keys && eingänge.none {it.belegung==AnschlussBelegung.Mehrfach}) {"Die Skalarproduktrollen sind nicht eindeutig."}
+    val ausgang=alt.anschlüsse.single {it.richtung==AnschlussRichtung.Ausgang}
+    eingänge.forEach {prüfeHistorischenPortTyp(it,setOf(MathematikAnschlussArten.Vektor.id))}
+    prüfeHistorischenPortTyp(ausgang,setOf(MathematikAnschlussArten.Zahl.id))
+    require(ausgang.name=="wert") {"Unbekannte Skalarproduktausgangsrolle."}
+    return alt.copy(art=VektorRechner.KNOTEN_ART,
+        anschlüsse=eingänge.map {p -> p.copy(name=rollen.getValue(p.name))}+ausgang.copy(name=VEKTOR_RECHNER_AUSGANG),
+        parameter=alt.parameter+(VEKTOR_RECHNER_OPERATOR to VektorRechnerOperator.SKALARPRODUKT.stabileId))
 }
 
 /** Ergänzt optionale Dimensionseingänge und erhält vorhandene Anschlussreferenzen. */
 fun KnotenDaten.mitGradmengenDimension(): KnotenDaten {
-    if (art != MENGEN_KNOTEN_ART || kartenVerweis != null) return this
+    if (RECHNER_MIGRATION_DIAGNOSE in parameter || art != MENGEN_KNOTEN_ART || kartenVerweis != null) return this
     val auswahl = MengenKnotenAuswahl.entries.firstOrNull { it.stabileId == parameter[MENGEN_KNOTEN_AUSWAHL] } ?: return this
     val name = "dimension"
     if (anschlüsse.any { it.richtung == AnschlussRichtung.Eingang && it.name in setOf("dimension", "dim") }) return this

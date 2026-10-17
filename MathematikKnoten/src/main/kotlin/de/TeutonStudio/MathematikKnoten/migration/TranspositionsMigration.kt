@@ -2,55 +2,21 @@ package de.TeutonStudio.MathematikKnoten
 
 import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 
-private val alteTranspositionsArten = setOf(
-    "mathematik.transponiereSpalte",
-    "mathematik.transponiereZeile",
-    "mathematik.transponiereMatrix",
-)
-
-/** Vereinigt historische Transpositionsknoten ohne Änderung ihrer Anschluss-IDs oder Edges. */
-internal fun migriereTranspositionsKnoten(karte: KartenDaten): KartenDaten {
-    if (karte.knoten.none { it.art in alteTranspositionsArten }) return karte
-    val standard = MathematikKnotenVorlagen.Transponieren.erzeuge(GraphPunkt.Zero)
-    val standardEingang = standard.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }
-    val standardAusgang = standard.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
-
-    return karte.copy(knoten = karte.knoten.map { alt ->
-        if (alt.art !in alteTranspositionsArten) return@map alt
-        val alterEingang = alt.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Eingang }
-        val alterAusgang = alt.anschlüsse.firstOrNull { it.richtung == AnschlussRichtung.Ausgang }
-        alt.copy(
-            art = "mathematik.transponieren",
-            name = "Transponieren",
-            anschlüsse = listOf(
-                (alterEingang ?: standardEingang).copy(
-                    name = "wert",
-                    richtung = AnschlussRichtung.Eingang,
-                    kante = AnschlussKante.Links,
-                    art = standardEingang.art,
-                    reihenfolge = 0,
-                    kannSichErweitern = false,
-                    dynamischErzeugt = false,
-                    artFolgtEingang = null,
-                    artVereinigtEingänge = emptyList(),
-                    zulässigeArten = standardEingang.zulässigeArten,
-                    artAbbildungVonEingang = null,
-                ),
-                (alterAusgang ?: standardAusgang).copy(
-                    name = "wert",
-                    richtung = AnschlussRichtung.Ausgang,
-                    kante = AnschlussKante.Rechts,
-                    art = standardAusgang.art,
-                    reihenfolge = 0,
-                    kannSichErweitern = false,
-                    dynamischErzeugt = false,
-                    artFolgtEingang = null,
-                    artVereinigtEingänge = emptyList(),
-                    zulässigeArten = emptySet(),
-                    artAbbildungVonEingang = standardAusgang.artAbbildungVonEingang,
-                ),
-            ),
-            parameter = alt.parameter + ("achsenPermutation" to (alt.parameter["achsenPermutation"] ?: "1,0")),
-        )
-    })
+/** Historische Vektortranspositionen erhalten sämtliche Ports und strukturierten Referenzen. */
+internal fun migriereTranspositionsKnoten(karte: KartenDaten): KartenDaten = karte.migriereHistorischeKnotenRollen { alt ->
+    val spalte = when (alt.art) {
+        "mathematik.transponiereSpalte" -> true
+        "mathematik.transponiereZeile" -> false
+        "mathematik.transponiereMatrix" -> return@migriereHistorischeKnotenRollen RechnerEinzeloperationMigration.migriereGeprüft(alt)
+        else -> return@migriereHistorischeKnotenRollen alt
+    }
+    prüfeHistorischeAnschlussForm(alt)
+    require(alt.anschlüsse.size == 2 && alt.anschlüsse.all { it.name == "vektor" }) { "Historische Transpositionsrollen sind nicht eindeutig." }
+    val eingang = alt.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }
+    val ausgang = alt.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }
+    prüfeHistorischenPortTyp(eingang, setOf(if (spalte) MathematikAnschlussArten.SpaltenVektor.id else MathematikAnschlussArten.ZeilenVektor.id))
+    prüfeHistorischenPortTyp(ausgang, setOf(if (spalte) MathematikAnschlussArten.ZeilenVektor.id else MathematikAnschlussArten.SpaltenVektor.id))
+    require(alt.parameter["achsenPermutation"] in setOf(null, "1,0")) { "Die gespeicherte Permutation widerspricht der Vektortransposition." }
+    alt.copy(art = "mathematik.transponieren", anschlüsse = alt.anschlüsse.map { it.copy(name = "wert") },
+        parameter = alt.parameter + ("achsenPermutation" to "1,0"))
 }

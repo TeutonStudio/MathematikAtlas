@@ -32,7 +32,7 @@ class MengenKonstantenKnotenTest {
     }
 
     @Test fun `historische Mengenkennungen werden auf dieselben Quellen migriert`() {
-        val alt = KnotenDaten(art = "mathematik.primzahlen", name = "Primzahlen", anschlüsse = MengenKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero).anschlüsse)
+        val alt = KnotenDaten(art = "mathematik.primzahlen", name = "Primzahlen", anschlüsse = MengenraumKnotenVorlagen.Primzahlen.erzeuge(GraphPunkt.Zero).anschlüsse)
         val geladen = MathematikKartenCodec.lade(KartenDatenJson.schreibe(KartenDaten(name = "Alt", knoten = listOf(alt)))).migriereKonsolidierteKnoten().knoten.single()
         assertEquals(MENGEN_KNOTEN_ART, geladen.art)
         assertEquals("P", geladen.parameter[MENGEN_KNOTEN_AUSWAHL])
