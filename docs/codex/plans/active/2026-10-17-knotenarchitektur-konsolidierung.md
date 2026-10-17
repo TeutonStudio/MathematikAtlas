@@ -11,7 +11,8 @@ ursprüngliche Android-Schlussabnahme fehlgeschlagen, durch enges Test-Reparatur
 v3.4.5/x abgeschlossen: e6760b9a41aaeb186dee7ee7c13254430cb47ee8, alle Master-Gates grün.
 M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle finalen Master-Gates grün.
 M4: v3.4.7 veröffentlicht, finaler Master 69d4e70a; PR- und Masterabnahme grün.
-M5: v3.4.8/x auf samai/v3.4.8/konsolidierung-m5 reserviert, Basis 69d4e70a.
+M5: v3.4.8 veröffentlicht, finaler Master fb1984f9; PR- und Masterabnahme grün.
+M6: v3.4.9/x auf samai/v3.4.9/konsolidierung-m6 reserviert, Basis fb1984f9.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -102,8 +103,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M2 Matrix/Vektor/Tensor: v3.4.4 integriert; Schlussabnahme über separat veröffentlichte Testreparatur v3.4.5/e6760b9a vollständig grün, ursprünglicher Laufzeitfehler historisch erhalten.
 - [x] M3 Tupel/Übersetzer: v3.4.6/43726159 veröffentlicht, PR #460; 124 gemeinsame/126 Androidarten, alle PR-/Master-Gates grün, PR-Geräteabnahme 62/62.
 - [x] M4 Mengen: v3.4.7 veröffentlicht, 69d4e70a4f1bdbf69b23f0ee708f5893d5232947, PR #461; drei Spezialarten konsolidiert, 121 gemeinsame/123 Androidtypen, alle sechs jüngsten PR-Gates und vier finalen Master-Workflows grün.
-- [-] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8/x ab v3.4.7/69d4e70a auf samai/v3.4.8/konsolidierung-m5 reserviert, Produktarbeit offen.
-- [ ] M6 Begriffe und Verantwortlichkeiten korrigieren.
+- [x] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8 veröffentlicht, fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a, PR #462; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
+- [-] M6 Begriffe und Verantwortlichkeiten: v3.4.9/x direkt ab v3.4.8/fb1984f9 auf samai/v3.4.9/konsolidierung-m6 reserviert, Produktarbeit offen.
 - [ ] M7 unabhängige Alt-Auswerter entfernen, Gesamtabschluss prüfen.
 
 ## 10. Konkrete Umsetzungsschritte
@@ -668,3 +669,34 @@ scheitert unverändert in jpackage: Invalid or unsupported type: [rpm]
 (/tmp/atlas-m5-rpm.log). Kein lokaler Geräte-Neuinstallationsversuch mit Datenverlust;
 fremde Nutzersignatur bleibt geschützt. Produktdiff unabhängig ohne Blocker.
 Produktbaum für SHA-bezogene CI eingefroren; M5 noch nicht veröffentlicht.
+
+
+### M5 veröffentlicht; M6 reserviert
+
+PR #462 wurde am konkret freigegebenen Head d31f4cded72d1ecd4af98109dd77a89a2d32979c
+regulär ohne Admin-/Bypassoption als v3.4.8 integriert. Finaler Mastercommit
+fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a folgt unmittelbar auf v3.4.7/69d4e70a.
+GitHub-Squashidentität Alexander/GitHub; lokale Reservierung 584b59bd und
+Produktcommit d31f4cde SamAI/SamAI verifiziert. Kein Connector-Produktcommit.
+
+Die finale lokale Suite bestand mit 2237 Fällen/0 Fehlern/1 vorhandenem Skip,
+also 2236 bestanden, 3m26s/277 Tasks. Nur aktuelle build/test-results-XMLs
+inklusive TypSystem gezählt; ältere connected-Berichte ausgeschlossen.
+Unabhängiger Abschlussreview ohne Blocker. Alle sechs finalen PR-Gates grün;
+isolierter Emulator Editor 7/7 und App 61/61, insgesamt 68/68 ohne Fehler oder
+Skips (/tmp/atlas-m5-runtime-final.zip). Neue Parameterbereich-/Dimensions-/Undo-
+und explizite Diagnose-Reparaturtests tatsächlich ausgeführt und erfolgreich.
+Lokales Standalone-kotlinc fehlt und RPM ist lokal unsupported; unveränderte
+Kern- und Linux-RPM-/Neustartpersistenz-CI lief erfolgreich.
+
+Finale Masterabnahme am exakten fb1984f9: Android 39005206217,
+Linux/RPM/Neustartpersistenz 39005206228, Kern/isolierte Android-Laufzeit
+39005206244 und Release-Guard 39005206226 jeweils completed/success;
+beide Kernworkflowjobs verify und android-runtime erfolgreich. M5 ist damit
+abgeschlossen. Diese Abnahme ersetzt vorherige offene M5-Statusangaben.
+
+Erst danach wurde M6 als v3.4.9/x direkt vom finalen Mastercommit reserviert.
+Der Umfang präzisiert Begriffe und Verträge bestehender Darstellungs-, Maß-,
+Raum-, Cauchy- und Richtungsknoten. Keine neuen Knotentypen oder Typentfernung,
+Katalog weiterhin 121/123. M7 bleibt offen und unreserviert. Android/Desktop/
+Linux/current_version bleiben bis zum M6-Zielabschluss kohärent auf 3.4.8.
