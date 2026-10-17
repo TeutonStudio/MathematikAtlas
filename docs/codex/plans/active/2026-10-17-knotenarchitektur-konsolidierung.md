@@ -10,7 +10,8 @@ M2: integriert als v3.4.4, ec152625926698f58e1ddd1d1a1d6420f8b0c6cc;
 ursprüngliche Android-Schlussabnahme fehlgeschlagen, durch enges Test-Reparaturrelease
 v3.4.5/x abgeschlossen: e6760b9a41aaeb186dee7ee7c13254430cb47ee8, alle Master-Gates grün.
 M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle finalen Master-Gates grün.
-M4: v3.4.7/x auf samai/v3.4.7/konsolidierung-m4 in Umsetzung, Basis 43726159.
+M4: v3.4.7 veröffentlicht, finaler Master 69d4e70a; PR- und Masterabnahme grün.
+M5: v3.4.8/x auf samai/v3.4.8/konsolidierung-m5 reserviert, Basis 69d4e70a.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -100,8 +101,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M1 Methodenaufrufe/Prädikate: v3.4.3 veröffentlicht, e665a7fde78fe845dc7c62fa60fa00896d35f58a, PR #457, alle PR-/master-Gates grün; 132 gemeinsame/134 Androidtypen.
 - [x] M2 Matrix/Vektor/Tensor: v3.4.4 integriert; Schlussabnahme über separat veröffentlichte Testreparatur v3.4.5/e6760b9a vollständig grün, ursprünglicher Laufzeitfehler historisch erhalten.
 - [x] M3 Tupel/Übersetzer: v3.4.6/43726159 veröffentlicht, PR #460; 124 gemeinsame/126 Androidarten, alle PR-/Master-Gates grün, PR-Geräteabnahme 62/62.
-- [-] M4 Mengen: v3.4.7/x reserviert, c10ce42d; drei Spezialarten, graphfähige endliche Menge und Schutz offizieller Standardkartenupdates in Umsetzung.
-- [ ] M5 Quellenverträge und Konstanten ohne Typentfernung vereinheitlichen.
+- [x] M4 Mengen: v3.4.7 veröffentlicht, 69d4e70a4f1bdbf69b23f0ee708f5893d5232947, PR #461; drei Spezialarten konsolidiert, 121 gemeinsame/123 Androidtypen, alle sechs jüngsten PR-Gates und vier finalen Master-Workflows grün.
+- [-] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8/x ab v3.4.7/69d4e70a auf samai/v3.4.8/konsolidierung-m5 reserviert, Produktarbeit offen.
 - [ ] M6 Begriffe und Verantwortlichkeiten korrigieren.
 - [ ] M7 unabhängige Alt-Auswerter entfernen, Gesamtabschluss prüfen.
 
@@ -587,3 +588,35 @@ Unabhängige Ursachenprüfung bestätigt diesen engen Fix. Fehlerarchiv
 Gezielte lokale Korrekturprüfung bestanden: app:testDebugUnitTest, lintDebug,
 assembleDebug und assembleDebugAndroidTest, 53 s/207 Tasks
 (/tmp/atlas-m4-runtime-fix-local.log). Unabhängige Diffprüfung ohne Blocker.
+
+
+### M4 veröffentlicht; M5 reserviert
+
+PR #461 wurde am freigegebenen Head 91f5c953589008e9ad090bb358f4356bfc9a849a
+regulär ohne Admin-/Bypassoption als v3.4.7 integriert. Finaler Mastercommit
+69d4e70a4f1bdbf69b23f0ee708f5893d5232947 (Vorgänger 43726159) trägt die
+GitHub-Squashidentität Alexander/GitHub; lokale Arbeitscommits 974544a8 und
+91f5c953 sowie Reservierung c10ce42d sind SamAI/SamAI verifiziert.
+
+Alle sechs maßgeblichen jüngsten PR-Prüfungen erfolgreich. Isolierter Emulator
+bestätigt Editor 7/7 und App 59/59, insgesamt 66/66 ohne Fehler oder Skips;
+Mengeneingabe-/Undo-Test und sämtliche drei Originalstandardkarten-Gerätetests
+bestanden (/tmp/atlas-m4-runtime-fix-final.zip). Ursprüngliche Runtimefehler und
+der root-classpath-Resolverfehler bleiben oben beziehungsweise im PR dokumentiert.
+Genau ein PR-Android-Retry am identischen Head bestand (Run 39000698093,
+Job 117303178680); der API-HTTP-500 hinterließ den historischen roten Check im
+Rollup. Keine Dependency-, CI- oder Prüfungsumgehung. Regulärer Merge zulässig
+und erfolgreich, historische rote Ergebnisse werden nicht als grün ausgegeben.
+
+Finale Masterabnahme am exakten 69d4e70a: Android 39001388559,
+Linux/RPM/Neustartpersistenz 39001388566, Kern/isolierte Android-Laufzeit
+39001388536 und Release-Guard 39001388554 jeweils completed/success;
+beide Kernworkflowjobs verify und android-runtime erfolgreich. M4 ist damit
+abgeschlossen. Diese Abnahme ersetzt die vorherigen offenen M4-Statusangaben.
+
+Erst danach wurde M5 als v3.4.8/x direkt auf dem finalen Mastercommit reserviert.
+Gemeinsame Typ-/Bereichsableitung und Konstantenpflege betreffen vorhandene
+Quellen; Parameter-/Variablenrollen, stabile Identitäten und Wahr/Falsch bleiben
+erhalten. Keine neuen Knotentypen oder Typentfernung, Katalog weiterhin 121/123.
+M6–M7 bleiben offen und unreserviert. Android/Desktop/Linux/current_version
+bleiben bis zum M5-Zielabschluss kohärent auf der veröffentlichten 3.4.7.
