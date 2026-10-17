@@ -75,3 +75,7 @@ M3-Revisionsschutz: vollständiger lokaler Abschlusslauf bestanden (49 s, 277 Ta
 2195 Tests, 0 Fehler, 1 bestehender Skip), einschließlich Lint, APKs, Test-APKs
 und Desktop. Protokoll: `/tmp/atlas-m3-revision-final.log`. CI am ergänzten
 Release-Head und dessen Veröffentlichung stehen weiterhin aus.
+
+Veröffentlicht mit v3.4.6/43726159 (PR #460, Head a4ea6cda): alle sechs
+PR-Gates und vier finalen Master-Workflows grün; PR-Geräteabnahme 62/62.
+Die zuvor als offen dokumentierten M3-Schlussprüfungen sind damit abgeschlossen.

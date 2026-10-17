@@ -181,7 +181,7 @@ object MathematikAnschlussArten {
     fun normalisiereMethodenArt(art: AnschlussArtId): AnschlussArtId =
         if (art in historischeMethodenIds) Methode.id else art
 
-    val alle = listOf(
+    val alle get() = listOf(
         AtlasWert,
         Objekt,
         Zahl,

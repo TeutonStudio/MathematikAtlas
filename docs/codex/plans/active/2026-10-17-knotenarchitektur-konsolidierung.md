@@ -9,7 +9,8 @@ M1: veröffentlicht als v3.4.3, Commit e665a7fde78fe845dc7c62fa60fa00896d35f58a.
 M2: integriert als v3.4.4, ec152625926698f58e1ddd1d1a1d6420f8b0c6cc;
 ursprüngliche Android-Schlussabnahme fehlgeschlagen, durch enges Test-Reparaturrelease
 v3.4.5/x abgeschlossen: e6760b9a41aaeb186dee7ee7c13254430cb47ee8, alle Master-Gates grün.
-M3: v3.4.6/x auf samai/v3.4.6/konsolidierung-m3 in Umsetzung, Basis e6760b9a.
+M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle finalen Master-Gates grün.
+M4: v3.4.7/x auf samai/v3.4.7/konsolidierung-m4 in Umsetzung, Basis 43726159.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -98,8 +99,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M0 Katalog und Migrationsschutz: 136 gemeinsame/138 vollständige Arten; v3.4.2 veröffentlicht, 5813c0337b5c7b2284d882b785559dfeea4ae3cd, PR #456 und alle PR-/master-Gates grün.
 - [x] M1 Methodenaufrufe/Prädikate: v3.4.3 veröffentlicht, e665a7fde78fe845dc7c62fa60fa00896d35f58a, PR #457, alle PR-/master-Gates grün; 132 gemeinsame/134 Androidtypen.
 - [x] M2 Matrix/Vektor/Tensor: v3.4.4 integriert; Schlussabnahme über separat veröffentlichte Testreparatur v3.4.5/e6760b9a vollständig grün, ursprünglicher Laufzeitfehler historisch erhalten.
-- [-] M3 Tupel/Übersetzer: v3.4.6/x ab v3.4.5/e6760b9a reserviert; vier Spezialarten entfernen, vorhandene Übersetzerziele konsolidieren.
-- [ ] M4 Mengen: drei Spezialarten entfernen.
+- [x] M3 Tupel/Übersetzer: v3.4.6/43726159 veröffentlicht, PR #460; 124 gemeinsame/126 Androidarten, alle PR-/Master-Gates grün, PR-Geräteabnahme 62/62.
+- [-] M4 Mengen: v3.4.7/x reserviert, c10ce42d; drei Spezialarten, graphfähige endliche Menge und Schutz offizieller Standardkartenupdates in Umsetzung.
 - [ ] M5 Quellenverträge und Konstanten ohne Typentfernung vereinheitlichen.
 - [ ] M6 Begriffe und Verantwortlichkeiten korrigieren.
 - [ ] M7 unabhängige Alt-Auswerter entfernen, Gesamtabschluss prüfen.
@@ -516,3 +517,56 @@ M3-Revisionsschutz: vollständiger lokaler Abschlusslauf bestanden (49 s, 277 Ta
 2195 Tests, 0 Fehler, 1 bestehender Skip), einschließlich Lint, APKs, Test-APKs
 und Desktop. Protokoll: `/tmp/atlas-m3-revision-final.log`. CI am ergänzten
 Release-Head und dessen Veröffentlichung stehen weiterhin aus.
+
+### M3 veröffentlicht; M4 begonnen
+
+M3-PR #460 wurde am exakten Head a4ea6cda33d4df8a7bcb8c5b04c0bb31b870460a
+mit sechs grünen Gates integriert. Editor 7/7, App 55/55, insgesamt 62/62
+Gerätetests bestanden, einschließlich aller drei Originalrevisionstests.
+Finaler Master 43726159a87efb50f1adcc5fe7cdafa981a2edd2: Android 38997004505,
+Linux/RPM/Persistenz 38997004486, Kern/Gerät 38997004522 und Guard 38997004509
+jeweils erfolgreich. GitHub-Squash: Alexander/GitHub, ausdrücklich kein lokal
+erzeugter SamAI-Commit. Lokale Produktcommits 3ddb687b/a4ea6cda SamAI/SamAI.
+
+Erst anschließend M4 als v3.4.7/x reserviert. Vor M4 wurden acht echte
+Altkarte-Dateien und ein M3-Format-10-Installationspayload gesichert. Letzterer
+entstand über M3-KartenJson.schreibe plus damaligen Inhaltshash; keine Behauptung
+einer damaligen Geräteinstallation. Payload-SHA256
+21f93dcde52b9aa6a0eb655e6c72a57c8092db715c136a157f8f8159e481d70f,
+Provenienzhash c9687628d041752314ae125004a5298fc6dca9033f7818efcb23d20664488761.
+Die tatsächliche Installerprüfung wird auf diesen Originalbytes aufgebaut.
+
+Graphmodus: explizite 0–64 einzelne Elementanschlüsse; 0 bedeutet ausdrücklich
+leere Menge, jeder andere Anschluss ist Pflicht. Lokale v2-/CSV-Daten bleiben
+inaktiv erhalten. Unbekannte Eingänge/Mehrfachbeiträge werden abgelehnt.
+Inaktive Operatorparameter dürfen die Graphports nicht durch Joinnormalisierung
+verändern. Modus-/Anzahlwechsel melden entfernte Verbindungen, Standardwerte
+und Kartenfallbacks im bestehenden KonfigurationsPlan, gemeinsam rückgängig.
+Standardquelltemplates behalten Format 7/Version 1; offizielle lokale Updates
+schreiben eine neue freie Revision. Höchste beschädigte Originalrevision und
+bereits nutzerbearbeitete/gelöschte Karten sind vor Aktualisierung geschützt.
+M4-Produkt-/Laufzeitabnahme steht noch aus. M5–M7 weiterhin offen.
+
+M4 Zwischenverifikation: gezielte Knoten-/App-/Test-APK-Prüfung bestanden
+(24 s/127 Tasks), anschließend echte acht Altfixtures und Desktopprüfung grün
+(1m28s/147 Tasks). Erste vollständige Suite 2208 Tests/0 Fehler/1 bestehender Skip,
+Lint/APKs/Test-APKs/Desktop, 3m23s/277 Tasks (`/tmp/atlas-m4-full.log`).
+Danach unabhängige Findings zur präzisen Graphdefinition und tatsächlichen
+Methodenverdrahtung korrigiert; deshalb erneute Gesamtprüfung am endgültigen
+Produktstand erforderlich (`/tmp/atlas-m4-final.log`, derzeit laufend).
+Originalhash als einziges Provenienzbeweismittel, Rückmigration einer
+Nutzeränderung bleibt geschützt. Keine M4-Laufzeit-/Releasefreigabe behauptet.
+Alle Python-Struktur-/Standardkarten-/Releaseprüfungen sowie 14 Guardregressionen
+bestehen; zusätzliche Standalone-Kernprüfung weiterhin nicht ausführbar, da
+`kotlinc` fehlt. Gerätekonflikt mit fremd signierter Nutzerinstallation und
+fehlendes lokales RPM-Werkzeug unverändert; isolierte CI-Abnahme erforderlich.
+
+M4 endgültige lokale Produktabnahme bestanden: 2213 Fälle, 0 Fehler,
+1 bestehender Skip; Lint, APKs, Test-APKs, Desktopkompilierung und alle vier
+Desktoptestmodule erfolgreich, 3m27s/277 Tasks (`/tmp/atlas-m4-final.log`).
+APK-Metadaten 3.4.7/3004007 geprüft. Unabhängige Abschlussreview ohne weitere
+Findings. Erneute lokale RPM-Paketierung scheitert konkret mit
+`Invalid or unsupported type: [rpm]` (2 s, `/tmp/atlas-m4-rpm.log`,
+`jpackage-2026-10-17-05-40-35-err.txt`). Keine lokale RPM-Laufzeit behauptet.
+Produktstand eingefroren für Commit und vollständige CI; M4 bleibt bis zur
+SHA-bezogenen PR-/Masterabnahme unvollständig, M5–M7 offen.

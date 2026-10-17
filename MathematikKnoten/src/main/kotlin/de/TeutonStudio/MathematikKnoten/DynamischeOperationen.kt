@@ -54,7 +54,7 @@ internal fun geordneteOperationsWerte(kontext: KnotenAuswertungsKontext): Linked
 
 /** Neue Erweiterbarkeit auch für bereits gespeicherte binäre Rechner; keine Instanz wird neu erzeugt. */
 fun KartenDaten.normalisiereDynamischeRechnerOperanden(): KartenDaten = copy(knoten = knoten.map { knoten ->
-    if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter) return@map knoten
+    if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter || knoten.art == ENDLICHE_MENGE_ART) return@map knoten
     val familie = RechnerOperatorRegistry.familieFür(knoten.art)
     val id = knoten.parameter[familie?.operatorParameter ?: "operator"] ?: knoten.parameter["operator"]
     if (id == null || !istAssoziativerRechnerOperator(id)) knoten else {

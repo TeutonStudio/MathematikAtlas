@@ -18,6 +18,7 @@ import de.TeutonStudio.MathematikKartenAdapter.KnotenAuswertungsErgebnis
 import de.TeutonStudio.MathematikKnoten.*
 
 internal object EndlicheMengeInspektor : KnotenInspektor {
+    override val hauptBereich get() = de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten
     private val artRegister = AnschlussArtRegister(MathematikAnschlussArten.alle)
 
     @Composable
@@ -26,6 +27,10 @@ internal object EndlicheMengeInspektor : KnotenInspektor {
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
+        val modus=runCatching {endlicheMengeEingabe(knoten)}.getOrElse {
+            Text(it.message.orEmpty(),color=MaterialTheme.colorScheme.error);return
+        }
+        if(modus==ENDLICHE_MENGE_GRAPH) return
         val rohdaten = knoten.parameter[ENDLICHE_MENGE_KONFIGURATION_PARAMETER]
         val altwert = knoten.parameter[ENDLICHE_MENGE_ALT_PARAMETER]
         val gelesen = remember(knoten.id, rohdaten, altwert) { leseEndlicheMengeKonfiguration(knoten) }

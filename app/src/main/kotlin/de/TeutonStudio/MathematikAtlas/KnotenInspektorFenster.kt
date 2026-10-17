@@ -71,7 +71,7 @@ internal fun Inspektor(zustand: AtlasZustand, modifier: Modifier) {
         AtlasBestätigungsDialog(
             onDismissRequest = zustand::verwerfeKonfiguration,
             title = { Text("Operanden entfernen?") },
-            text = { Text("Diese Konfiguration entfernt ${auswirkung.entfallendeVerbindungen.size} Verbindung(en) und ${auswirkung.entfallendeLokaleWerte.size} lokale Operanden (${auswirkung.entfallendeLokaleWerte.joinToString()}). Rückgängig stellt den bisherigen Stand wieder her.") },
+            text = { Text("Diese Konfiguration entfernt ${auswirkung.entfallendeVerbindungen.size} Verbindung(en) und ${auswirkung.entfallendeLokaleWerte.size} lokale Werte/Kartenfallbacks (${auswirkung.entfallendeLokaleWerte.joinToString()}). Rückgängig stellt den bisherigen Stand wieder her.") },
             confirmButton = { TextButton(onClick = zustand::bestätigeKonfiguration) { Text("Übernehmen") } },
             dismissButton = { TextButton(onClick = zustand::verwerfeKonfiguration) { Text("Abbrechen") } },
         )

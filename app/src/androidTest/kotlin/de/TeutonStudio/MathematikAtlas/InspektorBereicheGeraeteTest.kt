@@ -103,6 +103,35 @@ class InspektorBereicheGeraeteTest {
         }
     }
 
+    @Test fun mengeneingabeUndElementanzahlWechselnJeweilsMitEigenemUndoSchritt() {
+        val basis=MathematikKnotenVorlagen.EndlicheMenge.erzeuge(GraphPunkt.Zero)
+        lateinit var atlas:AtlasZustand
+        compose.setContent {
+            val context=LocalContext.current
+            atlas=remember {AtlasZustand(IsolierterInspektorTestContext(context)).also {
+                it.editor.ersetzeKarte(KartenDaten(name="Graphmenge",knoten=listOf(basis)))
+                it.editor.wähleKnoten(basis.id);it.aktualisiereAuswertung();InspektorSichtbarkeit.öffnen()
+            }}
+            MaterialTheme {Row(Modifier.fillMaxSize()) {Spacer(Modifier.weight(1f));Inspektor(atlas,Modifier)}}
+        }
+        compose.onNodeWithText("Standarddaten").performClick()
+        compose.onNodeWithText("Gemeinsame Einstellungen").performScrollTo().performClick()
+        compose.onNodeWithText("Graph-Elemente").performScrollTo().performClick()
+        compose.runOnIdle {assertEquals(ENDLICHE_MENGE_GRAPH,endlicheMengeEingabe(atlas.editor.karte.knoten.single()))}
+        compose.onNodeWithText("Graph-Elemente (0 bis 64)").performScrollTo().performTextReplacement("2")
+        compose.onNodeWithText("Elementanzahl übernehmen").performScrollTo().performClick()
+        compose.runOnIdle {
+            val k=atlas.editor.karte.knoten.single()
+            assertEquals(2,endlicheMengeGraphAnzahl(k))
+            assertEquals(basis.anschlüsse.single().id,k.anschlüsse.single {it.name=="menge"}.id)
+            assertEquals(basis.parameter[ENDLICHE_MENGE_KONFIGURATION_PARAMETER],k.parameter[ENDLICHE_MENGE_KONFIGURATION_PARAMETER])
+            atlas.editor.rückgängig();atlas.aktualisiereAuswertung()
+            assertEquals(1,endlicheMengeGraphAnzahl(atlas.editor.karte.knoten.single()))
+            atlas.editor.rückgängig();atlas.aktualisiereAuswertung()
+            assertEquals(basis,atlas.editor.karte.knoten.single());atlas.beendeBerechnungen()
+        }
+    }
+
     @Test fun relationswechselAendertParameterUndStandardnamenInEinemUndoSchritt() {
         val basis = MathematikKnotenVorlagen.Kleiner.erzeuge(GraphPunkt.Zero)
         lateinit var atlas: AtlasZustand

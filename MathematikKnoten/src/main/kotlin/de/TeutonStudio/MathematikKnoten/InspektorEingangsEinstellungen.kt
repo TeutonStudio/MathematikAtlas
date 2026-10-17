@@ -10,6 +10,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 fun hatRechnerEingangsEinstellungen(knoten: KnotenDaten): Boolean {
+    if (knoten.art == ENDLICHE_MENGE_ART) return true
     if (knoten.art == TensorRechner.KNOTEN_ART) return aktuelleTensorOperationDefinition(knoten).benoetigtAchsenEingabe()
     if (knoten.art == MatrixRechner.KNOTEN_ART) return knoten.parameter[RECHNER_OPERATOR_PARAMETER] == "matrix.produkt" && knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach }
     if (knoten.art != ZAHLENRECHNER_ART) return false
@@ -23,6 +24,7 @@ fun hatRechnerEingangsEinstellungen(knoten: KnotenDaten): Boolean {
 @Composable
 fun InspektorRechnerEingangsEinstellungen(knoten: KnotenDaten, übernehmen: (KnotenDaten) -> Unit) {
     when (knoten.art) {
+        ENDLICHE_MENGE_ART -> InspektorEndlicheMengeEingänge(knoten, übernehmen)
         ZAHLENRECHNER_ART -> { InspektorZahlenRechnerEingänge(knoten, übernehmen); InspektorKomplexEingabe(knoten, übernehmen) }
         MatrixRechner.KNOTEN_ART -> InspektorStrukturRechnerEingänge(knoten, übernehmen)
         TensorRechner.KNOTEN_ART -> InspektorTensorAchsen(knoten, übernehmen)
