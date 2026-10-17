@@ -617,7 +617,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.kreuzproduktSpalte|Kreuzprodukt (Spalten)")),
+            varianten = setOf(VariantenId("mathematik.vektorrechner|achse=1|integral.massModus=AUTO|integral.massSymbol=\\mu|metrik=metrik.l2|operator=vektor.kreuzprodukt|orientierung=spalte|strukturAusgabe=tupel|Kreuzprodukt (Spalten)")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.kreuzproduktZeile|Kreuzprodukt (Zeilen)|.32a41194.definition",
@@ -626,7 +626,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.kreuzproduktZeile|Kreuzprodukt (Zeilen)")),
+            varianten = setOf(VariantenId("mathematik.vektorrechner|achse=1|integral.massModus=AUTO|integral.massSymbol=\\mu|metrik=metrik.l2|operator=vektor.kreuzprodukt|orientierung=zeile|strukturAusgabe=tupel|Kreuzprodukt (Zeilen)")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.lösungsmenge|Lösungsmenge|automatisch=true;grundmengen=R;variablen=.80502346.definition",
@@ -680,7 +680,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.matrixdiagonale|diagonalArt=hauptdiagonale|Matrixdiagonale")),
+            varianten = setOf(VariantenId("mathematik.matrixrechner|diagonalArt=hauptdiagonale|diagonalAusgabe=tupel|diagonalModus=auslesen|operator=matrix.hauptdiagonale|Matrixdiagonale")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.matrixrechner|Matrixrechner|operator=matrix.addition.6210e779.definition",
@@ -986,7 +986,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.spur|Spur")),
+            varianten = setOf(VariantenId("mathematik.matrixrechner|operator=matrix.spur|Spur")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.teilOderGleichmenge|Teil- oder Gleichmenge|.4ea2b164.definition",
@@ -1121,7 +1121,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.vektorRadiusSpalte|Radius (Spalte)")),
+            varianten = setOf(VariantenId("mathematik.vektorrechner|achse=1|integral.massModus=AUTO|integral.massSymbol=\\mu|metrik=metrik.l2|operator=vektor.norm|strukturAusgabe=tupel|Radius (Spalte)")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.vektorRadiusZeile|Radius (Zeile)|.ea5e427.definition",
@@ -1130,7 +1130,7 @@ object StatischeKonzeptKarten {
             rolle = WissensKartenRolle.Definition,
             primär = true,
             titel = "Definition",
-            varianten = setOf(VariantenId("mathematik.vektorRadiusZeile|Radius (Zeile)")),
+            varianten = setOf(VariantenId("mathematik.vektorrechner|achse=1|integral.massModus=AUTO|integral.massSymbol=\\mu|metrik=metrik.l2|operator=vektor.norm|strukturAusgabe=tupel|Radius (Zeile)")),
         ),
         WissensKartenReferenz.Asset(
             id = "mathematik.vektorZuPolynom|Vektor zu Polynom|variable=x.e81f2cf6.definition",

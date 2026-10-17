@@ -60,9 +60,9 @@ fun karteAlsGebundeneFormel(karte:KartenDaten,wurzel:KnotenId):GebundeneFormel {
             else {
                 val kind=baue(verbindung.von.knotenId);ersetzt[q.id]=kind
                 kind.quellen.forEach(::quelle);vorkommen+=kind.variablenVorkommen;annahmen+=kind.annahmen
-                val aus=kind.werteAus(operation={op,args ->
+                val aus=kind.werteMitOperationsKontextAus(operation={op,args,operationsAnnahmen ->
                     val bed=mutableSetOf<Aussage>()
-                    val w=werteFormelOperationAus(op.operatorId,op.argumente.sortedBy {it.position}.map {it.rollenId}.zip(args).toMap(),k,bed) as? MathematischesObjekt ?: error("Nichtmathematischer Formelwert.")
+                    val w=werteFormelOperationAus(op.operatorId,op.argumente.sortedBy {it.position}.map {it.rollenId}.zip(args).toMap(),k,bed,kind.quellen.mapNotNull {q -> q.werteVorrat?.let {q.id to it}}.toMap(),operationsAnnahmen) as? MathematischesObjekt ?: error("Nichtmathematischer Formelwert.")
                     FormelKernErgebnis(w,bed)
                 })
                 werte[q.id]=aus.objekt;annahmen+=aus.bedingungen

@@ -57,9 +57,16 @@ object RechnerOperatorDefinitionen {
         RechnerOperatorDefinition(OperatorFamilie.MATRIX, d.id, d.titel, d.symbolLatex, d.definitionsLatex,
             listOf(signatur(d.eingänge.map { rolle(it.name, it.typ, variadisch = istAssoziativerRechnerOperator(d.id), methodenfähig = true,
                 aliases = if (d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId) when (it.name) { "links" -> setOf("a"); "rechts" -> setOf("b"); else -> emptySet() } else emptySet())
-                .let { r -> if (d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId) r.copy(zulässigeTypen = setOf(FormelTyp.MATRIX, FormelTyp.VEKTOR)) else r } },
+                .let { r -> if (d.id == MatrixRechnerOperator.MATRIXPRODUKT.stabileId) r.copy(zulässigeTypen = setOf(FormelTyp.MATRIX, FormelTyp.VEKTOR))
+                    else if (d.id in setOf(MatrixRechnerOperator.SPUR.stabileId,MatrixRechnerOperator.HAUPTDIAGONALE.stabileId,MatrixRechnerOperator.NEBENDIAGONALE.stabileId))
+                        r.copy(zulässigeTypen=setOf(FormelTyp.MATRIX,FormelTyp.TENSOR)) else r } },
                 if (zerlegen) FormelTyp.METHODE else d.ergebnisTyp, if (zerlegen) "methode" else "wert")),
-            d.eingänge, d.ergebnisTyp, formelFamilie = OperatorFamilie.MATRIX)
+            d.eingänge, d.ergebnisTyp, formelFamilie = OperatorFamilie.MATRIX,
+            parameter=when(d.id) {
+                MatrixRechnerOperator.DIAGONALMATRIX_ERZEUGEN.stabileId -> listOf(OperatorParameter("diagonalArt",standardwert="hauptdiagonale"))
+                MatrixRechnerOperator.HAUPTDIAGONALE.stabileId,MatrixRechnerOperator.NEBENDIAGONALE.stabileId -> listOf(OperatorParameter("diagonalAusgabe",standardwert="tupel"))
+                else -> emptyList()
+            })
     }
 
     private val vektor = VektorRechnerOperator.entries.map { op ->

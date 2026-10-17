@@ -3,7 +3,12 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 /** Fachliches Ergebnis einer gebundenen Formel, unabhängig von Compose oder einem Kartengraphen. */
 data class FormelKernErgebnis(val objekt: MathematischesObjekt, val bedingungen: Set<Aussage>, val übersetzungen: ÜbersetzungsMetadaten = ÜbersetzungsMetadaten())
 
-fun GebundeneFormel.werteAus(bindungen: Map<String, MathematischesObjekt> = emptyMap(), operation: ((FormelAusdruck.Operation,List<MathematischesObjekt>)->FormelKernErgebnis)? = null): FormelKernErgebnis {
+fun GebundeneFormel.werteAus(bindungen: Map<String, MathematischesObjekt> = emptyMap(), operation: ((FormelAusdruck.Operation,List<MathematischesObjekt>)->FormelKernErgebnis)? = null): FormelKernErgebnis =
+    werteMitOperationsKontextAus(bindungen, operation?.let { auswertung -> { op, argumente, _ -> auswertung(op,argumente) } })
+
+/** Derselbe AST-Auswerter übergibt Fachoperationen die bereits substituierten Voraussetzungen. */
+fun GebundeneFormel.werteMitOperationsKontextAus(bindungen: Map<String, MathematischesObjekt> = emptyMap(),
+    operation: ((FormelAusdruck.Operation,List<MathematischesObjekt>,Set<Aussage>)->FormelKernErgebnis)? = null): FormelKernErgebnis {
     require(quantoren.isEmpty()) { "Diese gebundene Bereichsoperation besitzt noch keine Auswertungscapability." }
     require(FormelBindungsPruefer.pruefe(this) == FormelBindungsPruefung.Gueltig)
     require(prüfeFormelTypen(this).isEmpty()) {prüfeFormelTypen(this).joinToString("\n")}
@@ -49,7 +54,7 @@ fun GebundeneFormel.werteAus(bindungen: Map<String, MathematischesObjekt> = empt
                 else -> {
                     val op = ZahlenRechnerOperator.entries.singleOrNull { it.stabileId == e.operatorId }
                     if(op==null) {
-                        val r=operation?.invoke(e,a) ?: error("Nicht unterstützter Formeloperator '${e.operatorId}'.")
+                        val r=operation?.invoke(e,a,bedingungen.toSet()) ?: error("Nicht unterstützter Formeloperator '${e.operatorId}'.")
                         bedingungen += r.bedingungen
                         r.objekt
                     } else {

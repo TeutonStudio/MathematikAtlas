@@ -14,7 +14,7 @@ sealed interface OrientierterVektor : Ausdruck, Tensorartig {
         require(werte.size == andere.werte.size) { "Vektoren müssen dieselbe Dimension haben." }
         return addition(werte.zip(andere.werte) { a, b -> multiplikation(a, b) })
     }
-    fun radius(): ZahlAusdruck = wurzel(addition(werte.map { Potenz(it, RationaleZahl.von(2)) }))
+    fun radius(): ZahlAusdruck = reelleEuklidischeNorm(werte)
 }
 
 data class SpaltenVektor(override val werte: List<ZahlAusdruck>) : OrientierterVektor {
@@ -57,21 +57,54 @@ fun polynomAusKoeffizienten(koeffizienten: List<ZahlAusdruck>, variable: Variabl
 /** Rückwärtskompatible Bezeichnung: ein ungerichteter Altvektor wird als Spaltenvektor geführt. */
 typealias Vektor = SpaltenVektor
 
-fun einheitsSpaltenVektor(dimension: Int, index: Int): SpaltenVektor = SpaltenVektor(einheitsWerte(dimension, index))
-fun einheitsZeilenVektor(dimension: Int, index: Int): ZeilenVektor = ZeilenVektor(einheitsWerte(dimension, index))
-private fun einheitsWerte(dimension: Int, index: Int): List<ZahlAusdruck> {
+fun einheitsSpaltenVektor(dimension: Int, index: Int): SpaltenVektor = SpaltenVektor(einheitsVektorWerte(dimension, index))
+fun einheitsZeilenVektor(dimension: Int, index: Int): ZeilenVektor = ZeilenVektor(einheitsVektorWerte(dimension, index))
+fun einheitsVektorWerte(dimension: Int, index: Int): List<ZahlAusdruck> {
     require(dimension > 0 && index in 1..dimension) { "Index des Einheitsvektors muss zwischen 1 und der Dimension liegen." }
     return List(dimension) { if (it == index - 1) RationaleZahl.Eins else RationaleZahl.Null }
 }
 
 fun kreuzprodukt(a: OrientierterVektor, b: OrientierterVektor): OrientierterVektor {
     require(a::class == b::class && a.werte.size == 3 && b.werte.size == 3) { "Das Kreuzprodukt benötigt gleich orientierte 3-Vektoren." }
-    val w = listOf(
-        subtraktion(multiplikation(a.werte[1], b.werte[2]), multiplikation(a.werte[2], b.werte[1])),
-        subtraktion(multiplikation(a.werte[2], b.werte[0]), multiplikation(a.werte[0], b.werte[2])),
-        subtraktion(multiplikation(a.werte[0], b.werte[1]), multiplikation(a.werte[1], b.werte[0])),
-    )
+    val w = kreuzproduktKomponenten(a.werte, b.werte)
     return if (a is ZeilenVektor) ZeilenVektor(w) else SpaltenVektor(w)
+}
+
+/** Klassisches bilineares Kreuzprodukt über einem kommutativen Koeffizientenbereich. */
+fun kreuzproduktKomponenten(a: List<ZahlAusdruck>, b: List<ZahlAusdruck>,
+    werteVorräte: Map<String, MengenAusdruck> = emptyMap(), annahmen: Set<Aussage> = emptySet()): List<ZahlAusdruck> {
+    require(a.size == 3 && b.size == 3) { "Das Kreuzprodukt benötigt zwei dreidimensionale Vektoren." }
+    require((a+b).all { inferiereZahlenWertevorrat(it,werteVorräte,annahmen).fundamentalerZahlbereichOderNull()?.let { bereich -> bereich <= FundamentalerZahlbereich.KOMPLEX } == true }) {
+        "Das klassische Kreuzprodukt benötigt einen nachgewiesenen kommutativen Koeffizientenbereich."
+    }
+    return listOf(
+        subtraktion(multiplikation(a[1], b[2]), multiplikation(a[2], b[1])),
+        subtraktion(multiplikation(a[2], b[0]), multiplikation(a[0], b[2])),
+        subtraktion(multiplikation(a[0], b[1]), multiplikation(a[1], b[0])),
+    )
+}
+
+data class ReelleNormAnwendung(val wert: ZahlAusdruck, val bedingungen: Set<Aussage>)
+
+/** Offene Definitionsbedingungen bleiben strukturiert; widerlegte verhindern die Anwendung. */
+fun reelleEuklidischeNormAnwendung(werte: List<ZahlAusdruck>, werteVorräte: Map<String,MengenAusdruck> = emptyMap(),
+    annahmen: Set<Aussage> = emptySet()): ReelleNormAnwendung {
+    require(werte.isNotEmpty()) { "Die Norm benötigt mindestens eine Komponente." }
+    val voraussetzungen=(annahmen+werte.flatMap(::definitionsBedingungen)).toSet()
+    require(voraussetzungen.none {it.entscheide().wahrheitswert==Wahrheitswert.Lüge}) { "Die Normkomponenten verletzen eine Definitionsbedingung." }
+    require(werte.all { istNachweisbarReell(it,{ v ->
+        (v.bindungsId?.let(werteVorräte::get) ?: werteVorräte[v.name])?.let(::nachgewieseneZahlenGrundmenge)?.fundamentalerZahlbereichOderNull()?.let { b -> b <= FundamentalerZahlbereich.REELL } == true
+    },voraussetzungen, { komponente -> nachgewieseneReelleQuellKomponente(komponente,werteVorräte) }) }) { "Diese euklidische Norm benötigt nachgewiesen reelle Komponenten." }
+    return ReelleNormAnwendung(wurzel(addition(werte.map {Potenz(it,RationaleZahl.von(2))})),
+        voraussetzungen.filterNot {it.entscheide().wahrheitswert==Wahrheitswert.Wahr}.toSet())
+}
+
+/** Unbedingter Legacy-Wertzugang: offene Bedingungen müssen vom Aufrufer ausdrücklich getragen werden. */
+fun reelleEuklidischeNorm(werte: List<ZahlAusdruck>, werteVorräte: Map<String,MengenAusdruck> = emptyMap(),
+    annahmen: Set<Aussage> = emptySet()): ZahlAusdruck {
+    val anwendung=reelleEuklidischeNormAnwendung(werte,werteVorräte,annahmen)
+    require(annahmen.containsAll(anwendung.bedingungen)) { "Die reelle Norm besitzt offene Definitionsbedingungen: ${anwendung.bedingungen.joinToString {it.zuLatex()}}" }
+    return anwendung.wert
 }
 
 data class Matrix(val zeilen: List<List<ZahlAusdruck>>) : Ausdruck, Tensorartig {
@@ -169,3 +202,37 @@ fun matrixProduktKette(faktoren: List<MathematischesObjekt>): MatrixProduktKette
 }
 
 fun matrixProdukt(faktoren: List<MathematischesObjekt>): Matrix = matrixProduktKette(faktoren).ergebnis
+
+
+/** Typabhängige Transposition; Vektororientierung ist keine Tensor-Achsenpermutation. */
+fun transponiereStruktur(wert: MathematischesObjekt, permutation: List<Int>? = null): MathematischesObjekt = when(wert) {
+    is SpaltenVektor -> wert.transponiert()
+    is ZeilenVektor -> wert.transponiert()
+    is Matrix -> wert.transponiert()
+    is Tensor -> wert.permutiereAchsen(permutation ?: standardTensorPermutation(wert.rang))
+    else -> error("Nur Vektoren, Matrizen und Tensoren können transponiert werden.")
+}
+
+fun Tensorartig.alsRangZweiMatrix(): Matrix {
+    require(tensorStufe == 2) { "Erwartet wird ein Tensor zweiter Stufe." }
+    if (this is Matrix) return this
+    val (zeilen,spalten)=tensorForm
+    return Matrix(List(zeilen) {z -> List(spalten) {s -> tensorKomponente(listOf(z,s))}})
+}
+
+/** Nur gültige Indizes einer explizit typisierten Quelle belegen einen Komponentenbereich. */
+private fun nachgewieseneReelleQuellKomponente(k: SymbolischeZahlKomponente,
+    bereiche: Map<String,MengenAusdruck>): Boolean {
+    val quelle=k.quelle as? MethodenParameter ?: return false
+    val raum=quelle.bindungsId?.let(bereiche::get) ?: bereiche[quelle.name] ?: return false
+    val indizes=(listOf(k.index)+k.weitereIndizes).map {
+        (it as? RationaleZahl)?.positiveGanzeZahlOderNull() ?: return false
+    }
+    val menge=when(raum) {
+        is Vektorraum -> if(indizes.size==1 && indizes[0] in 1..raum.dimension) raum.skalarMenge else return false
+        is Matrizenraum -> if(indizes.size==2 && indizes[0] in 1..raum.zeilen && indizes[1] in 1..raum.spalten) raum.skalarMenge else return false
+        is Tupelraum -> if(indizes.size==1) raum.komponenten.getOrNull(indizes[0]-1) ?: return false else return false
+        else -> return false
+    }
+    return nachgewieseneZahlenGrundmenge(menge)?.fundamentalerZahlbereichOderNull()?.let {it<=FundamentalerZahlbereich.REELL} == true
+}

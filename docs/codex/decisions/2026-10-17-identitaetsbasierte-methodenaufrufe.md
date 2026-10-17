@@ -1,6 +1,6 @@
 # Identitätsbasierte Methodenaufrufe und bewahrende Projektionen
 
-Datum: 2026-10-17. Status: M1 implementiert und unabhängig geprüft; Veröffentlichung v3.4.3 offen.
+Datum: 2026-10-17. Status: M1 veröffentlicht und vollständig geprüft als v3.4.3, e665a7fde78fe845dc7c62fa60fa00896d35f58a (PR #457).
 
 ## Kontext
 

@@ -456,6 +456,7 @@ internal fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester,
                 Text("Mehrere verbundene Dimensionseingänge. Betroffene Verbindungen werden vor der Bereinigung angezeigt.",color=MaterialTheme.colorScheme.error)
                 OutlinedButton(onClick={atlas.beantrageKonfiguration(knoten.mitEinheitlicherMengenDimension())}) {Text("Dimensionseingänge bereinigen")}
             }
+            InspektorMatrixDiagonalEinstellungen(knoten, atlas::beantrageKonfiguration)
             DesktopNotizDaten(knoten, atlas::beantrageKonfiguration)
             GeometryNodesEinstellungen(knoten,atlas::beantrageKonfiguration)
             ErgebnisVertragsInhalt(ergebnis?.copy(fehler = null))

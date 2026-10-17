@@ -98,18 +98,24 @@ private data class AllgemeineMethodenHebung(
     val werteVorraete: Map<String, MengenAusdruck>,
     val effektiverWerteVorrat: MengenAusdruck?,
     val operanden: Map<String, MathematischesObjekt>,
+    val argumentIdentitäten: Map<String, String>,
+    val voraussetzungen: Set<Aussage>,
+    val umbenennungen: Map<MathematischeMethode, Map<String, MethodenParameter>>,
 ) {
     fun methode(
         name: String,
         vorschrift: MathematischesObjekt,
         zielMenge: MengenAusdruck,
-    ): MathematischeMethode = Methode(
+        bedingungen: Set<Aussage>,
+    ): MathematischeMethode = MathematischeMethode(
         name = name,
         parameter = parameter,
         vorschrift = vorschrift,
         zielMenge = zielMenge,
         werteVorräte = werteVorraete,
         effektiverWerteVorrat = effektiverWerteVorrat,
+        argumentIdentitäten = argumentIdentitäten,
+        voraussetzungen = voraussetzungen + bedingungen,
     )
 }
 
@@ -118,6 +124,9 @@ private fun bereiteAllgemeineMethodenHebungVor(
 ): AllgemeineMethodenHebung {
     val methoden = operanden.values.filterIsInstance<MathematischeMethode>()
     require(methoden.isNotEmpty())
+    require(methoden.all { it.signatur.ergebnisse.size == 1 }) {
+        "Ein punktweise gehobener Wertoperand benötigt genau ein logisches Methodenergebnis."
+    }
     val basis = methoden.first()
     val stelligkeit = basis.signatur.argumente.size
     require(methoden.all { it.signatur.argumente.size == stelligkeit }) {
@@ -127,7 +136,7 @@ private fun bereiteAllgemeineMethodenHebungVor(
     val basisParameter = basis.parameter
     val umbenennungen = methoden.associateWith { methode ->
         methode.parameter.mapIndexed { index, parameter ->
-            parameter.name to basisParameter[index]
+            (parameter.bindungsId ?: parameter.name) to basisParameter[index]
         }.toMap()
     }
 
@@ -140,21 +149,15 @@ private fun bereiteAllgemeineMethodenHebungVor(
         parameter.name to schneide(mengen)
     }.toMap(LinkedHashMap())
 
-    val effektive = methoden.mapNotNull { methode ->
-        methode.effektiverWerteVorrat?.let { menge ->
-            val bindungen = umbenennungen.getValue(methode)
-            (ersetze(menge, bindungen) as? MengenAusdruck) ?: menge
-        }
+    val effektive = methoden.map { methode ->
+        ersetze(methode.mathematischeSignatur.definitionsRaum,umbenennungen.getValue(methode)) as MengenAusdruck
     }
-    val effektiverWerteVorrat = when {
-        effektive.isNotEmpty() -> schneide(effektive)
-        else -> Tupelraum(basisParameter.map { werteVorraete.getValue(it.name) })
-    }
+    val effektiverWerteVorrat = schneide(effektive)
 
     val angeglicheneOperanden = operanden.mapValues { (_, objekt) ->
         if (objekt !is MathematischeMethode) objekt else {
             val bindungen = umbenennungen.getValue(objekt)
-            ersetze(objekt.vorschrift, bindungen)
+            ersetze(objekt.einzigeAusgabe().second, bindungen)
         }
     }
 
@@ -163,6 +166,11 @@ private fun bereiteAllgemeineMethodenHebungVor(
         werteVorraete = werteVorraete,
         effektiverWerteVorrat = effektiverWerteVorrat,
         operanden = angeglicheneOperanden,
+        argumentIdentitäten = basis.argumentIdentitäten,
+        voraussetzungen = methoden.flatMap { methode ->
+            methode.voraussetzungen.map { ersetze(it, umbenennungen.getValue(methode)) }
+        }.toSet(),
+        umbenennungen = umbenennungen,
     )
 }
 
@@ -181,14 +189,10 @@ internal fun mitRechnerMethodenHebung(basis: de.TeutonStudio.MathematikKartenAda
             if (roheOperanden.values.none { it is Methode }) {
                 return@MathematikKnotenAuswerter basis.auswerten(kontext)
             }
-            val nichtMathematischeMethode = roheOperanden.values
-                .filterIsInstance<Methode>()
-                .firstOrNull { it !is MathematischeMethode }
-            require(nichtMathematischeMethode == null) {
-                "Die allgemeine Methode '${nichtMathematischeMethode?.name}' kann nicht durch einen mathematischen Rechner punktweise gehoben werden."
-            }
             val methodenOperanden = roheOperanden.mapValues { (name, objekt) ->
-                objekt as? MathematischesObjekt
+                if (objekt is Methode) runCatching { objekt.alsMathematischeMethode("punktweise Methodenhebung") }
+                    .getOrElse { error("Die Methode '${objekt.name}' besitzt keine symbolische mathematische Vorschrift für eine punktweise Methodenhebung: ${it.message}") }
+                else objekt as? MathematischesObjekt
                     ?: error("Der mathematische Rechneroperand '$name' ist kein MathematischesObjekt.")
             }
 
@@ -198,7 +202,17 @@ internal fun mitRechnerMethodenHebung(basis: de.TeutonStudio.MathematikKartenAda
                     wert.copy(
                         objekt = objekt,
                         zielMenge = null,
-                        werteVorrat = (wert.objekt as? MathematischeMethode)?.zielRaum ?: wert.werteVorrat,
+                        werteVorrat = (methodenOperanden[name] as? MathematischeMethode)?.einzigeZielMenge ?: wert.werteVorrat,
+                        annahmen = (methodenOperanden[name] as? MathematischeMethode)?.let { methode ->
+                            wert.annahmen.map { ersetze(it, hebung.umbenennungen.getValue(methode)) }.toSet()
+                        } ?: wert.annahmen,
+                        reelleVariablen = wert.reelleVariablen + (hebung.werteVorraete + hebung.parameter.associate {
+                            (it.bindungsId ?: it.name) to hebung.werteVorraete.getValue(it.name)
+                        }).filterValues { nachgewieseneZahlenGrundmenge(it)?.fundamentalerZahlbereichOderNull()?.let { b -> b <= FundamentalerZahlbereich.REELL } == true },
+                        variablenQuellen = wert.variablenQuellen + hebung.parameter.map { p ->
+                            VariablenQuelle(kontext.knoten.id,p.name,hebung.werteVorraete.getValue(p.name),
+                                alsMethodenParameter=false,bindungsId=p.bindungsId ?: hebung.argumentIdentitäten.getValue(p.name))
+                        },
                         latexDarstellung = null,
                     )
                 } ?: wert
@@ -206,7 +220,7 @@ internal fun mitRechnerMethodenHebung(basis: de.TeutonStudio.MathematikKartenAda
             val konkret = basis.auswerten(kontext.copy(eingänge = angeglicheneEingaenge))
             if (konkret.fehler != null) return@MathematikKnotenAuswerter konkret.copy(eingänge = kontext.eingänge)
 
-            val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
+            val annahmen = angeglicheneEingaenge.values.flatMap { it.annahmen }.toSet()
             val quellWerte = kontext.eingänge.values
             val ausgaben = konkret.ausgaben.mapValues { (ausgang, wert) ->
                 require(wert.objekt !is Methode) {
@@ -218,7 +232,9 @@ internal fun mitRechnerMethodenHebung(basis: de.TeutonStudio.MathematikKartenAda
                     is Aussage -> WahrheitsMenge
                     else -> wert.zielMenge ?: inferiereZielmenge(
                         mathematischerWert,
-                        hebung.werteVorraete,
+                        hebung.werteVorraete + hebung.parameter.associate {
+                            (it.bindungsId ?: it.name) to hebung.werteVorraete.getValue(it.name)
+                        },
                         annahmen + wert.annahmen,
                     )
                 }
@@ -226,6 +242,7 @@ internal fun mitRechnerMethodenHebung(basis: de.TeutonStudio.MathematikKartenAda
                     name = punktweiserRechnerMethodenName(kontext, ausgang),
                     vorschrift = mathematischerWert,
                     zielMenge = ziel,
+                    bedingungen = annahmen + wert.annahmen,
                 )
                 BedingterWert(
                     objekt = methode,
@@ -234,6 +251,8 @@ internal fun mitRechnerMethodenHebung(basis: de.TeutonStudio.MathematikKartenAda
                     werteVorrat = methode.mathematischeSignatur.definitionsRaum,
                     reelleVariablen = reelleVariablen(quellWerte),
                     variablenQuellen = quellWerte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
+                    übersetzungen = ÜbersetzungsMetadaten(herkunft = (quellWerte.flatMap { it.übersetzungen.alsHerkunft().herkunft } +
+                        methodenOperanden.values.filterIsInstance<MathematischeMethode>().flatMap { it.übersetzungen.alsHerkunft().herkunft }).distinct()),
                 )
             }
             konkret.copy(

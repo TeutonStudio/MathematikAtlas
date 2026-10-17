@@ -7,6 +7,25 @@ import kotlin.test.*
 class GebundeneFormelUiVertragTest {
     private fun basis()=ZahlenRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
     private fun eval(k:KnotenDaten,e:Map<String,BedingterWert>)=GesamterMathematikAuswerter.erzeugeRegister().finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k,e,RechenKontext()))
+    @Test fun `Norm verwendet substituierte Formeleigene und Operationsbedingungen`() {
+        val x=Variable("x",bindungsId="qx")
+        val bedingung=Vergleich(x,VergleichsArt.GrößerGleich,RationaleZahl.Null)
+        val literal=FormelAusdruck.Literal("v",SpaltenVektor(listOf(Wurzel(x))),FormelTyp.VEKTOR)
+        val op=FormelAusdruck.Operation("norm","vektor.norm",listOf(FormelArgument("vektor",0,literal)),FormelTyp.ZAHL)
+        val quelle=FormelVariablenQuelle("qx","x",FormelVariablenArt.FREI,FormelTyp.ZAHL,ReelleZahlen)
+        for(annahmenImOperator in listOf(false,true)) {
+            val ast=if(annahmenImOperator) op.copy(bedingungen=listOf(bedingung)) else op
+            val f=GebundeneFormel(ast,listOf(quelle),emptyMap(),annahmen=if(annahmenImOperator) emptySet() else setOf(bedingung))
+            val k=konfiguriereGebundeneKnotenFormel(basis(),f)
+            val ergebnis=eval(k,emptyMap())
+            assertNull(ergebnis.fehler)
+            assertTrue(bedingung in ergebnis.ausgaben.getValue("wert").annahmen)
+        }
+        val f=GebundeneFormel(op,listOf(quelle),emptyMap(),annahmen=setOf(bedingung))
+        val k=konfiguriereGebundeneKnotenFormel(basis(),f)
+        assertFails {eval(k,mapOf("x" to BedingterWert(RationaleZahl.von(-1))))}
+    }
+
     @Test fun `Gleichnamige Quellen werden verschieden gebunden auch nach Kopieren und Laden`() {
         val x=FormelAusdruck.Variable("a","x",typ=FormelTyp.ZAHL);val y=x.copy(id="b")
         val ast=FormelAusdruck.Operation("s","zahl.subtraktion",listOf(FormelArgument("a",0,x),FormelArgument("b",1,y)),FormelTyp.ZAHL)

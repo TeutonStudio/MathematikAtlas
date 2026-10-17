@@ -47,6 +47,8 @@ data class MatrixRechnerAnfrage(
     val vektoren: List<OrientierterVektor> = emptyList(),
     val diagonalWerte: MathematischesObjekt? = null,
     val zerlegeRichtung: MatrixZerlegeRichtung = MatrixZerlegeRichtung.ZEILEN,
+    val diagonalArt: MatrixDiagonalArt = MatrixDiagonalArt.HAUPTDIAGONALE,
+    val diagonalAusgabe: VektorStrukturAusgabe = VektorStrukturAusgabe.TUPEL,
 )
 
 sealed interface MatrixRechnerErgebnis {
@@ -180,7 +182,7 @@ object MatrixRechner {
                 MatrixRechnerErgebnis.VektorWert(matrix * SpaltenVektor(vektor.werte), bereich)
             }
             MatrixRechnerOperator.TRANSPONIEREN -> einMatrix(anfrage) { operand ->
-                MatrixRechnerErgebnis.MatrixWert(operand.matrix.transponiert(), operand.zahlbereich)
+                MatrixRechnerErgebnis.MatrixWert(transponiereStruktur(operand.matrix) as Matrix, operand.zahlbereich)
             }
             MatrixRechnerOperator.INVERSE -> einMatrix(anfrage) { operand ->
                 if (!operand.form.quadratisch) return@einMatrix quadratFehler("Inverse", operand.form)
@@ -239,7 +241,7 @@ object MatrixRechner {
             MatrixRechnerOperator.SPUR -> einMatrix(anfrage) { operand ->
                 if (!operand.form.quadratisch) quadratFehler("Spur", operand.form)
                 else MatrixRechnerErgebnis.ZahlWert(
-                    addition((0 until operand.form.zeilen).map { operand.matrix.zeilen[it][it] }),
+                    spur(operand.matrix),
                     operand.zahlbereich,
                 )
             }
@@ -263,17 +265,16 @@ object MatrixRechner {
             }
             MatrixRechnerOperator.DIAGONALMATRIX_ERZEUGEN -> {
                 val werte = anfrage.diagonalWerte ?: return MatrixRechnerErgebnis.Ungueltig("diagonal_werte", "Tupel oder Vektor fehlt.")
-                MatrixRechnerErgebnis.MatrixWert(diagonalmatrixErzeugen(werte), bereich)
+                MatrixRechnerErgebnis.MatrixWert(diagonalmatrixErzeugen(werte,anfrage.diagonalArt), bereich)
             }
-            MatrixRechnerOperator.HAUPTDIAGONALE -> einMatrix(anfrage) { operand ->
-                val n = minOf(operand.form.zeilen, operand.form.spalten)
-                MatrixRechnerErgebnis.TupelWert(Tupel(List(n) { index -> operand.matrix.zeilen[index][index] }))
-            }
+            MatrixRechnerOperator.HAUPTDIAGONALE,
             MatrixRechnerOperator.NEBENDIAGONALE -> einMatrix(anfrage) { operand ->
-                val n = minOf(operand.form.zeilen, operand.form.spalten)
-                MatrixRechnerErgebnis.TupelWert(
-                    Tupel(List(n) { index -> operand.matrix.zeilen[index][operand.form.spalten - 1 - index] }),
-                )
+                val art = if (anfrage.operator == MatrixRechnerOperator.HAUPTDIAGONALE) MatrixDiagonalArt.HAUPTDIAGONALE else MatrixDiagonalArt.NEBENDIAGONALE
+                when(val wert=projiziereMatrixDiagonale(matrixDiagonale(operand.matrix,art),anfrage.diagonalAusgabe)) {
+                    is Tupel -> MatrixRechnerErgebnis.TupelWert(wert)
+                    is OrientierterVektor -> MatrixRechnerErgebnis.VektorWert(wert,operand.zahlbereich)
+                    else -> error("Unbekannte Diagonalprojektion.")
+                }
             }
             MatrixRechnerOperator.CHARAKTERISTISCHES_POLYNOM -> einMatrix(anfrage) { operand ->
                 if (!operand.form.quadratisch) return@einMatrix quadratFehler("Charakteristisches Polynom", operand.form)

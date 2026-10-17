@@ -221,9 +221,12 @@ fun MathematikAuswerterRegister.registriereVektorOrientierungsKnotenV2300() {
     }
 }
 
-private fun tatsächlicheOrientierung(k: KnotenAuswertungsKontext, historisch: String): String =
-    k.knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER]
+private fun tatsächlicheOrientierung(k: KnotenAuswertungsKontext, historisch: String): String {
+    val orient = k.knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER]
         ?: if (k.knoten.art in ZEILEN_ALIAS_ARTEN) VEKTOR_ORIENTIERUNG_ZEILE else historisch
+    require(orient in setOf(VEKTOR_ORIENTIERUNG_SPALTE,VEKTOR_ORIENTIERUNG_ZEILE)) { "Unbekannte gespeicherte Vektororientierung '$orient'." }
+    return orient
+}
 
 private fun tupelZuVektorErgebnis(k: KnotenAuswertungsKontext, historisch: String): KnotenAuswertungsErgebnis {
     val quelle = k.eingänge["tupel"] ?: error("Tupel fehlt.")
@@ -238,18 +241,20 @@ private fun tupelZuVektorErgebnis(k: KnotenAuswertungsKontext, historisch: Strin
 private fun einheitsVektorErgebnisV2300(k: KnotenAuswertungsKontext, historisch: String): KnotenAuswertungsErgebnis {
     val dimensionWert = k.eingänge["dimension"]?.objekt as? RationaleZahl
     val positionWert = k.eingänge["position"]?.objekt as? RationaleZahl
-    val werte = if (dimensionWert != null && positionWert != null) {
+    val werte = if ("dimension" in k.eingänge || "position" in k.eingänge) {
+        requireNotNull(dimensionWert) { "Die Dimension muss als exakte ganze Zahl vorliegen." }
+        requireNotNull(positionWert) { "Die Position muss als exakte ganze Zahl vorliegen." }
         require(dimensionWert.nenner == BigInteger.ONE && dimensionWert.zähler.signum() > 0 && dimensionWert.zähler.bitLength() < 31) { "Die Dimension muss positiv ganzzahlig sein." }
         require(positionWert.nenner == BigInteger.ONE && positionWert.zähler.signum() >= 0 && positionWert.zähler.bitLength() < 31) { "Die Position muss nichtnegativ ganzzahlig sein." }
         val dimension = dimensionWert.zähler.toInt()
         val position = positionWert.zähler.toInt()
         require(position < dimension) { "Die Position muss kleiner als die Dimension sein." }
-        List<ZahlAusdruck>(dimension) { index -> if (index == position) RationaleZahl.Eins else RationaleZahl.Null }
+        einheitsVektorWerte(dimension,position+1)
     } else {
-        val dimension = k.knoten.parameter["dimension"]?.toIntOrNull() ?: 3
-        val index = k.knoten.parameter["index"]?.toIntOrNull() ?: 1
+        val dimension = k.knoten.parameter["dimension"]?.let { it.toIntOrNull() ?: error("Ungültige gespeicherte Dimension '$it'.") } ?: 3
+        val index = k.knoten.parameter["index"]?.let { it.toIntOrNull() ?: error("Ungültiger gespeicherter Basisindex '$it'.") } ?: 1
         require(dimension > 0 && index in 1..dimension) { "Historischer Einheitsvektor besitzt ungültige Dimension oder Index." }
-        List<ZahlAusdruck>(dimension) { position -> if (position == index - 1) RationaleZahl.Eins else RationaleZahl.Null }
+        einheitsVektorWerte(dimension,index)
     }
     val vektor: MathematischesObjekt = if (tatsächlicheOrientierung(k, historisch) == VEKTOR_ORIENTIERUNG_ZEILE) ZeilenVektor(werte) else SpaltenVektor(werte)
     return KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(vektor, k.eingänge.values.flatMap { it.annahmen }.toSet())), eingänge = k.eingänge)
@@ -257,7 +262,8 @@ private fun einheitsVektorErgebnisV2300(k: KnotenAuswertungsKontext, historisch:
 
 private fun vektorRadiusErgebnis(k: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
     val vektor = k.eingänge["vektor"]?.objekt as? OrientierterVektor ?: error("Vektor fehlt.")
-    return KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(vektor.radius(), k.eingänge.values.flatMap { it.annahmen }.toSet())), eingänge = k.eingänge)
+    val anwendung=reelleEuklidischeNormAnwendung(vektor.werte,k.eingänge.values.rechnerQuellBereiche(),k.eingänge.values.flatMap {it.annahmen}.toSet())
+    return KnotenAuswertungsErgebnis(mapOf("wert" to k.rechnerErgebnisWert(anwendung.wert,anwendung.bedingungen,zielMenge=ReelleZahlen)),eingänge=k.eingänge)
 }
 
 private fun kreuzproduktErgebnisV2300(k: KnotenAuswertungsKontext, historisch: String): KnotenAuswertungsErgebnis {
@@ -265,6 +271,7 @@ private fun kreuzproduktErgebnisV2300(k: KnotenAuswertungsKontext, historisch: S
     val b = k.eingänge["b"]?.objekt as? OrientierterVektor ?: error("Vektor b fehlt.")
     val zeile = tatsächlicheOrientierung(k, historisch) == VEKTOR_ORIENTIERUNG_ZEILE
     require((a is ZeilenVektor) == zeile && (b is ZeilenVektor) == zeile) { "Beide Kreuzproduktvektoren müssen die gewählte Orientierung besitzen." }
-    val ergebnis = kreuzprodukt(a, b)
+    val komponenten=kreuzproduktKomponenten(a.werte,b.werte,k.eingänge.values.rechnerQuellBereiche(),k.eingänge.values.flatMap {it.annahmen}.toSet())
+    val ergebnis=if(zeile) ZeilenVektor(komponenten) else SpaltenVektor(komponenten)
     return KnotenAuswertungsErgebnis(mapOf("vektor" to BedingterWert(ergebnis, k.eingänge.values.flatMap { it.annahmen }.toSet())), eingänge = k.eingänge)
 }

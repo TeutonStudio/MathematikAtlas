@@ -42,7 +42,7 @@ class KonzeptBibliothekTest {
         assertFalse("Karteneingänge" in hauptbereiche)
         assertFalse("Kartenausgänge" in hauptbereiche)
 
-        val vorlage = alleMathematikDefinitionsVorlagen().first { it.art == "mathematik.spur" }
+        val vorlage = alleMathematikDefinitionsVorlagen().first { it.art == "mathematik.matrixrechner" && it.standardParameter["operator"] == "matrix.spur" }
         val einträge = KonzeptBibliothekRegister.erstelle(listOf(vorlage))
         assertTrue(einträge.flatMap { it.kategoriePfade }.all { it.size in 1..3 })
         assertEquals(emptyList(), KonzeptBibliothekRegister.validierungsFehler(einträge))
@@ -119,7 +119,7 @@ class KonzeptBibliothekTest {
 
     @Test
     fun `Anschlussfilter prüft Richtung und Typ`() {
-        val vorlage = alleMathematikDefinitionsVorlagen().first { it.art == "mathematik.spur" }
+        val vorlage = alleMathematikDefinitionsVorlagen().first { it.art == "mathematik.matrixrechner" && it.standardParameter["operator"] == "matrix.spur" }
         val matrix = vorlage.anschlüsse.single { it.richtung == AnschlussRichtung.Eingang }.art
         val zahl = vorlage.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.art
         val eintrag = KonzeptBibliothekRegister.erstelle(listOf(vorlage)).single { it.vorlage == vorlage }
