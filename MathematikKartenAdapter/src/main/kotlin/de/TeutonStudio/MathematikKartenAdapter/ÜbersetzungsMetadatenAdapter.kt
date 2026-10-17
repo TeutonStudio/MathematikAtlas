@@ -20,6 +20,14 @@ fun BedingterWert.übersetzungsKontext(): ÜbersetzungsKontext {
     )
 }
 
+/** Genauigkeitsfortführung benötigt keine neue Signatur-/Bereichsinferenz. */
+private fun BedingterWert.istNumerischAngenähert(): Boolean {
+    val metadaten = listOfNotNull(übersetzungen, (objekt as? MathematischeMethode)?.übersetzungen)
+    return metadaten.any { m -> m.kontext?.datenGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT ||
+        m.aktuell?.effektiveGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT ||
+        m.herkunft.any { it.effektiveGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT } }
+}
+
 /** Neue Berechnungen erhalten nur Herkunft, außer der Auswerter hat den Ausgang gerade bezeugt. */
 fun KnotenAuswertungsErgebnis.führeÜbersetzungsHerkunftFort(eingänge: Collection<BedingterWert>): KnotenAuswertungsErgebnis {
     val eingangsHerkunft = eingänge.flatMap { (it.übersetzungen.alsHerkunft().herkunft + (it.objekt as? MathematischeMethode)?.übersetzungen?.alsHerkunft()?.herkunft.orEmpty()) }
@@ -28,11 +36,19 @@ fun KnotenAuswertungsErgebnis.führeÜbersetzungsHerkunftFort(eingänge: Collect
         val identischÜbertragen = wert.objekt is Methode && eingänge.any { it.objekt === wert.objekt && (if(it.übersetzungen == ÜbersetzungsMetadaten()) (it.objekt as? MathematischeMethode)?.übersetzungen ?: it.übersetzungen else it.übersetzungen) == eigene }
         val aktuell = eigene.aktuell.takeIf { name in bezeugteAusgaben || identischÜbertragen }
         val historie = (eigene.herkunft + eingangsHerkunft + if (aktuell != null) emptyList() else listOfNotNull(eigene.aktuell)).filter { it != aktuell }.distinct()
-        val metadaten = ÜbersetzungsMetadaten(aktuell, historie, if (aktuell != null) eigene.kontext else null)
+        val angenähert = eigene.kontext?.datenGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT ||
+            eigene.aktuell?.effektiveGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT ||
+            historie.any { it.effektiveGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT } ||
+            eingänge.any { it.istNumerischAngenähert() }
+        val kontext = eigene.kontext.takeIf { aktuell != null || name in bezeugteAusgaben || identischÜbertragen }
+        val fortgeführterKontext = if (angenähert) (kontext ?: ÜbersetzungsKontext()).copy(
+            datenGenauigkeit = ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT,
+        ) else kontext
+        val metadaten = ÜbersetzungsMetadaten(aktuell, historie, fortgeführterKontext)
         val methode = wert.objekt as? MathematischeMethode
         wert.copy(objekt = if(methode != null && methode.übersetzungen != metadaten) methode.copy(übersetzungen = metadaten) else wert.objekt, übersetzungen = metadaten, gebundeneFormel=wert.gebundeneFormel.takeIf { name in formelAusgaben || name in bezeugteAusgaben || identischÜbertragen }?.let { f ->
             val literal=f.wurzel as? FormelAusdruck.Literal
-            if(literal!=null) f.copy(wurzel=literal.copy(übersetzungen=metadaten.copy(kontext=wert.übersetzungsKontext())),annahmen=f.annahmen+wert.annahmen) else f
+            if(literal!=null) f.copy(wurzel=literal.copy(übersetzungen=metadaten.copy(kontext=wert.copy(übersetzungen=metadaten).übersetzungsKontext())),annahmen=f.annahmen+wert.annahmen) else f
         })
     })
 }

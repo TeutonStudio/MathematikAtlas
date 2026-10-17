@@ -123,7 +123,7 @@ const val RICHTUNG_WINKEL_ANZAHL = "richtung.n"
 /** n natürliche Halbkreiswinkel definieren eine Richtung in R^(n+1). */
 val RichtungWinkelVorlage = KnotenVorlage(
     RICHTUNG_WINKEL_ART, "Richtung (n-dimensional)", "Vektoren",
-    "n ∈ ℕ₀ legt n Halbkreiswinkel und damit eine Richtung in Rⁿ⁺¹ fest.",
+    "n ∈ ℕ₀ legt n Halbkreiswinkel und damit eine Richtung in Rⁿ⁺¹ fest. Für n > 0 wird die Richtung numerisch angenähert berechnet.",
     GraphGröße(250f, 120f),
     listOf(AnschlussDaten(name = "n", richtung = AnschlussRichtung.Eingang,
         kante = AnschlussKante.Links, art = MathematikAnschlussArten.Zahl.id),
@@ -238,7 +238,15 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
         require(winkel.size <= n) { "Für n = $n sind höchstens $n Halbkreiswinkel zulässig." }
         // Nicht angegebene Winkel entsprechen einer Rotation um 0 Grad.
         val vollständig = winkel + List(n - winkel.size) { 0.0 }
-        KnotenAuswertungsErgebnis(mapOf("richtung" to BedingterWert(richtungAlsSpaltenVektor(vorzeichen, vollständig))))
+        val angenähert = n > 0
+        KnotenAuswertungsErgebnis(
+            mapOf("richtung" to BedingterWert(richtungAlsSpaltenVektor(vorzeichen, vollständig),
+                annahmen = k.eingänge.values.flatMap { it.annahmen }.toSet(),
+                übersetzungen = if (angenähert) ÜbersetzungsMetadaten(kontext = ÜbersetzungsKontext(
+                    datenGenauigkeit = ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT,
+                )) else ÜbersetzungsMetadaten())),
+            warnungen = if (angenähert) listOf("Die Richtung wurde numerisch angenähert berechnet.") else emptyList(),
+        )
     }
     registriere(ÜBERSETZER_ART) { k ->
         val ziel = übersetzerZiel(k.knoten)

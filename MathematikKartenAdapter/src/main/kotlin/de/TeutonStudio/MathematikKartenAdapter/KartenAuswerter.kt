@@ -185,14 +185,6 @@ class KartenAuswerter(
 
             knoten.art in nichtAuswertbareKnotenArten -> KnotenAuswertungsErgebnis(emptyMap())
 
-            knoten.art == DARSTELLUNGSOPTIMIERUNG -> runCatching {
-                val wert = eingänge["wert"] ?: error("Ein Wert muss verbunden sein.")
-                val latex = knoten.parameter["latex"].orEmpty().trim()
-                KnotenAuswertungsErgebnis(
-                    mapOf("wert" to wert.copy(latexDarstellung = latex.ifBlank { wert.latexDarstellung })),
-                )
-            }.getOrElse { KnotenAuswertungsErgebnis(emptyMap(), fehler = it.message ?: it::class.simpleName.orEmpty()) }
-
             knoten.art == MULTIPLIKATION && knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach } -> werteMultiplikationAus(knoten, eingänge, annahmen)
 
             knoten.art == KONJUGIERTE && eingänge["zahl"]?.istNachweisbarReell() == true ->
@@ -211,7 +203,7 @@ class KartenAuswerter(
             }
         }
 
-        val durchgereicht = if (knoten.art in setOf(DARSTELLUNGSOPTIMIERUNG, KARTEN_EINGANG_ART, "mathematik.kartenAusgang", "konzept.eingang"))
+        val durchgereicht = if (knoten.art in setOf(KARTEN_EINGANG_ART, "mathematik.kartenAusgang", "konzept.eingang"))
             basis.copy(bezeugteAusgaben = basis.ausgaben.keys) else basis
         val ergebnis = durchgereicht
             .führeÜbersetzungsHerkunftFort(eingänge.values)
@@ -475,7 +467,7 @@ class KartenAuswerter(
         knoten: KnotenDaten,
         eingänge: Map<String, BedingterWert>,
     ): KnotenAuswertungsErgebnis {
-        if (knoten.art == DARSTELLUNGSOPTIMIERUNG || eingänge.values.none { it.latexDarstellung != null }) return this
+        if (eingänge.values.none { it.latexDarstellung != null }) return this
 
         fun wert(name: String): String = eingänge[name]?.anzeigeLatex() ?: "?"
         fun geordnet(): List<String> = knoten.anschlüsse
@@ -556,7 +548,7 @@ class KartenAuswerter(
             val ausgabe = ausgaben.values.single()
             if (eingang.objekt == ausgabe.objekt) {
                 val name = ausgaben.keys.single()
-                return copy(ausgaben = mapOf(name to ausgabe.copy(latexDarstellung = eingang.anzeigeLatex())))
+                return copy(ausgaben = mapOf(name to ausgabe.copy(latexDarstellung = if (name in bezeugteAusgaben) ausgabe.latexDarstellung ?: eingang.latexDarstellung else eingang.anzeigeLatex())))
             }
         }
         return this
@@ -567,7 +559,6 @@ class KartenAuswerter(
     private fun standardwertSchlüssel(name: String) = "$STANDARDWERT_PREFIX$name"
 
     private companion object {
-        const val DARSTELLUNGSOPTIMIERUNG = "mathematik.darstellungsoptimierung"
         const val MULTIPLIKATION = "mathematik.multiplikation"
         const val KONJUGIERTE = "mathematik.konjugierte"
         const val STANDARDWERT_PREFIX = "standardwert."

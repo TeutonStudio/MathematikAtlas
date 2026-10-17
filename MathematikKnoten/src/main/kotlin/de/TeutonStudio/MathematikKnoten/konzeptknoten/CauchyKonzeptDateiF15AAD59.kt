@@ -12,11 +12,11 @@ internal object CauchyKonzeptDateiF15AAD59 : ExpliziteKonzeptDatei {
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
         return WissensEintrag(
             id = id,
-            titel = "Cauchy",
+            titel = "Nichtstandard-Cauchyprüfung",
             kurzbeschreibung = "Prüft ein unnatürliches kartesisches Tupel primär über unendliche Hyperindizes.",
             fachPfade = setOf(FachPfad.von("algebra", "operationen")),
-            suchbegriffe = setOf("Analysis: Nichtstandardanalysis", "Cauchy", "Prüft ein unnatürliches kartesisches Tupel primär über unendliche Hyperindizes.", "aussage", "mathematik.aussage", "mathematik.cauchy", "mathematik.objekt", "tupel"),
-            aliase = emptySet(),
+            suchbegriffe = setOf("Nichtstandard-Cauchyprüfung", "Analysis: Nichtstandardanalysis", "Cauchy", "Prüft ein unnatürliches kartesisches Tupel primär über unendliche Hyperindizes.", "aussage", "mathematik.aussage", "mathematik.cauchy", "mathematik.objekt", "tupel"),
+            aliase = setOf("Cauchy"),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
             knotenArten = setOf("mathematik.cauchy"),

@@ -15,7 +15,7 @@ import kotlin.math.sqrt
  */
 fun richtungAusHalbkreiswinkeln(vorzeichen: Int, winkelGrad: List<Double>): List<Double> {
     require(vorzeichen == -1 || vorzeichen == 1) { "Richtungsvorzeichen muss -1 oder +1 sein." }
-    require(winkelGrad.size <= 31) { "Maximal 32 Dimensionen sind zulässig." }
+    require(winkelGrad.size <= MAXIMALE_RICHTUNGS_WINKEL) { "Maximal ${MAXIMALE_RICHTUNGS_WINKEL + 1} Dimensionen sind zulässig." }
     require(winkelGrad.all { it.isFinite() && it >= 0.0 && it < 180.0 }) {
         "Jeder Halbkreiswinkel muss in [0°,180°) liegen."
     }

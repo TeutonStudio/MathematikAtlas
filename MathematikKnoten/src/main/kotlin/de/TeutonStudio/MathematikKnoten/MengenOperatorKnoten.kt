@@ -141,7 +141,7 @@ object MengenMassKnotenVorlagen {
 
     val MengenNorm = KnotenVorlage(
         art = MENGEN_NORM_KNOTEN_ART,
-        name = "Norm einer Menge",
+        name = "Maß einer Menge",
         kategorie = "Mengen: Maßtheorie",
         beschreibung = "Berechnet für eine messbare Menge A die maßinduzierte Größe ∫_A 1 dμ = μ(A).",
         standardGröße = GraphGröße(270f, 130f),
@@ -233,7 +233,7 @@ internal fun MathematikAuswerterRegister.registriereMengenOperatorKnoten() {
             ),
             schritte = ergebnis.schritte,
             warnungen = buildList {
-                add("Definition: \\lVert A\\rVert_{\\mu}=\\int_A 1\\,\\mathrm d\\mu=\\mu(A)")
+                add("Definition: \\mu(A)=\\int_A 1\\,\\mathrm d\\mu")
                 add("Integralstatus: ${ergebnis.status.name}")
                 add("Maß: ${mass.zuLatex()}")
                 if (ergebnis.voraussetzungen.isNotEmpty()) {

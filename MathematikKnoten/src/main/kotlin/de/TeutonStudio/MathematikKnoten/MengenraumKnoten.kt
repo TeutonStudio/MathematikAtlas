@@ -92,9 +92,9 @@ object MengenraumKnotenVorlagen {
 
     val Vektorraum = KnotenVorlage(
         "mathematik.vektorraum",
-        "Vektorraum Aⁿ",
+        "Tensorträgermenge erster Stufe",
         "Mengen",
-        "Erzeugt den n-dimensionalen Koordinatenraum über einer Grundmenge.",
+        "Erzeugt die Trägermenge von Tensoren erster Stufe über einer Grundmenge; legt keine Addition, Skalarmultiplikation oder Vektorraumaxiome fest.",
         GraphGröße(245f, 110f),
         listOf(eingang("grundmenge"), ausgang()),
         mapOf("dimension" to "3"),

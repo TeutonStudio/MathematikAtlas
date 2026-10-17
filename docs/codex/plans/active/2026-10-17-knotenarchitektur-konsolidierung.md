@@ -700,3 +700,41 @@ Der Umfang präzisiert Begriffe und Verträge bestehender Darstellungs-, Maß-,
 Raum-, Cauchy- und Richtungsknoten. Keine neuen Knotentypen oder Typentfernung,
 Katalog weiterhin 121/123. M7 bleibt offen und unreserviert. Android/Desktop/
 Linux/current_version bleiben bis zum M6-Zielabschluss kohärent auf 3.4.8.
+
+
+M6 erste Umsetzung: LaTeX-Darstellung registriert im vorhandenen mathematischen Basisregister;
+Adapter-Sonderdispatch entfernt. Bezeugte Ausgaben behalten ihre eigene Anzeige
+und ihren Kontext. Folgerechnungen erhalten konservativ numerische Annäherung,
+aber keine veralteten Form-/Bereichskontexte und keine künstlichen Zeugnisse.
+Richtungsquelle n=0 bleibt exakt; n>0 erhält bestehenden Genauigkeitskontext und
+Hinweis. Nachgewiesene Kerngrenzabweichung 31 versus gemeinsame 64 Winkel auf
+MAXIMALE_RICHTUNGS_WINKEL vereinheitlicht. Präzisierte sichtbare Begriffe bei
+stabilen Typ-/Konzept-/Varianten-IDs und erhaltenen Suchaliasen. Sechs neue
+Vertragsregressionen; gezielter Lauf gestartet. ADR Darstellung/Genauigkeit.
+
+
+M6 gezielte Korrekturprüfung erfolgreich, 7 s/44 Tasks
+(/tmp/atlas-m6-third.log): sieben neue Architektur-/Genauigkeitsregressionen und
+bestehende Mengen-Methodenverträge. Die unabhängige Prüfung fand zuvor einen
+Genauigkeitsverlust in Formel-Snapshots. Literal-Snapshots verwenden nun den
+fortgeführten Kontext; Operations-ASTs erhalten rekursiv NUM aus Kindmetadaten
+und Herkunft ohne veraltete Formräume. Beide Fälle sind über Wire und erneute
+Formelauswertung geprüft. Genauigkeitstransport liest ausschließlich Metadaten
+und erzwingt keine neue Signaturinferenz historischer Methoden. Nachreview ohne
+weitere Blocker. Erste Gesamtsuite wurde durch diesen letzten Inferenzfehler
+abgebrochen; korrigierter finaler Gesamtlauf gestartet. Zwei frühe Testfixtures
+wurden an bestehende Verträge angepasst: Norm besitzt Kompatibilitätsaliasausgabe,
+Cauchy erwartet einen numerischen Träger ohne eindeutige Standardmetrik (Z).
+Die Darstellung registriert einmalig im bestehenden Standard-Basisregister,
+damit auch dessen bestehende API erhalten bleibt; keine doppelte Paketregistrierung.
+
+
+M6 vollständige finale lokale Suite erfolgreich: 3 min 47 s/277 Tasks,
+2244 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener Opt-in-Skip = 2243 bestanden
+(/tmp/atlas-m6-final.log). Sieben neue Regressionen grün; bestehende 68 Gerätefälle
+kompiliert, noch nicht an M6 ausgeführt. Repository/15 Standardkarten/Releaseplan
+115/Versionsfolge/14 Guardregressionen/Diffprüfung grün. Unabhängiger Nachreview
+nach Snapshotkorrektur ohne weitere Blocker. Standalone-Skript mangels kotlinc
+weiterhin offen; lokales jpackage unterstützt rpm nicht (/tmp/atlas-m6-rpm.log).
+User-App und Daten wegen fremder Signatur unverändert. Produktdiff für PR/CI
+am kohärenten 3.4.9-Zielstand eingefroren; noch keine Veröffentlichung.

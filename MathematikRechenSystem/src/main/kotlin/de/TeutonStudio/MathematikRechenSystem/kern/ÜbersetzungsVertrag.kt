@@ -217,6 +217,14 @@ data class ÜbertragenerMathematischerWert(val wert: MathematischesObjekt, val �
 
 fun FormelAusdruck.übersetzungsMetadaten(): ÜbersetzungsMetadaten = when (this) {
     is FormelAusdruck.Literal -> if (übersetzungen == ÜbersetzungsMetadaten()) (wert as? MathematischeMethode)?.übersetzungen ?: übersetzungen else übersetzungen
-    is FormelAusdruck.Operation -> ÜbersetzungsMetadaten(herkunft = argumente.flatMap { it.ausdruck.übersetzungsMetadaten().alsHerkunft().herkunft }.distinct())
+    is FormelAusdruck.Operation -> {
+        val eingänge = argumente.map { it.ausdruck.übersetzungsMetadaten() }
+        val herkunft = eingänge.flatMap { it.alsHerkunft().herkunft }.distinct()
+        val angenähert = eingänge.any { it.kontext?.datenGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT ||
+            it.aktuell?.effektiveGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT } ||
+            herkunft.any { it.effektiveGenauigkeit == ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT }
+        ÜbersetzungsMetadaten(herkunft = herkunft, kontext = if (angenähert)
+            ÜbersetzungsKontext(datenGenauigkeit = ÜbersetzungsGenauigkeit.NUMERISCH_ANGENÄHERT) else null)
+    }
     else -> ÜbersetzungsMetadaten()
 }

@@ -12,11 +12,11 @@ internal object DarstellungsoptimierungKonzeptDatei64A92B1D : ExpliziteKonzeptDa
         val passendeVorlagen = vorlagen.nachVarianten(varianten)
         return WissensEintrag(
             id = id,
-            titel = "Darstellungsoptimierung",
+            titel = "LaTeX-Darstellung",
             kurzbeschreibung = "Reicht einen beliebigen Wert unverändert weiter und ersetzt seine nachfolgende LaTeX-Darstellung.",
             fachPfade = setOf(FachPfad.von("algebra", "operationen")),
-            suchbegriffe = setOf("Darstellung", "Darstellungsoptimierung", "Reicht einen beliebigen Wert unverändert weiter und ersetzt seine nachfolgende LaTeX-Darstellung.", "latex", "mathematik.darstellungsoptimierung", "mathematik.objekt", "u", "wert"),
-            aliase = emptySet(),
+            suchbegriffe = setOf("LaTeX-Darstellung", "Darstellung", "Darstellungsoptimierung", "Reicht einen beliebigen Wert unverändert weiter und ersetzt seine nachfolgende LaTeX-Darstellung.", "latex", "mathematik.darstellungsoptimierung", "mathematik.objekt", "u", "wert"),
+            aliase = setOf("Darstellungsoptimierung"),
             verfügbarkeit = WissensVerfügbarkeit.Verfügbar,
             reifegrad = WissensReifegrad.Geprüft,
             knotenArten = setOf("mathematik.darstellungsoptimierung"),

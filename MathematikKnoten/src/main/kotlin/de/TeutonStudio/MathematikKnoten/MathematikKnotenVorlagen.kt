@@ -100,7 +100,7 @@ object MathematikKnotenVorlagen {
         ),
     )
     val Darstellungsoptimierung = KnotenVorlage(
-        "mathematik.darstellungsoptimierung", "Darstellungsoptimierung", "Darstellung", "Reicht einen beliebigen Wert unverändert weiter und ersetzt seine nachfolgende LaTeX-Darstellung.", GraphGröße(250f, 120f),
+        "mathematik.darstellungsoptimierung", "LaTeX-Darstellung", "Darstellung", "Reicht einen beliebigen Wert unverändert weiter und ersetzt seine nachfolgende LaTeX-Darstellung.", GraphGröße(250f, 120f),
         listOf(
             eingang("wert", MathematikAnschlussArten.Objekt.id),
             AnschlussDaten(

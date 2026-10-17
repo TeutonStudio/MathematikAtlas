@@ -27,6 +27,7 @@ private fun relationsVariablen(
 
 object StandardMathematikAuswerter {
     fun erzeugeRegister() = MathematikAuswerterRegister().apply {
+        registriereLatexDarstellung()
         RechnerFamilie.entries.forEach { familie ->
             registriereOptionaleMethodenEingänge(familie.knotenArt) { knoten ->
                 val op = RechnerOperatorRegistry.finde(familie, knoten.parameter[familie.operatorParameter])

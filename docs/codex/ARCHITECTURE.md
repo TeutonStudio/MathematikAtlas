@@ -232,3 +232,14 @@ Eine neue Abstraktion ist gerechtfertigt, wenn mindestens eines gilt:
 ## Lokale Standarddialoghistorie
 
 Die Android-App führt eine vom Kartengraphen getrennte, begrenzte Standarddialoghistorie. Stabile Einträge und eine gemeinsame Ergebnisdarstellung verbinden UI und Erfassung; nur explizite Standardauswahlaufträge zählen tatsächliche Einfügungen. Ein installationsweiter IO-Dienst verarbeitet Laden/Ereignisse/AtomicFile-Schreiben/Löschen geordnet im No-Backup-Verzeichnis. Keine Statistik in Karten, Exporten oder fachneutralen Modulen. Details: [ADR](decisions/2026-10-15-knotenauswahl-historie.md) und [Vertrag](../KNOTENAUSWAHL_HISTORIE.md).
+
+
+## Registrierte Darstellung und Genauigkeit
+
+LaTeX-Darstellung wird über das vorhandene mathematische Basisregister ausgeführt.
+Der Adapter erhält ausdrücklich bezeugte Ausgaben einschließlich Kontext und
+Anzeige generisch; neue Berechnungen führen Zeugnisse als Herkunft weiter.
+Numerische Annäherung bleibt im vorhandenen Genauigkeitskontext erhalten, auch
+wenn kein aktives Übersetzungszeugnis vorliegt. Veraltete Form-/Bereichsdaten
+werden dabei nicht in neue Ergebnisse übernommen. Siehe
+[ADR Darstellung und Genauigkeit](decisions/2026-10-17-darstellung-und-numerische-genauigkeit.md).
