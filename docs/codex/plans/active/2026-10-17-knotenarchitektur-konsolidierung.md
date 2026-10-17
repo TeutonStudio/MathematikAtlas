@@ -13,8 +13,8 @@ M3: veröffentlicht als v3.4.6/x, 43726159a87efb50f1adcc5fe7cdafa981a2edd2; alle
 M4: v3.4.7 veröffentlicht, finaler Master 69d4e70a; PR- und Masterabnahme grün.
 M5: v3.4.8 veröffentlicht, finaler Master fb1984f9; PR- und Masterabnahme grün.
 M6: v3.4.9 veröffentlicht, finaler Master 49945974; PR- und Masterabnahme grün.
-M7a: v3.4.10/x auf samai/v3.4.10/konsolidierung-m7, Basis 49945974; enges Migrationsschutz-/Logarithmusrelease.
-M7b: Alt-Auswerterbereinigung und Kartenkanonisierung offen; noch keine Folgeversion reserviert.
+M7a: v3.4.10 veröffentlicht, finaler Master f2d06d30; PR- und Masterabnahme grün.
+M7b: v3.4.11/x auf samai/v3.4.11/konsolidierung-m7b reserviert, Basis f2d06d30; Bereinigung und Gesamtabschluss offen.
 Jeder Meilenstein wird getrennt vollständig geprüft und veröffentlicht, bevor
 sein Nachfolger reserviert wird. Keine vorab gestapelten Versionsbranches.
 
@@ -107,8 +107,8 @@ Alle: Konzeptbibliothek, gespeicherte Konzept-/Standardkarten, Tests und Docs.
 - [x] M4 Mengen: v3.4.7 veröffentlicht, 69d4e70a4f1bdbf69b23f0ee708f5893d5232947, PR #461; drei Spezialarten konsolidiert, 121 gemeinsame/123 Androidtypen, alle sechs jüngsten PR-Gates und vier finalen Master-Workflows grün.
 - [x] M5 Quellenverträge und Konstanten ohne Typentfernung: v3.4.8 veröffentlicht, fb1984f9f83aa4e586b4e6bf22cb524ab0d9cb5a, PR #462; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
 - [x] M6 Begriffe und Verantwortlichkeiten: v3.4.9 veröffentlicht, 49945974dbe96778b70341f29a32bd96747d18d8, PR #463; Katalog unverändert 121/123, alle sechs PR-Gates und vier finalen Master-Workflows grün.
-- [-] M7a Migrationsschutz und Logarithmuskorrekturen: v3.4.10/x direkt ab v3.4.9/49945974 auf samai/v3.4.10/konsolidierung-m7; Produkt-/Releaseabnahme offen.
-- [ ] M7b Alt-Auswerterbereinigung, Kartenkanonisierung und Gesamtabschlussprüfung: erst nach vollständiger M7a-Masterabnahme reservieren, keine Folgeversion beansprucht.
+- [x] M7a Migrationsschutz, historische Rollen und Zeichenbarriere: v3.4.10 veröffentlicht, f2d06d3087a0f27bbe58fad81187e8c6ac0c3501, PR #464; alle sechs finalen PR-Gates und vier Master-Workflows grün.
+- [-] M7b Alt-Auswerterbereinigung, Kartenkanonisierung und Gesamtabschlussprüfung: v3.4.11/x direkt vom vollständig geprüften v3.4.10-Master f2d06d30 auf samai/v3.4.11/konsolidierung-m7b reserviert; Produktarbeit und Gesamtabschluss offen.
 
 ## 10. Konkrete Umsetzungsschritte
 
@@ -912,3 +912,44 @@ e66e0c92 bleibt ohne Mergefreigabe. Keine Produktänderung nach diesem Lauf.
 RPM am korrigierten Stand erneut versucht: 2 s/22 Tasks,
 /tmp/atlas-m7a-zeichenstatus-rpm.log, weiterhin Invalid or unsupported type rpm.
 Lokale Paketinstallation nicht möglich; unveränderte Linux-CI-Abnahme erforderlich.
+
+
+### M7a veröffentlicht; M7b reserviert
+
+PR #464 wurde ausschließlich am freigegebenen Korrekturhead
+32f32e5c67ba21f47665be59a881d935ea2f69f7 regulär ohne Admin-/Bypassoption
+als v3.4.10 integriert. Finaler Mastercommit f2d06d3087a0f27bbe58fad81187e8c6ac0c3501
+folgt unmittelbar auf v3.4.9/49945974. GitHub-Squash: Autor Alexander,
+Committer GitHub. Lokale Reservierung 565ece41 und Produktcommits e66e0c92 /
+32f32e5c sind SamAI/SamAI verifiziert; kein Connector-Produktcommit.
+
+Korrigierte lokale Vollsuite: 2256 Fälle/0 Fehler/1 vorhandener Skip,
+also 2255 bestanden, 3m34s/277 Tasks. 17 gezielte Desktoptests und unabhängiger
+Renderer-Nachreview ohne Blocker. Alle 523 Repositorykarten über vier Phasen
+idempotent und im Rundlauf stabil, ohne Diagnosen. Der ältere Push-Android-
+Testfehler e66e0c92 bleibt dokumentiert. Code-Race bei Sampling gegenüber
+asynchronen Zeichenpaketen belegt; konkrete Auslösung des früheren CI-Fehlers
+mangels Bildartefakten nicht bewiesen. Die strikte Fertigbarriere wurde ohne
+Sleep, Toleranzänderung oder Testretry korrigiert.
+
+Alle sechs aktuellen PR-Gates am 32f32e5c bestanden, einschließlich des zuvor
+roten Push-Gates. Neuer isolierter Androidbericht /tmp/atlas-m7a-runtime-32f32e5c.zip:
+Editor 7/7 und App 61/61, insgesamt 68/68 ohne Fehler oder Skips. Die früheren
+68 erfolgreichen Androidtests gelten ausschließlich als historische Evidenz.
+Lokales Standalone-kotlinc fehlt und RPM ist unsupported; Kern und Linux-RPM/
+Neustartpersistenz wurden durch unveränderte CI erfolgreich geprüft.
+
+Finale Masterabnahme am exakten f2d06d30: Android 39011501316,
+Linux/RPM/Neustartpersistenz 39011501582, Kern/isolierte Android-Laufzeit
+39011501513 und Release-Guard 39011501311 jeweils completed/success;
+beide Kernworkflowjobs verify und android-runtime erfolgreich. M7a ist damit
+abgeschlossen. Diese Abnahme ersetzt vorherige offene M7a-Statusangaben.
+
+Erst danach wurde M7b als v3.4.11/x direkt vom finalen Mastercommit reserviert.
+Umfang: nachgewiesene Bereinigung historischer Auswerter und kanonische
+Repositorykarten, mit vollständiger Verbraucher-, Fixture-, Plattform- und
+Vertragsevidenz. Originalschutz, historische Ladbarkeit und diagnostische Sperren
+bleiben Abnahmekriterien. Keine neuen oder aus dem kanonischen Katalog entfernten
+Typen, weiterhin 121/123. Gesamtabschluss M0–M7 bleibt offen. Keine Folgeversion
+reserviert. Android/Desktop/Linux/current_version bleiben bis zum M7b-Zielabschluss
+kohärent auf der veröffentlichten 3.4.10.
