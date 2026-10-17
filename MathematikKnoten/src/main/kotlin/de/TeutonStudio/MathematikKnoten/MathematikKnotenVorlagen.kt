@@ -61,7 +61,7 @@ object MathematikKnotenVorlagen {
         listOf(eingang("links", MathematikAnschlussArten.Objekt.id, 0), eingang("rechts", MathematikAnschlussArten.Objekt.id, 1), ausgang("aussage", MathematikAnschlussArten.Aussage.id)),
     )
     val Wahr = KnotenVorlage("mathematik.wahr", "Wahr", "Aussagen: Aussagenlogik", "Die wahre Aussage ⊤.", GraphGröße(180f, 90f), listOf(ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
-    val Lüge = KnotenVorlage("mathematik.lüge", "Lüge", "Aussagen: Aussagenlogik", "Die falsche Aussage ⊥.", GraphGröße(180f, 90f), listOf(ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
+    val Lüge = KnotenVorlage("mathematik.lüge", "Falsch", "Aussagen: Aussagenlogik", "Die falsche Aussage ⊥.", GraphGröße(180f, 90f), listOf(ausgang("aussage", MathematikAnschlussArten.Aussage.id)))
     val Element = aussagenVorlage("mathematik.element", "Element", "Prüft, ob ein Objekt Element einer Menge ist.", MathematikAnschlussArten.Objekt.id, MathematikAnschlussArten.Menge.id, "Aussagen: Mengenprädikate")
     val Kleiner = vergleichVorlage("Kleiner", "<", "kleiner")
     val Größer = vergleichVorlage("Größer", ">", "größer")

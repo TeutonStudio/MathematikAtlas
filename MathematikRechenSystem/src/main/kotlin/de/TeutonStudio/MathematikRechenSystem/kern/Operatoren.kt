@@ -306,6 +306,7 @@ fun inferiereZahlenWertevorrat(
     is RationaleZahl -> when {
         ausdruck.nenner != BigInteger.ONE -> RationaleZahlen
         ausdruck.zähler.signum() < 0 -> GanzeZahlen
+        ausdruck.zähler.signum() == 0 -> NichtnegativeGanzeZahlenSemantik.menge
         else -> NatürlicheZahlen
     }
     is MathematischeKonstante -> if (ausdruck == Pi || ausdruck == EulerscheZahl) ReelleZahlen else KomplexeZahlen
@@ -321,7 +322,8 @@ fun inferiereZahlenWertevorrat(
         inferiereZahlenWertevorrat(ausdruck.divisor, werteVorräte, annahmen),
     ))
     is StrukturierteDivision -> when (ausdruck.struktur) {
-        ZahlbereichsIds.NATUERLICH_POSITIV, ZahlbereichsIds.NATUERLICH_MIT_NULL -> NatürlicheZahlen
+        ZahlbereichsIds.NATUERLICH_POSITIV -> NatürlicheZahlen
+        ZahlbereichsIds.NATUERLICH_MIT_NULL -> NichtnegativeGanzeZahlenSemantik.menge
         ZahlbereichsIds.GANZ -> GanzeZahlen
         ZahlbereichsIds.RATIONAL -> RationaleZahlen
         ZahlbereichsIds.REELL -> ReelleZahlen
@@ -367,7 +369,7 @@ fun inferiereZahlenWertevorrat(
     is DifferentialVariable, is DifferentialTerm, is SymbolischerHyperReellerWert -> error(
         "${ausdruck::class.simpleName} lebt außerhalb der klassischen N-Z-Q-R-C-Wertevorratsinferenz.",
     )
-    is StrukturAchsenLaenge -> NatürlicheZahlen
+    is StrukturAchsenLaenge -> NichtnegativeGanzeZahlenSemantik.menge
     is SymbolischeZahlKomponente -> when(val quelle=ausdruck.quelle) {
         is MethodenParameter -> when(val raum=quelle.bindungsId?.let(werteVorräte::get) ?: werteVorräte[quelle.name]) {
             is Matrizenraum -> raum.skalarMenge

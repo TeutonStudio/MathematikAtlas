@@ -129,11 +129,11 @@ internal fun atlasLatexQuelltext(latex: String, dunklesSchema: Boolean): String 
     val rendererKompatibel = ersetzeNichtBedingteCases(latex)
         .replace("\\{", "\\lbrace ").replace("\\}", "\\rbrace ")
         .replace(Regex("""\\mathbb\s*([A-Za-z])""")) { "\\mathbb{${it.groupValues[1]}}" }
-    val farbig = rendererKompatibel
+    val farbig = rendererKompatibel.replace("\\mathcal{Lüge}", "\\mathcal{Falsch}")
         .replace("\\mathcal{Wahr}", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
-        .replace("\\mathcal{Lüge}", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
+        .replace("\\mathcal{Falsch}", "\\textcolor{$lüge}{\\mathcal{Falsch}}")
         .replace("\\top", "\\textcolor{$wahr}{\\mathcal{Wahr}}")
-        .replace("\\bot", "\\textcolor{$lüge}{\\mathcal{Lüge}}")
+        .replace("\\bot", "\\textcolor{$lüge}{\\mathcal{Falsch}}")
     return ATLAS_MACROS + farbig
 }
 
@@ -390,7 +390,7 @@ private class LatexParser(
             }
             "mathcal" -> schreibeMathcal()
             "top" -> schreibeWahrheitswert("Wahr", wahrFarbe)
-            "bot" -> schreibeWahrheitswert("Lüge", lügeFarbe)
+            "bot" -> schreibeWahrheitswert("Falsch", lügeFarbe)
             "mathop", "mathbin", "mathopen", "mathclose" -> schreibeArgument()
             "limits" -> Unit
             "mathbb" -> schreibeDoppelstrich()
@@ -428,7 +428,7 @@ private class LatexParser(
         val inhalt = liesGruppenText()
         when (inhalt) {
             "Wahr" -> schreibeWahrheitswert(inhalt, wahrFarbe)
-            "Lüge" -> schreibeWahrheitswert(inhalt, lügeFarbe)
+            "Lüge", "Falsch" -> schreibeWahrheitswert("Falsch", lügeFarbe)
             else -> mitStil(SpanStyle(fontFamily = FontFamily.Serif, fontStyle = FontStyle.Italic)) {
                 LatexParser(inhalt, ausgabe, wahrFarbe, lügeFarbe).schreibe()
             }

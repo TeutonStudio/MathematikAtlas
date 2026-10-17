@@ -620,3 +620,51 @@ Quellen; Parameter-/Variablenrollen, stabile Identitäten und Wahr/Falsch bleibe
 erhalten. Keine neuen Knotentypen oder Typentfernung, Katalog weiterhin 121/123.
 M6–M7 bleiben offen und unreserviert. Android/Desktop/Linux/current_version
 bleiben bis zum M5-Zielabschluss kohärent auf der veröffentlichten 3.4.7.
+
+M5 erste Umsetzung auf reservierter Basis: gemeinsame Quellen-Grundrauminformation,
+ID-basierte allgemeine Parameter, strikter Wertebereichsdecoder mit ausdrücklich
+versioniertem neuem Leertupelbereich und gemeinsamer Android-/Desktop-Editor.
+Historische mehrdeutige Quellen bleiben vor Portnormalisierung diagnostisch erhalten.
+Methodenbildung und skalare Lösungsnamen unterscheiden gleichnamige Quellen nach
+Identität. Numerische Nullinferenz und numerischer Ergebnisbereichsschutz sind in
+Umsetzung; der bestehende Mengenfamilien-Zielmengenvertrag bleibt ausdrücklich
+unverändert (ADR 2026-07-27). Neuer ADR: stabile-quellen-und-strikte-bereiche.
+Erster gezielter Gradle-Lauf läuft; noch keine M5-Produkt-/Laufzeitfreigabe.
+
+M5 gezielte Prüfung bestanden (26 s/147 Tasks, /tmp/atlas-m5-fifth.log):
+Kern/Knoten/App-Unit-Tests, Android-Test-APK und zwei neue native Desktoptests
+für explizite Bereichsreparatur und vollständige Tiefengrenzvalidierung. Zwei
+neue Android-Inspector-/Undo-Tests kompiliert; Geräteausführung noch offen.
+Zusätzliche symbolische Tupelpackung erhält ein logisches Ergebnis, und explizite
+strukturierte Quellen besitzen selbsttragende Formel-/Wire-Bindungen.
+Historische allgemeine Parameterargumente behalten exakt ihre Knoten-ID; keine
+Umstellung dieser bestehenden Argumentidentität auf ein neues Suffix.
+Letzte Ergänzungen und vollständige Suite am kohärenten Zielstand 3.4.8 stehen aus.
+
+
+M5 letzte Vertragskorrekturen: gebundene Formeln priorisieren Quellen-IDs vor
+Namensaliasen und erhalten strukturierte Zielräume über Wire/Methodenbildung.
+Konkrete Vektor-/Matrixbereichsmitgliedschaften prüfen Orientierung/Form und
+Komponenten; Skalarbindungen werden abgewiesen, offene Strukturparameter bleiben
+offen. Tensor Rang zwei wird nicht still zur Matrix. Achsenlängen einschließlich
+leerer Tupel inferieren N₀. Gesonderte Quellenidentitätsdiagnosen bleiben auch bei
+ausdrücklicher Bereichsreparatur gesperrt.
+
+Gezielter Nachlauf erfolgreich, 26 s/141 Tasks
+(/tmp/atlas-m5-membership-targeted.log). Unabhängige finale Diffprüfung ohne
+blockierende Findings und ohne Änderungen/Builds. Vollständige Suite läuft am
+kohärenten Zielbaum 3.4.8; noch kein Produktcommit/PR oder Laufzeitfreigabe.
+
+
+M5 vollständige lokale Freigabeprüfung bestanden, 3 min 26 s/277 Tasks:
+2237 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener Opt-in-Skip = 2236 bestanden.
+XML-Zählung ausschließlich build/test-results (keine älteren connected-XMLs).
+16 neue Quellenregressionen, sechs neue Kerntests und zwei Desktop-UI-Tests grün;
+zwei neue Android-Inspector-/Undo-Fälle kompiliert, 68 Gerätefälle erst erwartet.
+Log /tmp/atlas-m5-final-verified.log. Repository/15 Standardkarten/Releaseplan
+114/Versionsfolge/14 Guards/Diffprüfung erfolgreich. Zusätzliche Standalone-
+Kernprüfung mangels kotlinc nicht ausführbar. Lokaler packageRpm-Lauf 2 s/22 Tasks
+scheitert unverändert in jpackage: Invalid or unsupported type: [rpm]
+(/tmp/atlas-m5-rpm.log). Kein lokaler Geräte-Neuinstallationsversuch mit Datenverlust;
+fremde Nutzersignatur bleibt geschützt. Produktdiff unabhängig ohne Blocker.
+Produktbaum für SHA-bezogene CI eingefroren; M5 noch nicht veröffentlicht.

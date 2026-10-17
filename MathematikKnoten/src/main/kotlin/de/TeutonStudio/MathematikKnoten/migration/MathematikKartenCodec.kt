@@ -45,6 +45,7 @@ object MathematikKartenMigrationen {
     fun vorSpeichern(karte: KartenDaten): KartenDaten = vorSpeichern(karte, 0)
 
     private fun vorSpeichern(karte: KartenDaten, tiefe: Int): KartenDaten = karte
+        .diagnostiziereQuellenBereiche()
         .normalisiereSchnittstellenReihenfolge()
         .migriereGradmengenDimension()
         .migriereVariablenGrundraum()
@@ -72,6 +73,7 @@ object MathematikKartenMigrationen {
     fun nachDekodierung(karte: KartenDaten): KartenDaten = nachDekodierung(karte, 0)
 
     private fun nachDekodierung(karte: KartenDaten, tiefe: Int): KartenDaten = karte
+        .diagnostiziereQuellenBereiche()
         .migriereHistorischeVariablenGrundräume()
         .normalisiereSchnittstellenReihenfolge()
         .migriereGradmengenDimension()
@@ -100,6 +102,7 @@ object MathematikKartenMigrationen {
     fun nachLaden(karte: KartenDaten): KartenDaten = nachLaden(karte, 0)
 
     private fun nachLaden(karte: KartenDaten, tiefe: Int): KartenDaten = karte
+        .diagnostiziereQuellenBereiche()
         .migriereHistorischeVariablenGrundräume()
         .normalisiereSchnittstellenReihenfolge()
         .migriereGradmengenDimension()

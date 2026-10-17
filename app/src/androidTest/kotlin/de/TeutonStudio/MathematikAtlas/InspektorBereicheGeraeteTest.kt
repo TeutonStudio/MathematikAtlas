@@ -132,6 +132,58 @@ class InspektorBereicheGeraeteTest {
         }
     }
 
+    @Test fun allgemeinerParameterBereichUndDimensionSindValidiertUndEinzelnRueckgaengig() {
+        val basis=MathematikKnotenVorlagen.AllgemeinerParameter.erzeuge(GraphPunkt.Zero)
+        lateinit var atlas:AtlasZustand
+        compose.setContent {
+            val context=LocalContext.current
+            atlas=remember {AtlasZustand(IsolierterInspektorTestContext(context)).also {
+                it.editor.ersetzeKarte(KartenDaten(name="Parameter",knoten=listOf(basis)))
+                it.editor.wähleKnoten(basis.id);it.aktualisiereAuswertung();InspektorSichtbarkeit.öffnen()
+            }}
+            MaterialTheme {Row(Modifier.fillMaxSize()) {Spacer(Modifier.weight(1f));Inspektor(atlas,Modifier)}}
+        }
+        compose.onNodeWithText("Standarddaten").performClick()
+        compose.onNodeWithText("Matrix").performScrollTo().performClick()
+        compose.runOnIdle {
+            assertEquals(WertebereichKonfiguration.Matrix(),WertebereichKonfiguration.vonEigenschaft(atlas.editor.karte.knoten.single().eigenschaften[WertebereichKonfiguration.EIGENSCHAFT]))
+            assertEquals(basis.anschlüsse.map {it.id},atlas.editor.karte.knoten.single().anschlüsse.map {it.id})
+        }
+        compose.onNodeWithText("Zeilen").performScrollTo().performTextReplacement("0")
+        compose.runOnIdle {assertEquals(2,(WertebereichKonfiguration.vonEigenschaft(atlas.editor.karte.knoten.single().eigenschaften[WertebereichKonfiguration.EIGENSCHAFT]) as WertebereichKonfiguration.Matrix).zeilen)}
+        compose.onNodeWithText("Zeilen").performTextReplacement("3")
+        compose.runOnIdle {
+            assertEquals(3,(WertebereichKonfiguration.vonEigenschaft(atlas.editor.karte.knoten.single().eigenschaften[WertebereichKonfiguration.EIGENSCHAFT]) as WertebereichKonfiguration.Matrix).zeilen)
+            atlas.editor.rückgängig();atlas.aktualisiereAuswertung()
+            assertEquals(2,(WertebereichKonfiguration.vonEigenschaft(atlas.editor.karte.knoten.single().eigenschaften[WertebereichKonfiguration.EIGENSCHAFT]) as WertebereichKonfiguration.Matrix).zeilen)
+            atlas.editor.rückgängig();atlas.aktualisiereAuswertung()
+            assertEquals(basis,atlas.editor.karte.knoten.single());atlas.beendeBerechnungen()
+        }
+    }
+
+    @Test fun fehlerhafterParameterBereichBleibtBisZurExplizitenAuswahlErhalten() {
+        val basis=MathematikKnotenVorlagen.AllgemeinerParameter.erzeuge(GraphPunkt.Zero).let {it.copy(
+            eigenschaften=it.eigenschaften+(WertebereichKonfiguration.EIGENSCHAFT to KnotenEigenschaft.Text("defekt")))}
+        lateinit var atlas:AtlasZustand
+        compose.setContent {
+            val context=LocalContext.current
+            atlas=remember {AtlasZustand(IsolierterInspektorTestContext(context)).also {
+                it.editor.ersetzeKarte(KartenDaten(name="Defekter Parameter",knoten=listOf(basis)))
+                it.editor.wähleKnoten(basis.id);it.aktualisiereAuswertung();InspektorSichtbarkeit.öffnen()
+            }}
+            MaterialTheme {Row(Modifier.fillMaxSize()) {Spacer(Modifier.weight(1f));Inspektor(atlas,Modifier)}}
+        }
+        compose.onNodeWithText("Standarddaten").performClick()
+        compose.onNodeWithText("Wähle den gewünschten Bereich ausdrücklich neu. Die gespeicherte Konfiguration bleibt bis dahin erhalten.").performScrollTo().assertIsDisplayed()
+        compose.runOnIdle {assertEquals(basis,atlas.editor.karte.knoten.single())}
+        compose.onNodeWithText("Tupel").performScrollTo().performClick()
+        compose.runOnIdle {
+            assertEquals(WertebereichKonfiguration.Tupel(),WertebereichKonfiguration.vonEigenschaft(atlas.editor.karte.knoten.single().eigenschaften[WertebereichKonfiguration.EIGENSCHAFT]))
+            atlas.editor.rückgängig();atlas.aktualisiereAuswertung()
+            assertEquals(basis,atlas.editor.karte.knoten.single());atlas.beendeBerechnungen()
+        }
+    }
+
     @Test fun relationswechselAendertParameterUndStandardnamenInEinemUndoSchritt() {
         val basis = MathematikKnotenVorlagen.Kleiner.erzeuge(GraphPunkt.Zero)
         lateinit var atlas: AtlasZustand

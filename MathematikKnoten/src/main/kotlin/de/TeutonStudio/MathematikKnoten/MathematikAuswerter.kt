@@ -50,26 +50,7 @@ object StandardMathematikAuswerter {
             KnotenAuswertungsErgebnis(mapOf("wert" to wert.copy(annahmen = wert.annahmen + eingang.annahmen)))
         }
         registriere("mathematik.allgemeinerParameter") { k ->
-            val name = k.knoten.parameter["name"]?.trim().orEmpty().ifBlank { "a" }
-            val bereich = WertebereichKonfiguration.vonEigenschaft(
-                k.knoten.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT],
-            )
-            val wertevorrat = bereich.zuMenge()
-            val objekt: MathematischesObjekt = when (bereich) {
-                WertebereichKonfiguration.Winkel -> WinkelParameter(name)
-                is WertebereichKonfiguration.Zahl -> Variable(name)
-                is WertebereichKonfiguration.Vektor -> TypisiertesElement(name,
-                    if (bereich.orientierung == VektorOrientierung.Spalte) "mathematik.vektor.spalte" else "mathematik.vektor.zeile",
-                    strukturForm = listOf(RationaleZahl.von(bereich.dimension.toLong())))
-                is WertebereichKonfiguration.Matrix -> TypisiertesElement(name, "mathematik.matrix",
-                    strukturForm = listOf(RationaleZahl.von(bereich.zeilen.toLong()), RationaleZahl.von(bereich.spalten.toLong())))
-                else -> AllgemeinerParameter(name)
-            }
-            KnotenAuswertungsErgebnis(mapOf("wert" to BedingterWert(
-                objekt,
-                werteVorrat = wertevorrat,
-                variablenQuellen = listOf(VariablenQuelle(k.knoten.id, name, wertevorrat, lösungsRolle = LösungsQuellenRolle.Parameter)),
-            )))
+            KnotenAuswertungsErgebnis(mapOf("wert" to allgemeinerParameterWert(k.knoten)))
         }
         registriere("mathematik.addition") { k ->
             val werte = k.operatorEingänge { anschluss, index ->
@@ -106,8 +87,8 @@ object StandardMathematikAuswerter {
             val rechts = k.objekt("rechts")
             KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(Gleichheit(links, rechts), annahmen(k))))
         }
-        registriere("mathematik.wahr") { KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(WahrheitsKonstante(true)))) }
-        registriere("mathematik.lüge") { KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(WahrheitsKonstante(false)))) }
+        registriere("mathematik.wahr") { KnotenAuswertungsErgebnis(mapOf("aussage" to aussagenKonstantenWert(true))) }
+        registriere("mathematik.lüge") { KnotenAuswertungsErgebnis(mapOf("aussage" to aussagenKonstantenWert(false))) }
         registriere("mathematik.element") { k ->
             KnotenAuswertungsErgebnis(mapOf("aussage" to BedingterWert(ElementBeziehung(k.objekt("links"), k.menge("rechts")), annahmen(k))))
         }
@@ -587,7 +568,7 @@ object StandardMathematikAuswerter {
         }
         registriere("mathematik.fall") { k ->
             val wahr = k.eingänge["wahr"] ?: error("Wahr-Eingang fehlt.")
-            val lüge = k.eingänge["lüge"] ?: error("Lüge-Eingang fehlt.")
+            val lüge = k.eingänge["lüge"] ?: error("Falsch-Eingang fehlt.")
             val aussageWert = k.eingänge["aussage"] ?: error("Aussage-Eingang fehlt.")
             val aussage = aussageWert.objekt as? Aussage ?: error("Der Aussage-Eingang enthält keine Aussage.")
             val eingangsWerte = listOf(wahr, aussageWert, lüge)
@@ -603,7 +584,7 @@ object StandardMathematikAuswerter {
                     FallAusdruck(
                         wahr.mathematischesObjekt("Wahr-Zweig der Fallunterscheidung"),
                         aussage,
-                        lüge.mathematischesObjekt("Lüge-Zweig der Fallunterscheidung"),
+                        lüge.mathematischesObjekt("Falsch-Zweig der Fallunterscheidung"),
                     ),
                 )
             }

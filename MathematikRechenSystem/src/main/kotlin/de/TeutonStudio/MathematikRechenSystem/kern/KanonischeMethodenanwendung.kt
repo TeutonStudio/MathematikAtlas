@@ -32,10 +32,10 @@ fun MathematischeMethode.wendeMitBedingungenAn(
     require(entscheidungen.values.none { it.wahrheitswert == Wahrheitswert.Lüge }) {
         "Die Argumente liegen außerhalb des Definitionsraums der Methode '$name'."
     }
-    return MathematischeAnwendung(
-        wendeMathematischAlsTupelAn(argumente),
-        entscheidungen.filterValues { it.wahrheitswert != Wahrheitswert.Wahr }.keys,
-    )
+    val ergebnis=wendeMathematischAlsTupelAn(argumente)
+    return MathematischeAnwendung(ergebnis,
+        entscheidungen.filterValues {it.wahrheitswert!=Wahrheitswert.Wahr}.keys+
+            prüfeNumerischeMethodenErgebnisBedingungen(name,ergebnisMengenVertrag,ergebnis,bindungen,kontext.copy(annahmen=kontext.annahmen+bedingungen)))
 }
 
 /** Neue Aufrufer binden ausschließlich anhand der Signaturidentitäten. */
@@ -90,7 +90,9 @@ fun MathematischAuswertbareMethode.wendeMitIdentitätenAn(
     val ergebnis = if (s.ergebnisse.size == 1) Tupel(listOf(roh)) else roh as? Tupel
         ?: error("Mehrere mathematische Ergebnisse benötigen ein Tupel.")
     require(ergebnis.anzahl == s.ergebnisse.size) { "Die Ergebnisanzahl stimmt nicht mit der Methodensignatur überein." }
-    return MathematischeAnwendung(ergebnis, entscheidungen.filterValues { it.wahrheitswert != Wahrheitswert.Wahr }.keys)
+    val substitution=s.argumente.associate {(it.parameter.bindungsId ?: it.name) to bindungen.getValue(it.id)}
+    return MathematischeAnwendung(ergebnis, entscheidungen.filterValues {it.wahrheitswert!=Wahrheitswert.Wahr}.keys+
+        prüfeNumerischeMethodenErgebnisBedingungen(name,s.ergebnisse.map {it.name to it.zielMenge},ergebnis,substitution,kontext.copy(annahmen=kontext.annahmen+bedingungen)))
 }
 
 /** Prüft den Definitionsvertrag einer offenen Capability ohne sie auszuführen. */

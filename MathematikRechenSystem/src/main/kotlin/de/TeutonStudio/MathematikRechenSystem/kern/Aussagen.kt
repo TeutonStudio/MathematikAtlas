@@ -2,7 +2,7 @@ package de.TeutonStudio.MathematikRechenSystem.kern
 
 enum class Wahrheitswert(val latex: String) {
     Wahr("\\mathcal{Wahr}"),
-    Lüge("\\mathcal{Lüge}"),
+    Lüge("\\mathcal{Falsch}"),
 }
 
 sealed interface EntscheidungsStatus {

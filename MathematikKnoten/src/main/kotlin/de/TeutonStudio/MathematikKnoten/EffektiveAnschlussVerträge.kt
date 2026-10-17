@@ -128,9 +128,10 @@ fun effektiverMathematikAnschluss(karte: KartenDaten, ref: AnschlussVerweis): An
         }
 
         anschluss.richtung == AnschlussRichtung.Ausgang && knoten.art == "mathematik.allgemeinerParameter" -> {
-            val bereich = WertebereichKonfiguration.vonEigenschaft(knoten.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT])
-            if (bereich == WertebereichKonfiguration.Aussage) TypAusdruck.Atom(MathematischeTypen.Aussage)
-            else bereich.zuMenge().elementTypAusdruck()
+            runCatching {
+                val bereich=WertebereichKonfiguration.vonEigenschaft(knoten.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT])
+                quellenGrundraumInformation(bereich.zuMenge()).typ
+            }.getOrDefault(TypAusdruck.Unbekannt)
         }
         anschluss.richtung == AnschlussRichtung.Ausgang && knoten.art == MENGENKONSTRUKTOR_ART && anschluss.name == "element" -> {
             val art = AnschlussArtId(knoten.parameter[MENGENDEFINITION_ELEMENTART] ?: MathematikAnschlussArten.Zahl.id.wert)

@@ -6,6 +6,18 @@ data class FormelKernErgebnis(val objekt: MathematischesObjekt, val bedingungen:
 fun GebundeneFormel.werteAus(bindungen: Map<String, MathematischesObjekt> = emptyMap(), operation: ((FormelAusdruck.Operation,List<MathematischesObjekt>)->FormelKernErgebnis)? = null): FormelKernErgebnis =
     werteMitOperationsKontextAus(bindungen, operation?.let { auswertung -> { op, argumente, _ -> auswertung(op,argumente) } })
 
+/** Sichtbare Aliasse sind nur bei eindeutiger Quelle erlaubt. */
+private fun GebundeneFormel.quellenWertevorräte():Map<String,MengenAusdruck> {
+    val namen=quellen.groupBy {it.anzeigeName}
+    val ids=quellen.map {it.id}.toSet()
+    return buildMap {
+        quellen.forEach {q -> q.werteVorrat?.let {raum ->
+            put(q.id,raum)
+            if(namen.getValue(q.anzeigeName).map {it.id}.distinct().size==1 && (q.anzeigeName !in ids || q.anzeigeName==q.id)) put(q.anzeigeName,raum)
+        }}
+    }
+}
+
 /** Derselbe AST-Auswerter übergibt Fachoperationen die bereits substituierten Voraussetzungen. */
 fun GebundeneFormel.werteMitOperationsKontextAus(bindungen: Map<String, MathematischesObjekt> = emptyMap(),
     operation: ((FormelAusdruck.Operation,List<MathematischesObjekt>,Set<Aussage>)->FormelKernErgebnis)? = null): FormelKernErgebnis {
@@ -23,7 +35,7 @@ fun GebundeneFormel.werteMitOperationsKontextAus(bindungen: Map<String, Mathemat
     }
     val bedingungen = annahmen.map { ersetze(it, symbole) }.toMutableSet()
     quellen.forEach { q -> q.werteVorrat?.let { raum -> bedingungen += ElementBeziehung(symbole.getValue(q.id), raum) } }
-    val vorräte = quellen.mapNotNull { q -> q.werteVorrat?.let { q.anzeigeName to it } }.toMap()
+    val vorräte = quellenWertevorräte()
     fun besuche(e: FormelAusdruck): MathematischesObjekt = when (e) {
         is FormelAusdruck.Literal -> {
             val metadata = e.übersetzungsMetadaten()
@@ -89,7 +101,7 @@ fun GebundeneFormel.alsMethode(name: String, argumentIds: List<String> = quellen
     require(argumentIds.distinct().size == argumentIds.size)
     val auswertung = werteAus()
     val quellenNachId = quellen.associateBy { it.id }
-    val belegteNamen=mutableSetOf<String>()
+    val belegteNamen=quellen.filter {it.id !in argumentIds}.map {it.anzeigeName}.toMutableSet()
     val parameter = argumentIds.map { id ->
         val q = quellenNachId.getValue(id)
         var name=q.anzeigeName;var suffix=1
@@ -100,11 +112,14 @@ fun GebundeneFormel.alsMethode(name: String, argumentIds: List<String> = quellen
             else -> AllgemeinerParameter(name, bindungsId = id)
         }
     }
-    val ziel = when (val wert = auswertung.objekt) {
-        is ZahlAusdruck -> inferiereZahlenWertevorrat(wert, quellen.mapNotNull { q -> q.werteVorrat?.let { q.anzeigeName to it } }.toMap(), auswertung.bedingungen)
-        else -> FehlendeObermenge("Formelergebnis")
+    val formaleBindungen=parameter.associateBy {it.bindungsId!!}
+    val vorschrift=ersetze(auswertung.objekt,formaleBindungen)
+    val bedingungen=auswertung.bedingungen.map {ersetze(it,formaleBindungen)}.toSet()
+    val ziel = when (val wert = vorschrift) {
+        is ZahlAusdruck -> inferiereZahlenWertevorrat(wert, quellenWertevorräte(), bedingungen)
+        else -> runCatching {inferiereZielmenge(wert,quellenWertevorräte(),bedingungen)}.getOrElse {FehlendeObermenge("Formelergebnis")}
     }
-    return MathematischeMethode(name, parameter, Tupel(listOf(auswertung.objekt)), Tupelraum(listOf(ziel)),
+    return MathematischeMethode(name, parameter, Tupel(listOf(vorschrift)), Tupelraum(listOf(ziel)),
         parameter.associate { p -> p.name to (quellenNachId.getValue(p.bindungsId!!).werteVorrat ?: FehlendeObermenge(p.name)) },
-        voraussetzungen = auswertung.bedingungen, übersetzungen = auswertung.übersetzungen.alsHerkunft())
+        voraussetzungen = bedingungen, übersetzungen = auswertung.übersetzungen.alsHerkunft())
 }

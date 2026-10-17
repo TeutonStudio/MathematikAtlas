@@ -54,7 +54,7 @@ fun PrädikatsRechenwegInhalt(ergebnis: KnotenAuswertungsErgebnis?, modifier: Mo
             ergebnis?.entscheidung?.let { e ->
                 Text(when (e.wahrheitswert) {
                     Wahrheitswert.Wahr -> "Wahr"
-                    Wahrheitswert.Lüge -> "Lüge"
+                    Wahrheitswert.Lüge -> "Falsch"
                     null -> if (e.status == EntscheidungsStatus.NichtAuswertbar) "Nicht auswertbar"
                         else if (ergebnis.ausgaben.values.any { (it.objekt as? Aussage)?.freieMethodenParameter()?.isNotEmpty() == true }) "Vereinfacht / offen"
                         else "Mit verfügbaren Verfahren nicht entscheidbar"

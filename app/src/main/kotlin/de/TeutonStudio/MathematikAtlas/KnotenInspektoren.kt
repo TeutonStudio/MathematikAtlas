@@ -221,12 +221,7 @@ private object VariablenInspektor : KnotenInspektor {
 
 private object AllgemeineParameterInspektor : KnotenInspektor {
     @Composable override fun Inhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen) {
-        ParameterFeld("Name", knoten.parameter["name"] ?: "a") { aktionen.parameter("name", it.trim()) }
-        val bereich = WertebereichKonfiguration.vonEigenschaft(knoten.eigenschaften[WertebereichKonfiguration.EIGENSCHAFT])
-        WertebereichEditor(bereich) { neu ->
-            aktionen.eigenschaften(knoten.eigenschaften + (WertebereichKonfiguration.EIGENSCHAFT to neu.zuEigenschaft()))
-        }
-        Text("Der Wertebereich bestimmt die Zielmenge von Term zu Methode.", style = MaterialTheme.typography.bodySmall)
+        InspektorAllgemeinerParameter(knoten,aktionen::knoten)
         ergebnis?.fehler?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
 }
@@ -465,76 +460,6 @@ private fun TensorPermutationEditor(
             aktionen.parameter("achsenPermutation", standardText)
         },
     ) { Text("Standardpermutation") }
-}
-
-@Composable private fun WertebereichEditor(
-    bereich: WertebereichKonfiguration,
-    ändern: (WertebereichKonfiguration) -> Unit,
-) {
-    Text("Wertebereich", style = MaterialTheme.typography.titleSmall)
-    val arten = listOf(
-        "Zahl" to WertebereichKonfiguration.Zahl(),
-        "Aussage" to WertebereichKonfiguration.Aussage,
-        "Menge" to WertebereichKonfiguration.Menge(),
-        "Tupel" to WertebereichKonfiguration.Tupel(),
-        "Spalte" to WertebereichKonfiguration.Vektor(),
-        "Zeile" to WertebereichKonfiguration.Vektor(orientierung = VektorOrientierung.Zeile),
-        "Matrix" to WertebereichKonfiguration.Matrix(),
-    )
-    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
-        arten.take(3).forEach { (name, wert) -> FilterChip(bereich::class == wert::class, { ändern(wert) }, label = { Text(name) }) }
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng), modifier = Modifier.fillMaxWidth()) {
-        arten.drop(3).forEach { (name, wert) -> FilterChip(bereich::class == wert::class && (bereich !is WertebereichKonfiguration.Vektor || wert !is WertebereichKonfiguration.Vektor || bereich.orientierung == wert.orientierung), { ändern(wert) }, label = { Text(name) }) }
-    }
-    TextButton(onClick = { ändern(WertebereichKonfiguration.Winkel) }) { Text(if (bereich == WertebereichKonfiguration.Winkel) "✓ Winkel (Gradmenge)" else "Winkel (Gradmenge)") }
-    when (bereich) {
-        WertebereichKonfiguration.Winkel -> LatexText(de.TeutonStudio.MathematikRechenSystem.kern.Gradmenge.zuLatex())
-        is WertebereichKonfiguration.Zahl -> GrundmengenAuswahl("Zahlgrundmenge", bereich.grundmenge) { ändern(bereich.copy(grundmenge = it)) }
-        WertebereichKonfiguration.Aussage -> Text("{⊤, ⊥}", style = MaterialTheme.typography.bodySmall)
-        is WertebereichKonfiguration.Menge -> {
-            Text("Elementbereich", style = MaterialTheme.typography.bodySmall)
-            WertebereichEditor(bereich.elementBereich) { ändern(bereich.copy(elementBereich = it)) }
-        }
-        is WertebereichKonfiguration.Tupel -> {
-            bereich.komponenten.forEachIndexed { index, komponente ->
-                Text("Komponente ${index + 1}", style = MaterialTheme.typography.bodySmall)
-                WertebereichEditor(komponente) { neu -> ändern(bereich.copy(komponenten = bereich.komponenten.mapIndexed { i, alt -> if (i == index) neu else alt })) }
-            }
-            OutlinedButton(onClick = { ändern(bereich.copy(komponenten = bereich.komponenten + WertebereichKonfiguration.Zahl())) }) { Text("Komponente hinzufügen") }
-        }
-        is WertebereichKonfiguration.Vektor -> {
-            PositiveGanzzahlFeld("Dimension", bereich.dimension) { ändern(bereich.copy(dimension = it)) }
-            GrundmengenAuswahl("Skalarmenge", bereich.skalarMenge) { ändern(bereich.copy(skalarMenge = it)) }
-        }
-        is WertebereichKonfiguration.Matrix -> {
-            PositiveGanzzahlFeld("Zeilen", bereich.zeilen) { ändern(bereich.copy(zeilen = it)) }
-            PositiveGanzzahlFeld("Spalten", bereich.spalten) { ändern(bereich.copy(spalten = it)) }
-            GrundmengenAuswahl("Skalarmenge", bereich.skalarMenge) { ändern(bereich.copy(skalarMenge = it)) }
-        }
-    }
-}
-
-@Composable private fun PositiveGanzzahlFeld(label: String, wert: Int, ändern: (Int) -> Unit) {
-    var text by remember(label, wert) { mutableStateOf(wert.toString()) }
-    OutlinedTextField(
-        value = text,
-        onValueChange = { neu ->
-            text = neu
-            neu.toIntOrNull()?.takeIf { it > 0 }?.let(ändern)
-        },
-        label = { Text(label) },
-        modifier = Modifier.fillMaxWidth(),
-    )
-}
-
-@Composable private fun GrundmengenAuswahl(label: String, aktuell: String, ändern: (String) -> Unit) {
-    Text(label, style = MaterialTheme.typography.titleSmall)
-    Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
-        listOf("N", "Z", "Q", "R", "C").forEach { menge ->
-            FilterChip(aktuell == menge, { ändern(menge) }, label = { Text(menge) })
-        }
-    }
 }
 
 private object KartenSchnittstellenInspektor : KnotenInspektor {
