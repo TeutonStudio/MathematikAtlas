@@ -497,3 +497,22 @@ PR- und Master-SHA bleibt Voraussetzung. Unabhängige Abschlussprüfung
 einschließlich Identitäts-, Tiefenalias- und Orientierungszusätzen ohne Findings.
 Fixture-SHA256: 7e46c59edc9dfc744b8046e1a29ff5f1594b56ef0136bcb0698d66d0a5077dee.
 Produktbaum zur selektiven SamAI-Commit-/PR-Erstellung freigegeben.
+
+M3 nachträglicher Vertragsbefund vor Veröffentlichung: Android KartenSpeicher
+überschrieb unreferenzierte Revisionen auch nach mathematischer Migration.
+PR #460/3ddb687b bleibt deshalb ungemergt und ist nicht der finale Head.
+Enger Schutz ergänzt: vorhandene Zielrevision fachneutral lesen, ID/Version
+und Format prüfen, vollständige aktuelle Lade-/Schreibnormalisierung mit
+Originalgraph vergleichen. Bei notwendiger Migration oder unlesbarem Original
+neue Revision oberhalb aller physischen Versionen; Originaldateien unverändert.
+Gewöhnliche aktuelle Bearbeitungen behalten bisherige Speichersemantik.
+Desktop speichert bereits stets eine neue Revision. Zwei JVM-Regressionen
+bestanden; drei neue echte Android-Speichertests kompiliert (Originalbytes,
+beschädigte höhere Revision, aktueller Normalfall, defekte Zieldatei).
+Unabhängige enge Prüfung ohne Findings. Neue vollständige Abnahme/CI erforderlich;
+die vorherige lokale Freigabe und CI gelten nicht für diesen Zusatz.
+
+M3-Revisionsschutz: vollständiger lokaler Abschlusslauf bestanden (49 s, 277 Tasks;
+2195 Tests, 0 Fehler, 1 bestehender Skip), einschließlich Lint, APKs, Test-APKs
+und Desktop. Protokoll: `/tmp/atlas-m3-revision-final.log`. CI am ergänzten
+Release-Head und dessen Veröffentlichung stehen weiterhin aus.

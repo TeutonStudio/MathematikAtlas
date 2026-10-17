@@ -669,3 +669,15 @@ M3 lokale Gesamtprüfung abgeschlossen: 2.193 Tests ohne Fehler, ein bestehender
 Opt-in-Skip, Lint, APK-/Test-APK- und Desktopprüfungen grün. APK 3.4.6/3004006;
 Manifest 126, gemeinsamer Katalog 124. Unabhängiger Review ohne offene Findings.
 Veröffentlichung und finale SHA-bezogene CI-Laufzeitabnahme weiterhin offen.
+
+Vor M3-Veröffentlichung wurde zusätzlich Androids Revisionsschutz korrigiert:
+notwendige Migration/unlesbare vorhandene Originalrevision erzeugt beim
+Speichern eine neue freie Revision; Altbytes bleiben erhalten. Gewöhnliche
+aktuelle Bearbeitungen unverändert, Desktop bereits revisionsbildend.
+Gezielte JVM-Prüfungen und Kompilierung der drei neuen Geräteprüfungen bestehen,
+unabhängiger Review ohne Findings. M3-PR #460 benötigt neuen finalen Head und CI.
+
+M3-Revisionsschutz: vollständiger lokaler Abschlusslauf bestanden (49 s, 277 Tasks;
+2195 Tests, 0 Fehler, 1 bestehender Skip), einschließlich Lint, APKs, Test-APKs
+und Desktop. Protokoll: `/tmp/atlas-m3-revision-final.log`. CI am ergänzten
+Release-Head und dessen Veröffentlichung stehen weiterhin aus.

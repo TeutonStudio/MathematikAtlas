@@ -53,3 +53,25 @@ ein bestehender Opt-in-Skip, vollständige angeforderte Build-/Lint-/Desktoptask
 erfolgreich. Unabhängige Lesekontrolle ohne offene Findings. Die lokale
 Standalone-kotlinc-/RPM-Werkzeuggrenze und Android-Signaturgrenze bleiben;
 endgültige PR-/Master-CI und isolierte Laufzeitprüfung stehen noch aus.
+
+## Bewahrung gespeicherter Originalrevisionen
+
+Androids vorhandener Speicher überschreibt unreferenzierte aktuelle Revisionen
+bei gewöhnlichen Bearbeitungen. Eine mathematische oder Formatmigration darf
+diesen Weg nicht verwenden: Die vorhandene Zielrevision wird fachneutral
+dekodiert und mit ihrer vollständigen aktuellen Codec-Normalisierung verglichen.
+Bei notwendiger Migration, abweichendem Format/ID/Version oder unlesbarem
+Original wird eine neue freie Version oberhalb sämtlicher physischer Revisionen
+geschrieben. Die Originaldatei bleibt unverändert, auch wenn keine fremde Karte
+auf sie verweist. Die vorgeschlagene Nutzereingabe entscheidet diesen Trigger
+nicht; gewöhnliche aktuelle Bearbeitungen behalten ihre Speichersemantik.
+Desktop erzeugt bereits für jeden Speichervorgang eine neue Revision.
+
+Gezielte JVM-Prüfung und Kompilierung dreier realer Android-Speichertests
+erfolgreich, unabhängige Prüfung ohne Findings; erneute Gesamt- und CI-Abnahme
+am neuen finalen M3-Head erforderlich.
+
+M3-Revisionsschutz: vollständiger lokaler Abschlusslauf bestanden (49 s, 277 Tasks;
+2195 Tests, 0 Fehler, 1 bestehender Skip), einschließlich Lint, APKs, Test-APKs
+und Desktop. Protokoll: `/tmp/atlas-m3-revision-final.log`. CI am ergänzten
+Release-Head und dessen Veröffentlichung stehen weiterhin aus.
