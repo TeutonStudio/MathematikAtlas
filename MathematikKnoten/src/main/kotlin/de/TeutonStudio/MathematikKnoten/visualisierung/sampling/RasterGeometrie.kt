@@ -19,7 +19,7 @@ internal object RasterGeometrie {
     ): RasterGeometrieErgebnis {
         if (auflösung < 2 || dimension !in 1..3) return RasterGeometrieErgebnis()
         val enthalten = werte.filterValues { it == NumerischeMitgliedschaft.Enthalten }.keys
-        val zellen = if (dimension >= 2) enthalten.map { index -> rasterZelle(index, auflösung, bereiche) } else emptyList()
+        val zellen = if (dimension >= 2) enthalten.map { index -> samplingSpeicher(256);rasterZelle(index, auflösung, bereiche) } else emptyList()
         val linien = if (dimension == 2) konturen2D(auflösung, bereiche, werte) else emptyList()
         val isoDreiecke = if (dimension == 3) isoFläche3D(auflösung, bereiche, werte) else emptyList()
         val volumenRand = if (dimension == 3) voxelRand3D(enthalten.toSet(), auflösung, bereiche) else emptyList()
@@ -47,6 +47,7 @@ internal object RasterGeometrie {
     ): List<VisualisierungsLinie> {
         val ergebnis = mutableListOf<VisualisierungsLinie>()
         for (x in 0 until n - 1) for (y in 0 until n - 1) {
+            SamplingSitzung.aktuelle()?.prüfe()
             val ecken = listOf(listOf(x, y), listOf(x + 1, y), listOf(x + 1, y + 1), listOf(x, y + 1))
             val residuen = ecken.map { (werte[it] as? NumerischeMitgliedschaft.Grenze)?.residuum }
             if (residuen.any { it == null }) continue
@@ -77,6 +78,7 @@ internal object RasterGeometrie {
         )
         val kanten = listOf(0 to 1, 0 to 2, 0 to 3, 1 to 2, 1 to 3, 2 to 3)
         for (x in 0 until n - 1) for (y in 0 until n - 1) for (z in 0 until n - 1) {
+            SamplingSitzung.aktuelle()?.prüfe()
             val ecken = List(8) { maske -> listOf(x + (maske and 1), y + ((maske shr 1) and 1), z + ((maske shr 2) and 1)) }
             val residuen = ecken.map { (werte[it] as? NumerischeMitgliedschaft.Grenze)?.residuum }
             if (residuen.any { it == null }) continue
@@ -86,9 +88,12 @@ internal object RasterGeometrie {
                     schnittpunkt(ecken[a], residuen[a]!!, ecken[b], residuen[b]!!, n, bereiche)
                 }.distinctBy { Triple(it.x, it.y, it.z) }
                 if (schnitte.size == 3) {
+                    samplingSpeicher(448)
                     ergebnis += VisualisierungsDreieck(schnitte[0], schnitte[1], schnitte[2])
                 } else if (schnitte.size == 4) {
+                    samplingSpeicher(448)
                     ergebnis += VisualisierungsDreieck(schnitte[0], schnitte[1], schnitte[2])
+                    samplingSpeicher(448)
                     ergebnis += VisualisierungsDreieck(schnitte[0], schnitte[2], schnitte[3])
                 }
             }
@@ -107,6 +112,7 @@ internal object RasterGeometrie {
             listOf(0, 1, 0), listOf(0, 0, -1), listOf(0, 0, 1),
         )
         enthalten.forEach { index ->
+            SamplingSitzung.aktuelle()?.prüfe()
             val zelle = rasterZelle(index, n, bereiche)
             richtungen.forEachIndexed { fläche, delta ->
                 val nachbar = index.indices.map { index[it] + delta[it] }
@@ -122,7 +128,9 @@ internal object RasterGeometrie {
                     4 -> listOf(p(x[0], y[0], z[0]), p(x[1], y[0], z[0]), p(x[1], y[1], z[0]), p(x[0], y[1], z[0]))
                     else -> listOf(p(x[0], y[0], z[1]), p(x[0], y[1], z[1]), p(x[1], y[1], z[1]), p(x[1], y[0], z[1]))
                 }
+                samplingSpeicher(448)
                 ergebnis += VisualisierungsDreieck(vier[0], vier[1], vier[2], DarstellungsNachweis.Numerisch)
+                samplingSpeicher(448)
                 ergebnis += VisualisierungsDreieck(vier[0], vier[2], vier[3], DarstellungsNachweis.Numerisch)
             }
         }

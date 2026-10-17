@@ -1,6 +1,9 @@
 package de.TeutonStudio.MathematikRechenSystem.kern
 
 enum class MengenRechnerOperator(val stabileId: String) {
+    TUPELRAUM("menge.tupelraum"),
+    TENSORRAUM("menge.tensorraum"),
+    MATRIZENMENGE("menge.matrizenmenge"),
     UNTERRAUM("menge.unterraum"),
     VEREINIGUNG("menge.vereinigung"),
     SCHNITT("menge.schnitt"),
@@ -70,6 +73,8 @@ object MengenRechner {
         val inkompatibel = universen.size > 1
 
         return when (operator) {
+            MengenRechnerOperator.TUPELRAUM, MengenRechnerOperator.TENSORRAUM -> MengenRechnerErgebnis.Ungueltig("dimensionsvertrag", "Der Raumoperator benötigt zusätzlich eine Zahl beziehungsweise ein Dimensionstupel.")
+            MengenRechnerOperator.MATRIZENMENGE -> MengenRechnerErgebnis.Ungueltig("dimensionsvertrag", "Die Matrizenmenge benötigt eine Grundmenge und zwei positive natürliche Dimensionsausdrücke.")
             MengenRechnerOperator.UNTERRAUM -> MengenRechnerErgebnis.Ungueltig("vektorvertrag", "Unterraum benötigt Richtungsvektoren statt Mengen.")
             MengenRechnerOperator.VEREINIGUNG -> {
                 if (eingaben.isEmpty()) ungueltigeAnzahl(operator, 1)

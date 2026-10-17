@@ -63,11 +63,15 @@ enum class MengenKnotenAuswahl(val operator: MengenKonstante) {
     PRIMZAHLEN(MengenKonstante.P),
     GAUSSSCHE_GANZE(MengenKonstante.ZI),
     GAUSSSCHE_PRIMZAHLEN(MengenKonstante.PZI),
-    GRADMENGE(MengenKonstante.GRAD);
+    GRADMENGE(MengenKonstante.GRAD),
+    REELLE_MATRIZEN(MengenKonstante.R),
+    KOMPLEXE_MATRIZEN(MengenKonstante.C);
 
-    val stabileId: String get() = operator.stabileId
-    val titel: String get() = operator.titel
-    val beschreibung: String get() = operator.definitionLatex
+    val istMatrizenmenge: Boolean get() = this == REELLE_MATRIZEN || this == KOMPLEXE_MATRIZEN
+
+    val stabileId: String get() = if (istMatrizenmenge) "${operator.stabileId}.matrizen" else operator.stabileId
+    val titel: String get() = if (istMatrizenmenge) "Matrizenmenge ${if (this == REELLE_MATRIZEN) "ℝ" else "ℂ"}ⁿˣᵐ" else operator.titel
+    val beschreibung: String get() = if (istMatrizenmenge) "${operator.symbolLatex}^{n\\times m}, n,m \\in \\mathbb{N}_{>0}" else operator.definitionLatex
     fun menge(): MengenAusdruck = operator.auswerten()
     companion object {
         fun vonIdOderNull(id: String?): MengenKnotenAuswahl? = entries.firstOrNull { it.stabileId == id }
@@ -85,15 +89,12 @@ private fun mengenAusgang() = AnschlussDaten(
 object MengenKnotenVorlagen {
     fun vorlage(auswahl: MengenKnotenAuswahl): KnotenVorlage = KnotenVorlage(
         art = MENGEN_KNOTEN_ART,
-        name = "Menge",
+        name = if (auswahl.istMatrizenmenge) auswahl.titel else "Menge",
         kategorie = "Mengen",
         beschreibung = "Ein einheitlicher Mengenknoten; die konkrete Menge oder eine versionsfeste eigene Karte wird im Inspector gewählt.",
         standardGröße = GraphGröße(230f, 105f),
-        anschlüsse = if (auswahl == MengenKnotenAuswahl.GRADMENGE) {
-            listOf(zahlEingang("dimension", 0)) + mengenAusgang()
-        } else {
-            listOf(zahlEingang("dimension", 0)) + mengenAusgang()
-        },
+        anschlüsse = (if (auswahl.istMatrizenmenge) listOf(zahlEingang("n", 0), zahlEingang("m", 1))
+            else listOf(zahlEingang("dimension", 0))) + mengenAusgang(),
         standardParameter = mapOf(MENGEN_KNOTEN_AUSWAHL to auswahl.stabileId),
     )
 
@@ -200,19 +201,17 @@ internal fun MathematikAuswerterRegister.registriereKonsolidierteKnoten() {
         val id = kontext.knoten.parameter[MENGEN_KNOTEN_AUSWAHL]
         val auswahl = if (id == null) MengenKnotenAuswahl.REELLE_ZAHLEN else MengenKnotenAuswahl.vonIdOderNull(id)
         if (auswahl == null) return@registriere KnotenAuswertungsErgebnis(ausgaben = emptyMap(), fehler = "Unbekannter Mengenoperator: $id")
-        KnotenAuswertungsErgebnis(
-            ausgaben = mapOf("menge" to BedingterWert(
-                if (auswahl != MengenKnotenAuswahl.GRADMENGE && "dimension" in kontext.eingänge) {
-                    kartesischePotenz(auswahl.menge(), kontext.eingänge["dimension"]!!.objekt as ZahlAusdruck)
-                } else if (auswahl == MengenKnotenAuswahl.GRADMENGE && ("dimension" in kontext.eingänge || "dim" in kontext.eingänge)) {
-                    val dimension = kontext.natuerlicheGanzzahl(if ("dim" in kontext.eingänge) "dim" else "dimension", nullErlaubt = false)
-                    require(dimension <= 65) { "Die Dimension darf höchstens 65 sein." }
-                    de.TeutonStudio.MathematikRechenSystem.kern.winkelraum(dimension - 1)
-                } else auswahl.menge(),
-                kontext.eingänge.values.flatMap { it.annahmen }.toSet(),
-            )),
-            eingänge = kontext.eingänge,
-        )
+        if (auswahl.istMatrizenmenge) return@registriere matrizenMengenErgebnis(kontext, auswahl.menge())
+        require(mengenDimensionsart(kontext.knoten) in setOf(MENGEN_DIMENSION_TUPEL, MENGEN_DIMENSION_TENSOR)) { "Unbekannte Dimensionsart." }
+        if (auswahl != MengenKnotenAuswahl.GRADMENGE && "dimension" in kontext.eingänge)
+            return@registriere mengenDimensionsErgebnis(kontext, auswahl.menge(), mengenDimensionsart(kontext.knoten) == MENGEN_DIMENSION_TENSOR)
+
+        val menge = if (auswahl == MengenKnotenAuswahl.GRADMENGE && ("dimension" in kontext.eingänge || "dim" in kontext.eingänge)) {
+            val dimension = kontext.natuerlicheGanzzahl(if ("dim" in kontext.eingänge) "dim" else "dimension", nullErlaubt = false)
+            require(dimension <= 65) { "Die Dimension darf höchstens 65 sein." }
+            de.TeutonStudio.MathematikRechenSystem.kern.winkelraum(dimension - 1)
+        } else auswahl.menge()
+        KnotenAuswertungsErgebnis(mapOf("menge" to kontext.rechnerErgebnisWert(menge)), eingänge = kontext.eingänge)
     }
     registriere("mathematik.einheitsSpalte") { kontext ->
         val orientierung=kontext.knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] ?: VEKTOR_ORIENTIERUNG_SPALTE
@@ -336,6 +335,7 @@ private fun migriereSkalarprodukt(alt: KnotenDaten): KnotenDaten? {
 fun KnotenDaten.mitGradmengenDimension(): KnotenDaten {
     if (RECHNER_MIGRATION_DIAGNOSE in parameter || art != MENGEN_KNOTEN_ART || kartenVerweis != null) return this
     val auswahl = MengenKnotenAuswahl.entries.firstOrNull { it.stabileId == parameter[MENGEN_KNOTEN_AUSWAHL] } ?: return this
+    if (auswahl.istMatrizenmenge) return this
     val name = "dimension"
     if (anschlüsse.any { it.richtung == AnschlussRichtung.Eingang && it.name in setOf("dimension", "dim") }) return this
     return copy(anschlüsse = listOf(zahlEingang(name, 0).copy(id = AnschlussId("${id.wert}-mengen-$name"))) + anschlüsse)
@@ -345,7 +345,7 @@ fun KartenDaten.migriereGradmengenDimension(): KartenDaten {
     val verbunden = verbindungen.mapTo(hashSetOf()) { it.zu.anschlussId }
     return copy(knoten = knoten.map { alt ->
         val k = alt.mitGradmengenDimension()
-        if (k.art != MENGEN_KNOTEN_ART || k.kartenVerweis != null) k else {
+        if (k.art != MENGEN_KNOTEN_ART || k.kartenVerweis != null || MengenKnotenAuswahl.vonIdOderNull(k.parameter[MENGEN_KNOTEN_AUSWAHL])?.istMatrizenmenge == true) k else {
             val dimensionen = k.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name in setOf("dim", "dimension") }
             val belegte = dimensionen.filter { it.id in verbunden }
             if (belegte.size > 1) k // Beide Verbindungen bleiben bis zur expliziten Verlustbestätigung erhalten.
@@ -390,4 +390,42 @@ fun KnotenDaten.mitEinheitlicherMengenDimension(): KnotenDaten {
     return if (aktiv == null) mitGradmengenDimension() else copy(anschlüsse = anschlüsse.mapNotNull {
         if (it == aktiv) it.copy(name = "dimension") else if (it in kandidaten) null else it
     })
+}
+
+/** Varianten erhalten Anschluss-IDs nach Rolle; der Aufrufer bestätigt betroffene Verbindungen. */
+fun konfiguriereMengenAuswahl(knoten: KnotenDaten, auswahl: MengenKnotenAuswahl): KnotenDaten {
+    require(knoten.art == MENGEN_KNOTEN_ART)
+    val vorlage = MengenKnotenVorlagen.vorlage(auswahl)
+    val anschlüsse = vorlage.anschlüsse.map { neu ->
+        (knoten.anschlüsse.firstOrNull { it.name == neu.name && it.richtung == neu.richtung }
+            ?: knoten.anschlüsse.singleOrNull { neu.richtung == AnschlussRichtung.Ausgang && it.richtung == AnschlussRichtung.Ausgang })
+            ?.copy(name = neu.name, art = neu.art, zulässigeArten = neu.zulässigeArten) ?: neu.copy(id = AnschlussId("${knoten.id.wert}:menge:${neu.name}"))
+    }
+    val neu = knoten.copy(kartenVerweis = null, parameter = (knoten.parameter - "raum.matrixHistorisch") + (MENGEN_KNOTEN_AUSWAHL to auswahl.stabileId), anschlüsse = anschlüsse)
+    return if (hatMengenDimensionsart(neu)) konfiguriereMengenDimensionsart(neu, mengenDimensionsart(neu).takeIf { it in setOf(MENGEN_DIMENSION_TUPEL, MENGEN_DIMENSION_TENSOR) } ?: MENGEN_DIMENSION_TUPEL) else neu.copy(parameter = neu.parameter - MENGEN_DIMENSIONSART_PARAMETER)
+}
+
+
+const val MENGEN_DIMENSIONSART_PARAMETER = "dimensionsart"
+const val MENGEN_DIMENSION_TUPEL = "tupel"
+const val MENGEN_DIMENSION_TENSOR = "tensor"
+fun sichtbareMengenAuswahlen(): List<MengenKnotenAuswahl> = MengenKnotenAuswahl.entries.filterNot { it.istMatrizenmenge }
+fun mengenDimensionsart(knoten: KnotenDaten): String = knoten.parameter[MENGEN_DIMENSIONSART_PARAMETER] ?: MENGEN_DIMENSION_TUPEL
+fun hatMengenDimensionsart(knoten: KnotenDaten): Boolean = knoten.art == MENGEN_KNOTEN_ART && knoten.kartenVerweis == null &&
+    MengenKnotenAuswahl.vonIdOderNull(knoten.parameter[MENGEN_KNOTEN_AUSWAHL])?.let { !it.istMatrizenmenge && it != MengenKnotenAuswahl.GRADMENGE } == true
+
+fun konfiguriereMengenDimensionsart(knoten: KnotenDaten, art: String): KnotenDaten {
+    require(hatMengenDimensionsart(knoten)) { "Diese Mengenquelle besitzt keine umschaltbare Dimensionsart." }
+    require(art in setOf(MENGEN_DIMENSION_TUPEL, MENGEN_DIMENSION_TENSOR)) { "Unbekannte Dimensionsart: $art" }
+    val wechsel = mengenDimensionsart(knoten) != art
+    return knoten.copy(
+        parameter = (if (wechsel) knoten.parameter.filterKeys { it != "raum.matrixHistorisch" && it != "standardwert.dimension" && !it.startsWith("standardwert.dimension.") } else knoten.parameter) + (MENGEN_DIMENSIONSART_PARAMETER to art),
+        eingangsKartenVerweise = if (wechsel) knoten.eingangsKartenVerweise.filterKeys { it != "dimension" && !it.startsWith("dimension@") } else knoten.eingangsKartenVerweise,
+        anschlüsse = knoten.anschlüsse.map { port ->
+            if (port.richtung == AnschlussRichtung.Eingang && port.name == "dimension") port.copy(
+                art = if (art == MENGEN_DIMENSION_TENSOR) MathematikAnschlussArten.Tupel.id else MathematikAnschlussArten.Zahl.id,
+                zulässigeArten = emptySet(),
+            ) else port
+        },
+    )
 }

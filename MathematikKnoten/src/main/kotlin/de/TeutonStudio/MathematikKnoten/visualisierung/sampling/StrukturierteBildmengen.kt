@@ -8,30 +8,13 @@ import java.math.BigInteger
 import java.util.concurrent.CancellationException
 import kotlin.math.*
 
-/** Produktblätter sind Samplingachsen; der Packungsbaum erhält die öffentliche Argumentstruktur. */
-private sealed interface ArgumentPackung {
-    fun wert(achsen: List<MathematischesObjekt>): MathematischesObjekt
-    data class Blatt(val index: Int) : ArgumentPackung {
-        override fun wert(achsen: List<MathematischesObjekt>) = achsen[index]
-    }
-    data class Produkt(val kinder: List<ArgumentPackung>, val orientierung: VektorOrientierung? = null) : ArgumentPackung {
-        override fun wert(achsen: List<MathematischesObjekt>): MathematischesObjekt {
-            val werte = kinder.map { it.wert(achsen) }
-            return when (orientierung) {
-                VektorOrientierung.Zeile -> ZeilenVektor(werte.map { it as ZahlAusdruck })
-                VektorOrientierung.Spalte -> SpaltenVektor(werte.map { it as ZahlAusdruck })
-                null -> Tupel(werte)
-            }
-        }
-    }
-}
-
 private data class ProduktAchse(
     val endlich: List<MathematischesObjekt>? = null,
     val minimum: Double = 0.0,
     val maximum: Double = 1.0,
     val linksOffen: Boolean = false,
     val rechtsOffen: Boolean = false,
+    val fensterBegrenzt: Boolean = false,
 ) {
     fun kontinuierlicherWert(t: Double): MathematischesObjekt {
         var x = minimum + (maximum - minimum) * t
@@ -78,54 +61,56 @@ internal fun sampleStrukturierteBildmenge(
     val fensterHinweise = mutableListOf<String>()
     fun reell(x: ZahlAusdruck): Double = ((DomaenenAuswerter.wert(x) as? DomaenenErgebnis.Wert)?.wert as? DomaenenWert.Reell)
         ?.wert?.toDouble()?.takeIf(Double::isFinite) ?: error("Eine Parametergrenze ist nicht endlich reell auswertbar.")
-    fun baue(menge: MengenAusdruck): ArgumentPackung = when (menge) {
-        is Tupelraum -> ArgumentPackung.Produkt(menge.komponenten.map(::baue))
-        is KartesischesProdukt -> ArgumentPackung.Produkt(menge.mengen.map(::baue))
-        is Vektorraum -> ArgumentPackung.Produkt(List(menge.dimension) { baue(menge.skalarMenge) }, menge.orientierung)
-        else -> {
-            val index = achsen.size
-            val achse = when (menge) {
-                LeereMenge -> ProduktAchse(endlich = emptyList())
-                is EndlicheMenge -> ProduktAchse(endlich = menge.elemente.sortedBy { it.zuLatex() })
-                is ReellesIntervall -> {
-                    val min = reell(menge.links); val max = reell(menge.rechts)
-                    when {
-                        min > max || min == max && (menge.linksOffen || menge.rechtsOffen) -> ProduktAchse(endlich = emptyList())
-                        min == max -> ProduktAchse(endlich = listOf(rationaleStützstelle(min)))
-                        !(max - min).isFinite() -> error("Die Parameterintervallspanne ist nicht endlich darstellbar.")
-                        else -> ProduktAchse(minimum = min, maximum = max, linksOffen = menge.linksOffen, rechtsOffen = menge.rechtsOffen)
-                    }
+    fun blatt(menge: MengenAusdruck): (List<MathematischesObjekt>) -> MathematischesObjekt {
+        val index = achsen.size
+        if(menge is EndlicheMenge) samplingSpeicher(menge.elemente.size*64L)
+        val fensterBereiche = if (graph) konfiguration.sampling.sichtBereiche ?: konfiguration.bereiche else konfiguration.bereiche
+        val fenster = listOfNotNull(fensterBereiche.x, fensterBereiche.y, fensterBereiche.z).getOrElse(index) { fensterBereiche.x }
+        val diskreteWerte = diskreteAchsenWerte(menge, fenster.minimum, fenster.maximum, budget)
+        val achse = if (diskreteWerte != null) ProduktAchse(endlich = diskreteWerte, fensterBegrenzt = menge !is EndlicheMenge) else when (menge) {
+            LeereMenge -> ProduktAchse(endlich = emptyList())
+            is EndlicheMenge -> ProduktAchse(endlich = menge.elemente.sortedBy { it.zuLatex() })
+            is ReellesIntervall -> {
+                val min = reell(menge.links); val max = reell(menge.rechts)
+                when {
+                    min > max || min == max && (menge.linksOffen || menge.rechtsOffen) -> ProduktAchse(endlich = emptyList())
+                    min == max -> ProduktAchse(endlich = listOf(rationaleStützstelle(min)))
+                    !(max - min).isFinite() -> error("Die Parameterintervallspanne ist nicht endlich darstellbar.")
+                    else -> ProduktAchse(minimum = min, maximum = max, linksOffen = menge.linksOffen, rechtsOffen = menge.rechtsOffen)
                 }
-                ReelleZahlen, RationaleZahlen, GanzeZahlen, NatürlicheZahlen -> {
-                    val fensterBereiche = if (graph) konfiguration.sampling.sichtBereiche ?: konfiguration.bereiche else konfiguration.bereiche
-                    val fenster = when (index) {
-                        0 -> fensterBereiche.x
-                        1 -> fensterBereiche.y
-                        else -> fensterBereiche.z ?: fensterBereiche.x
-                    }
-                    fensterHinweise += "Die unbeschränkte Parameterachse ${index + 1} wird durch ihr Parameterfenster begrenzt."
-                    if (menge == GanzeZahlen || menge == NatürlicheZahlen) {
-                        val start = maxOf(ceil(fenster.minimum), if (menge == NatürlicheZahlen) 1.0 else ceil(fenster.minimum))
-                        val ende = floor(fenster.maximum)
-                        val anzahl = if (ende < start) 0 else (ende - start + 1).also {
-                            require(it <= budget) { "Die diskrete Parameterachse überschreitet das Samplingbudget." }
-                        }.toInt()
-                        ProduktAchse(endlich = List(anzahl) { rationaleStützstelle(start + it) })
-                    } else ProduktAchse(minimum = fenster.minimum, maximum = fenster.maximum)
-                }
-                else -> error("${menge::class.simpleName} ist keine unterstützte numerische Produktdomäne.")
             }
-            achsen += achse
-            ArgumentPackung.Blatt(index)
+            ReelleZahlen, RationaleZahlen -> {
+                fensterHinweise += "Die unbeschränkte Parameterachse ${index + 1} wird durch ihr Parameterfenster begrenzt."
+                ProduktAchse(minimum = fenster.minimum, maximum = fenster.maximum, fensterBegrenzt = true)
+            }
+            else -> error(raumInterpretationsHinweis(menge) ?: "${menge::class.simpleName} ist keine unterstützte numerische Produktdomäne.")
+        }
+        achsen += achse
+        return { werte -> werte[index] }
+    }
+    fun baueRaum(raum: NumerischerRaum): (List<MathematischesObjekt>) -> MathematischesObjekt = when (raum) {
+        is NumerischerRaum.Blatt -> blatt(raum.menge)
+        is NumerischerRaum.Produkt -> {
+            val kinder = raum.kinder.map(::baueRaum)
+            val packe: (List<MathematischesObjekt>) -> MathematischesObjekt = { werte -> raum.baue(kinder.map { it(werte) }) }
+            packe
         }
     }
-    val packung = try { baue(abbild.menge) } catch (fehler: IllegalArgumentException) {
+    val packung = try {
+        val raum = numerischeArgumentStruktur(abbild.menge, endlicheObjekte = true)
+        if (raum != null) baueRaum(raum) else blatt(abbild.menge)
+    } catch (fehler: OffeneRaumBedingung) {
+        return VisualisierungsErgebnis.BedingtDarstellbar(fehler.message ?: "Offene diskrete Mitgliedschaft.")
+    } catch (fehler: IllegalArgumentException) {
         return VisualisierungsErgebnis.NichtDarstellbar(fehler.message ?: "Ungültige Produktdomäne.")
     } catch (fehler: IllegalStateException) {
         return VisualisierungsErgebnis.NichtDarstellbar(fehler.message ?: "Nicht unterstützte Produktdomäne.")
     }
     if (achsen.any { it.endlich?.isEmpty() == true }) {
-        return VisualisierungsErgebnis.Erfolgreich(emptyList(), false, listOf("Die Produktdomäne ist mathematisch leer."), VisualisierungsQualität.MathematischLeer)
+        val leer = achsen.any { it.endlich?.isEmpty() == true && !it.fensterBegrenzt }
+        return VisualisierungsErgebnis.Erfolgreich(emptyList(), false,
+            listOf(if (leer) "Die Produktdomäne ist mathematisch leer." else "Im Parameterfenster liegen keine diskreten Argumente."),
+            if (leer) VisualisierungsQualität.MathematischLeer else VisualisierungsQualität.KeineTrefferImFenster)
     }
     val diskret = achsen.indices.filter { achsen[it].endlich != null }
     val kontinuierlich = achsen.indices.filter { achsen[it].endlich == null }
@@ -147,20 +132,39 @@ internal fun sampleStrukturierteBildmenge(
     var auflösung = minOf(basis, budgetAuflösung)
     while (auflösung > 2 && begrenztesProdukt(listOf(zweigAnzahl.toInt()) + List(kontinuierlich.size) { auflösung }) > budget) auflösung--
     val halton = begrenztesProdukt(listOf(zweigAnzahl.toInt()) + List(kontinuierlich.size) { auflösung }) > budget
-    var zweige = listOf(emptyList<MathematischesObjekt>())
-    diskret.forEach { i -> zweige = zweige.flatMap { prefix -> achsen[i].endlich!!.map { prefix + it } } }
+    val zweige=zweigAnzahl.toInt()
+    // Gemischtradix-Index statt Materialisierung sämtlicher Parameterkombinationen.
+    samplingSpeicher(zweige*64L)
     val werte = MutableList<MathematischesObjekt>(achsen.size) { RationaleZahl.Null }
     val punkte = mutableListOf<VisualisierungsPunkt>()
-    val raster = List(zweige.size) { mutableListOf<VisualisierungsPunkt?>() }
+    val raster = List(zweige) { mutableListOf<VisualisierungsPunkt?>() }
     val diagnosen = linkedSetOf<String>()
+    var offeneBedingung = false
     var projektion: KoordinatenErgebnis.ProjektionErforderlich? = null
     var auswertungen = 0
+    val hatZusatzBedingung = numerischeArgumentStruktur(abbild.menge, endlicheObjekte = true)?.hatZusatzBedingung() == true ||
+        numerischerRaum(abbild.menge, endlicheObjekte = true) == null && numerischeArgumentStruktur(abbild.menge, endlicheObjekte = true) != null
     fun auswerten(zweig: Int) {
         abbruchPrüfen()
         if (projektion != null && konfiguration.ausgabeKoordinaten.isEmpty()) return
         auswertungen++
+        samplingSpeicher(512)
+        if(auswertungen % 256 == 0) samplingZwischenstand {
+            VisualisierungsErgebnis.Teilweise(punkte.toList(),listOf("Parameterzweige werden ausgewertet; noch nicht vollständig.")+diagnosen)
+        }
         try {
-            val argument = packung.wert(werte)
+            val argument = packung(werte)
+            val mitgliedschaft = ElementBeziehung(argument, abbild.menge).entscheide().wahrheitswert
+            if (mitgliedschaft == null && hatZusatzBedingung) {
+                offeneBedingung = true
+                diagnosen += "Die zusätzliche Definitionsraumbedingung eines Arguments ist noch nicht bewiesen."
+                raster[zweig] += null
+                return
+            }
+            if (mitgliedschaft == Wahrheitswert.Lüge) {
+                raster[zweig] += null
+                return
+            }
             val ergebnis = methode.wendeAn(methode.argumenteAusGesamtArgument(argument))
             val bild = if (graph) Tupel(listOf(argument, ergebnis)) else if (konfiguration.methodenModus == MethodenDarstellungsModus.Koordinatenausgabe && methode.ausgabeNamen.size > 1 && konfiguration.ausgabeKoordinaten.isEmpty()) {
                 val vollständig = KoordinatenAdapter.extrahiere(ergebnis, 1, konfiguration.festeSchnitte)
@@ -194,13 +198,19 @@ internal fun sampleStrukturierteBildmenge(
             raster[zweig] += null
         }
     }
-    fun setzeZweig(z: Int) { diskret.forEachIndexed { i, achse -> werte[achse] = zweige[z][i] } }
+    fun setzeZweig(z:Int) {
+        var rest=z
+        for(i in diskret.indices.reversed()) {
+            val achse=diskret[i];val elemente=achsen[achse].endlich!!
+            werte[achse]=elemente[rest%elemente.size];rest/=elemente.size
+        }
+    }
     if (halton) {
         val primzahlen = erstePrimzahlen(kontinuierlich.size)
-        repeat(budget / zweige.size) { nummer ->
+        repeat(budget / zweige) { nummer ->
             kontinuierlich.forEachIndexed { i, achse -> werte[achse] = achsen[achse].kontinuierlicherWert(haltonWert(nummer + 1, primzahlen[i])) }
             // Alle diskreten Zweige erhalten dieselben kontinuierlichen Stützwerte, insbesondere das Vorzeichenpaar.
-            zweige.indices.forEach { z -> setzeZweig(z); auswerten(z) }
+            (0 until zweige).forEach { z -> setzeZweig(z); auswerten(z) }
         }
     } else {
         fun rasterAchse(i: Int, zweig: Int) {
@@ -208,12 +218,16 @@ internal fun sampleStrukturierteBildmenge(
             val achse = kontinuierlich[i]
             repeat(auflösung) { j -> werte[achse] = achsen[achse].rasterWert(j, auflösung); rasterAchse(i + 1, zweig) }
         }
-        zweige.indices.forEach { z -> setzeZweig(z); rasterAchse(0, z) }
+        (0 until zweige).forEach { z -> setzeZweig(z); rasterAchse(0, z) }
     }
     if (punkte.isEmpty()) {
         projektion?.let { return VisualisierungsErgebnis.ProjektionErforderlich(it.vorhandeneDimension, it.erwarteteDimension, it.beschreibung) }
-        return VisualisierungsErgebnis.NichtDarstellbar(diagnosen.joinToString(" ").ifBlank { "Die Bildmenge erzeugt keine numerischen Punkte." })
+        if (offeneBedingung) return VisualisierungsErgebnis.BedingtDarstellbar(diagnosen.joinToString(" "))
+        if (diagnosen.isEmpty()) return VisualisierungsErgebnis.Erfolgreich(emptyList(), false,
+            listOf("Unter den numerischen Stützpunkten im Parameterfenster liegen keine zulässigen Argumente."), VisualisierungsQualität.KeineTrefferImFenster)
+        return VisualisierungsErgebnis.NichtDarstellbar(diagnosen.joinToString(" "))
     }
+    samplingSpeicher(punkte.size*1024L)
     val linien = mutableListOf<VisualisierungsLinie>()
     val dreiecke = mutableListOf<VisualisierungsDreieck>()
     if (!halton && kontinuierlich.size == 1) raster.forEach { zweig ->
@@ -229,15 +243,32 @@ internal fun sampleStrukturierteBildmenge(
             if (b != null && c != null && d != null) dreiecke += VisualisierungsDreieck(b, d, c)
         }
     }
+    // Vollständig ausgewertete regelmäßige Flächen: grobes zusammenhängendes Netz
+    // je diskretem Zweig. Jede bekannte Definitionslücke sperrt diesen Ersatz.
+    val interaktionsDreiecke=mutableListOf<VisualisierungsDreieck>()
+    if(!halton && kontinuierlich.size==2 && zweige<=512 && raster.all { zweig -> zweig.all {it!=null} }) {
+        val segmenteProAchse=kotlin.math.sqrt(512.0/zweige).toInt().coerceIn(1,15)
+        val schritt=kotlin.math.ceil((auflösung-1).toDouble()/segmenteProAchse).toInt().coerceAtLeast(1)
+        val indices=(0 until auflösung step schritt).toMutableList().also { if(it.last()!=auflösung-1) it+=auflösung-1 }
+        samplingSpeicher(zweige.toLong()*(indices.size-1)*(indices.size-1)*2*448)
+        raster.forEach { zweig ->
+            indices.zipWithNext().forEach { (i,j) -> indices.zipWithNext().forEach { (k,l) ->
+                val a=zweig[i*auflösung+k]!!;val b=zweig[j*auflösung+k]!!
+                val c=zweig[i*auflösung+l]!!;val d=zweig[j*auflösung+l]!!
+                interaktionsDreiecke+=VisualisierungsDreieck(a,b,c)
+                interaktionsDreiecke+=VisualisierungsDreieck(b,d,c)
+            } }
+        }
+    }
     val hinweise = fensterHinweise.distinct() + listOf(
-        "Bildmodus: ${methode.parameter.size} öffentliche Argumente, ${kontinuierlich.size} kontinuierliche Achsen, ${zweige.size} getrennte diskrete Zweige.",
+        "Bildmodus: ${methode.parameter.size} öffentliche Argumente, ${kontinuierlich.size} kontinuierliche Achsen, ${zweige} getrennte diskrete Zweige.",
         if (halton) "Deterministische Halton-Approximation mit gepaarten diskreten Zweigen: $auswertungen Auswertungen innerhalb Budget $budget."
         else "Vollständiges Produktgitter: $auswertungen Auswertungen; endliche Parameterintervalle bleiben unabhängig vom Kamerafenster.",
     ) + diagnosen
     val eindeutig = punkte.distinct()
     val statistik = VisualisierungsStatistik(auswertungen = auswertungen, stützpunkte = eindeutig.size, linien = linien.size, dreiecke = dreiecke.size)
-    return if (diagnosen.isNotEmpty()) VisualisierungsErgebnis.Teilweise(eindeutig, hinweise, linien = linien, dreiecke = dreiecke, statistik = statistik)
-    else VisualisierungsErgebnis.Erfolgreich(eindeutig, kontinuierlich.isNotEmpty(), hinweise, linien = linien, dreiecke = dreiecke, statistik = statistik)
+    return if (diagnosen.isNotEmpty()) VisualisierungsErgebnis.Teilweise(eindeutig, hinweise, linien = linien, dreiecke = dreiecke, statistik = statistik,interaktionsDreiecke=interaktionsDreiecke)
+    else VisualisierungsErgebnis.Erfolgreich(eindeutig, kontinuierlich.isNotEmpty(), hinweise, linien = linien, dreiecke = dreiecke, statistik = statistik,interaktionsDreiecke=interaktionsDreiecke)
 }
 
 private fun rationaleStützstelle(wert: Double): RationaleZahl {

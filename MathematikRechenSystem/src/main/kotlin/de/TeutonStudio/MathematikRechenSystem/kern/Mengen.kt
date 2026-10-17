@@ -332,7 +332,13 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
         is DefinierteMenge -> entscheidePrädikatsMitgliedschaft(element, menge, kontext)
         is BeschraenkteZahlmenge -> entscheideBeschränkteMitgliedschaft(element, menge, kontext)
         is PrädikatsMenge -> {
-            val bedingung = ersetze(menge.bedingung, mapOf((menge.element.bindungsId ?: menge.element.name) to element))
+            val bindungen = mapOf((menge.element.bindungsId ?: menge.element.name) to element)
+            // Aufrufvoraussetzungen müssen vor der Substitution geprüft werden: diese
+            // kann einen konstanten Aufruf vereinfachen und seine Bedingungen entfernen.
+            val voraussetzungen = menge.bedingung.aufgerufeneBedingungen(bindungen, kontext)
+            val voraussetzungsLage = Konjunktion(voraussetzungen.toList()).entscheide(kontext)
+            if (voraussetzungsLage.wahrheitswert != Wahrheitswert.Wahr) return voraussetzungsLage
+            val bedingung = ersetze(menge.bedingung, bindungen)
             val lage = prüfeDefinitionslage(bedingung, kontext)
             when (lage.wahrheitswert) {
                 Wahrheitswert.Wahr -> bedingung.entscheide(kontext)
@@ -347,6 +353,25 @@ data class ElementBeziehung(val element: MathematischesObjekt, val menge: Mengen
         is Tupelraum -> entscheideTupelMitgliedschaft(element, menge.komponenten, kontext)
         is Vektorraum -> entscheideVektorMitgliedschaft(element, menge, kontext)
         is Matrizenraum -> entscheideMatrixMitgliedschaft(element, menge, kontext)
+        is Tensorraum -> run {
+            val raum = menge as Tensorraum
+            val achsen: List<Int>
+            val werte: List<ZahlAusdruck>
+            when {
+                element is Matrix && raum.dimensionen.size == 2 -> {
+                    achsen = listOf(element.zeilenAnzahl, element.spaltenAnzahl)
+                    werte = element.zeilen.flatten()
+                }
+                element is Tensor && !raum.matrixForm -> {
+                    achsen = element.dimensionen
+                    werte = element.werte
+                }
+                else -> return@run unpassendeLineareStruktur(element, "Der Wert besitzt nicht die erforderliche Tensorstruktur.")
+            }
+            if (achsen.size != raum.dimensionen.size) AussageErgebnis(Wahrheitswert.Lüge, EntscheidungsStatus.Widerlegt)
+            else Konjunktion(achsen.zip(raum.dimensionen).map { (n, d) -> Gleichheit(RationaleZahl.von(n.toLong()), d) } +
+                werte.map { ElementBeziehung(it, raum.elementMenge) }).entscheide(kontext)
+        }
         is Vereinigung -> Disjunktion(menge.mengen.map { ElementBeziehung(element, it) }).entscheide(kontext)
         is Schnitt -> if (menge.mengen.isEmpty()) {
             menge.grundMenge?.let { ElementBeziehung(element, it).entscheide(kontext) }

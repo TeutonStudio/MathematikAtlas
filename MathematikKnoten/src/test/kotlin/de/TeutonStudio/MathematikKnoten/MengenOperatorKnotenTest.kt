@@ -12,6 +12,8 @@ class MengenOperatorKnotenTest {
     fun `sichtbarer mengenrechner umfasst die kanonischen operatoren`() {
         assertEquals(
             setOf(
+                MengenRechnerOperator.TUPELRAUM,
+                MengenRechnerOperator.TENSORRAUM,
                 MengenRechnerOperator.UNTERRAUM,
                 MengenRechnerOperator.SCHNITT,
                 MengenRechnerOperator.VEREINIGUNG,
@@ -26,6 +28,7 @@ class MengenOperatorKnotenTest {
                 MengenRechnerOperator.FOLGENMENGE,
                 MengenRechnerOperator.HALBFOLGENMENGE,
                 MengenRechnerOperator.KLASSIFIZIERTE_MENGE,
+                MengenRechnerOperator.URBILD,
             ),
             sichtbareMengenRechnerOperatoren().toSet(),
         )

@@ -447,6 +447,9 @@ internal fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester,
                     value = knoten.parameter[VEKTOR_POTENZ_EXPONENT] ?: "2", label = { Text("Exponent") },
                     onValueChange = { text -> if (text.toIntOrNull()?.let { it >= 0 } == true) atlas.beantrageKonfiguration(knoten.copy(parameter = knoten.parameter + (VEKTOR_POTENZ_EXPONENT to text))) })
             }
+            if (knoten.art == MENGEN_KNOTEN_ART) sichtbareMengenAuswahlen().forEach { auswahl ->
+                TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereMengenAuswahl(knoten, auswahl)) }) { Text(auswahl.titel) }
+            }
             if (knoten.art == MengenRechner.KNOTEN_ART) sichtbareMengenRechnerOperatoren().forEach { op -> TextButton(onClick = { atlas.beantrageKonfiguration(konfiguriereMengenRechner(knoten, op)) }) { Text(op.titel()) } }
             if (knoten.art == ZAHLENRECHNER_ART || de.TeutonStudio.MathematikKnoten.StrukturRechnerKnotenFamilie.fuerKnotenArt(knoten.art) != null)
                 OutlinedButton(onClick = { formelOffen = true }) { Text("Formel / Zeichnung bearbeiten") }
@@ -494,11 +497,21 @@ internal fun DesktopInspektor(atlas: DesktopAtlasZustand, fokus: FocusRequester,
 }
 
 private fun hatDesktopEingangsEinstellungen(knoten: KnotenDaten, karte: KartenDaten): Boolean =
-    hatRechnerEingangsEinstellungen(knoten) || istDynamischeOperation(knoten) && dynamischeOperandengruppen(karte, knoten, belegteOperationsEingänge(knoten)).isNotEmpty() || knoten.art == METHODEN_GRAPH_KNOTEN_ART || knoten.art == METHODEN_AUFRUF_ART ||
+    hatMengenDimensionsart(knoten) || hatRechnerEingangsEinstellungen(knoten) || istDynamischeOperation(knoten) && dynamischeOperandengruppen(karte, knoten, belegteOperationsEingänge(knoten)).isNotEmpty() || knoten.art == METHODEN_GRAPH_KNOTEN_ART || knoten.art == METHODEN_AUFRUF_ART ||
         knoten.art == "mathematik.visualisierung" && (knoten.anschlüsse.any { it.richtung == AnschlussRichtung.Ausgang } || knoten.anschlüsse.count { it.kannSichErweitern } < 2)
 
 @Composable
 private fun DesktopEingangsEinstellungen(knoten: KnotenDaten, atlas: DesktopAtlasZustand) {
+    if (hatMengenDimensionsart(knoten)) {
+        Text("Dimensionsart")
+        Row {
+            listOf(MENGEN_DIMENSION_TUPEL to "Tupel", MENGEN_DIMENSION_TENSOR to "Tensor").forEach { (art, titel) ->
+                FilterChip(selected = mengenDimensionsart(knoten) == art,
+                    onClick = { atlas.beantrageKonfiguration(konfiguriereMengenDimensionsart(knoten, art)) }, label = { Text(titel) })
+            }
+        }
+    }
+
     InspektorRechnerEingangsEinstellungen(knoten, atlas::beantrageKonfiguration)
     GraphEingangsEinstellungen(knoten, atlas::beantrageKonfiguration)
     de.TeutonStudio.MathematikKnoten.visualisierung.ui.VisualisierungsAnschlussEinstellungen(knoten, atlas::beantrageKonfiguration)

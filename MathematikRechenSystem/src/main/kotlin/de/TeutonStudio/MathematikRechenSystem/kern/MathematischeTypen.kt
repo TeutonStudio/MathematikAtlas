@@ -142,7 +142,7 @@ fun MengenAusdruck.elementTypAusdruck(): TypAusdruck = when (this) {
         ),
     )
     is Tensorraum -> TypAusdruck.Parameterisiert(
-        MathematischeTypen.Tensor,
+        if (matrixForm) MathematischeTypen.Matrix else MathematischeTypen.Tensor,
         listOf(elementMenge.elementTypAusdruck()) + dimensionen.map { TypAusdruck.Literal(it.zuLatex()) },
     )
     is BeschraenkteZahlmenge -> when (traeger) {

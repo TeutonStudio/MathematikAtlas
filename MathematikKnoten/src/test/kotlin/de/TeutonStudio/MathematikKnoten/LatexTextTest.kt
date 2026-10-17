@@ -8,6 +8,22 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class LatexTextTest {
+    @Test fun `indiziertes Kreuzprodukt ist auch im Exponenten ein grosser Operator`() {
+        assertContains(atlasLatexQuelltext("A^{\\times\\limits_k n(k)}",false),"A^{\\mathop{×}\\limits_k n(k)}")
+    }
+
+    @Test
+    fun `brace Aliase sind im Renderer und Klartext echte Klammern`() {
+        for (dunkel in listOf(false,true)) {
+            val latex = atlasLatexQuelltext("\\left\\lbrace x\\right\\rbrace + \\bigl\\lbrace y\\bigr\\rbrace",dunkel)
+            assertContains(latex,"\\left\\{ x\\right\\}")
+            assertContains(latex,"\\bigl\\{ y\\bigr\\}")
+            assertFalse("\\lbrace" in latex)
+            assertFalse("\\rbrace" in latex)
+        }
+        assertEquals("{x}",vereinfacheLatexAnzeige("\\lbrace x\\rbrace").replace(" ",""))
+    }
+
     @Test
     fun `Doppelstrichnotation bleibt in beiden Themes samt Potenzen und Indizes erhalten`() {
         val fälle = mapOf(
@@ -36,7 +52,7 @@ class LatexTextTest {
         val latex = "f:\\begin{cases}\\mathbb{R} \\longrightarrow \\mathbb{C}\\\\x \\mapsto \\frac{x}{2}\\end{cases}"
         val quelltext = atlasLatexQuelltext(latex, dunklesSchema = false)
 
-        assertContains(quelltext, "\\left\\lbrace")
+        assertContains(quelltext, "\\left\\{")
         assertContains(quelltext, "\\begin{matrix}")
         assertContains(quelltext, "\\end{matrix}\\right.")
         assertContains(quelltext, "\\frac{x}{2}")

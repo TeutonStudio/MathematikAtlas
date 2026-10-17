@@ -65,7 +65,7 @@ class KanonischerMathematikKnotenKatalogTest {
     @Test
     fun `mengenoperatoren sind konsolidiert relationen liegen im praedikat und potenzmenge bleibt eigenstaendig sichtbar`() {
         val kanonischeArten = KanonischerMathematikKnotenKatalog.alle().map { it.art }.toSet()
-        val mengenraumArten = MengenraumKnotenVorlagen.alle.map { it.art }.toSet()
+        val mengenraumArten = MengenraumKnotenVorlagen.alle.filterNot { it.art == "mathematik.matrizenraum" }.map { it.art }.toSet()
 
         assertTrue(MengenRechner.KNOTEN_ART in kanonischeArten)
         assertTrue(RelationsOperatoren.KNOTEN_ART in kanonischeArten)

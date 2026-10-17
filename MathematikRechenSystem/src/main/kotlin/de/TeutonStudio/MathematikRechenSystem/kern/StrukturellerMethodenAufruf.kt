@@ -81,6 +81,13 @@ internal fun MathematischesObjekt.aufgerufeneBedingungen(
                     require(ziel.signatur.argumente.size == argumente.anzahl) { "Falsche Argumentanzahl." }
                     val ids = ziel.signatur.argumente.mapIndexed { i,k -> k.id to argumente.elemente[i] }.toMap()
                     bedingungen += ziel.prüfeDefinitionsBedingungen(ids, kontext)
+                    val symbolisch = runCatching { ziel.alsMathematischeMethode("Definitionsbedingungen") }.getOrNull()
+                    if (symbolisch != null) {
+                        val argumentBindungen = symbolisch.parameter.mapIndexed { i, p ->
+                            (p.bindungsId ?: p.name) to argumente.elemente[i]
+                        }.toMap()
+                        bedingungen += definitionsBedingungen(symbolisch.ergebnisTupel).map { ersetze(it, argumentBindungen) }
+                    }
                 }
                 emptyList()
             }

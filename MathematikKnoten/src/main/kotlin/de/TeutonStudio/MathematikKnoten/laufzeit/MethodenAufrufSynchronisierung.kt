@@ -41,7 +41,8 @@ fun synchronisiereMethodenAufrufe(
     prüfung: GraphPrüfung,
 ): KartenDaten {
 
-    val synchronisierteKnoten = karte.knoten.map { knoten ->
+    val urbildKarte = synchronisiereUrbildAnschluesse(karte, auswertung, prüfung)
+    val synchronisierteKnoten = urbildKarte.knoten.map { knoten ->
         if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter) return@map knoten
         when (knoten.art) {
             METHODEN_AUFRUF_ART -> {
@@ -50,10 +51,10 @@ fun synchronisiereMethodenAufrufe(
                     ?.get("methode")
                     ?.objekt as? Methode
                 val fest = knoten.parameter[METHODEN_AUFRUF_PROJEKTION_FEST] == "true"
-                val argumentProjektion = if (fest) knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION] ?: METHODEN_ARGUMENTPROJEKTION_SEPARIERT else methodenArgumentprojektionFürVerbraucher(karte, knoten)
-                val ergebnisProjektion = if (fest) knoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION] ?: METHODEN_ERGEBNISPROJEKTION_DIREKT else methodenErgebnisprojektionFürVerbraucher(karte, knoten)
+                val argumentProjektion = if (fest) knoten.parameter[METHODEN_AUFRUF_ARGUMENTPROJEKTION] ?: METHODEN_ARGUMENTPROJEKTION_SEPARIERT else methodenArgumentprojektionFürVerbraucher(urbildKarte, knoten)
+                val ergebnisProjektion = if (fest) knoten.parameter[METHODEN_AUFRUF_ERGEBNISPROJEKTION] ?: METHODEN_ERGEBNISPROJEKTION_DIREKT else methodenErgebnisprojektionFürVerbraucher(urbildKarte, knoten)
                 val belegt = knoten.anschlüsse.filter { p ->
-                    karte.verbindungen.any { it.von == AnschlussVerweis(knoten.id,p.id) || it.zu == AnschlussVerweis(knoten.id,p.id) } ||
+                    urbildKarte.verbindungen.any { it.von == AnschlussVerweis(knoten.id,p.id) || it.zu == AnschlussVerweis(knoten.id,p.id) } ||
                         "standardwert.${p.name}" in knoten.parameter || p.name in knoten.eingangsKartenVerweise
                 }.map { it.id }.toSet()
                 synchronisiereMethodenAufruf(knoten, methode, argumentProjektion, ergebnisProjektion, belegt,
@@ -64,22 +65,22 @@ fun synchronisiereMethodenAufrufe(
                     ?.eingänge
                     ?.get("methode")
                     ?.objekt as? Methode
-                val projektion = methodenArgumentprojektionFürVerbraucher(karte, knoten)
+                val projektion = methodenArgumentprojektionFürVerbraucher(urbildKarte, knoten)
                 synchronisiereMethodenArgumente(knoten, methode, projektion)
             }
             METHODEN_ZIELMENGE_ART -> {
-                val projektion = methodenErgebnisprojektionFürVerbraucher(karte, knoten)
+                val projektion = methodenErgebnisprojektionFürVerbraucher(urbildKarte, knoten)
                 knoten.copy(
                     parameter = knoten.parameter +
                         (METHODEN_ZIELMENGE_ERGEBNISPROJEKTION to projektion),
                 )
             }
             else -> knoten
-        }.let { synchronisiereSemantischeAusgänge(it, auswertung, karte) }
+        }.let { synchronisiereSemantischeAusgänge(it, auswertung, urbildKarte) }
     }
 
     val argumentIdErsetzungen=buildMap {
-        for(alt in karte.knoten.filter {it.art==METHODEN_AUFRUF_ART}) {
+        for(alt in urbildKarte.knoten.filter {it.art==METHODEN_AUFRUF_ART}) {
             if(METHODEN_STRUKTUR_PACKUNG in alt.eigenschaften) continue
             val neu=synchronisierteKnoten.single {it.id==alt.id}
             alt.argumentAnschlüsse().forEachIndexed {i,p ->
@@ -90,9 +91,9 @@ fun synchronisiereMethodenAufrufe(
         }
     }
 
-    var ergebnis = karte.copy(
+    var ergebnis = urbildKarte.copy(
         knoten = synchronisierteKnoten,
-        verbindungen = karte.verbindungen.map { verbindung ->
+        verbindungen = urbildKarte.verbindungen.map { verbindung ->
             verbindung.copy(
                 von = argumentIdErsetzungen[verbindung.von] ?: verbindung.von,
                 zu = argumentIdErsetzungen[verbindung.zu] ?: verbindung.zu,
@@ -107,7 +108,7 @@ fun synchronisiereMethodenAufrufe(
     })
 
     // Eine einzelne unvereinbare Kante darf keine unabhängigen Kanten mitreißen.
-    val geschützt = ergebnis.knoten.filter { RECHNER_MIGRATION_DIAGNOSE in it.parameter || METHODEN_AUFRUF_VERTRAGSFEHLER in it.parameter }.map { it.id }.toSet()
+    val geschützt = ergebnis.knoten.filter { RECHNER_MIGRATION_DIAGNOSE in it.parameter || METHODEN_AUFRUF_VERTRAGSFEHLER in it.parameter || URBILD_VERTRAGSFEHLER in it.parameter }.map { it.id }.toSet()
     val inkompatibleIds = prüfung.inkompatibleVerbindungen(ergebnis)
         .filter { it.von.knotenId !in geschützt && it.zu.knotenId !in geschützt }.map { it.id }.toSet()
     val gültigeVerbindungen = ergebnis.verbindungen.filterNot { it.id in inkompatibleIds }

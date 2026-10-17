@@ -15,7 +15,14 @@ internal object ErweiterterFormelRenderer {
         fun schreibe(ausdruck: FormelAusdruck, elternPraezedenz: Int = 0) {
             val start = text.length
             when (ausdruck) {
-                is FormelAusdruck.Literal -> text.append(ausdruck.wert.zuLatex())
+                is FormelAusdruck.Literal -> {
+                    val wert = ausdruck.wert
+                    val klammern = wert is ZahlAusdruck && (elternPraezedenz >= 30 && positiverGegentermOderNull(wert) != null ||
+                        elternPraezedenz > 10 && wert is Addition || elternPraezedenz > 20 && wert is Multiplikation)
+                    if (klammern) text.append("\\left(")
+                    text.append(wert.zuLatex())
+                    if (klammern) text.append("\\right)")
+                }
                 is FormelAusdruck.Variable -> text.append(ausdruck.latex)
                 is FormelAusdruck.Platzhalter -> text.append("\\square_{${ausdruck.beschriftung.atlasLatexText()}}")
                 is FormelAusdruck.Operation -> {
@@ -30,7 +37,23 @@ internal object ErweiterterFormelRenderer {
             bereiche[ausdruck.id] = start until text.length
         }
 
+        fun erfasseBedingungen(a: FormelAusdruck) {
+            if (a is FormelAusdruck.Operation) {
+                bedingungen += a.bedingungen
+                a.argumente.forEach { erfasseBedingungen(it.ausdruck) }
+            }
+        }
+        erfasseBedingungen(wurzel)
         schreibe(wurzel)
+        // Vorzeichenhüllen bleiben im Bearbeitungsmodell adressierbar, auch wenn
+        // die Darstellung ihren inneren Gegenwert ohne die Hülle schreibt.
+        fun ergänzeBereiche(a: FormelAusdruck, eltern: IntRange) {
+            val bereich = bereiche[a.id] ?: if (a is FormelAusdruck.Operation)
+                a.argumente.mapNotNull { bereiche[it.ausdruck.id] }.firstOrNull() ?: eltern else eltern
+            bereiche.putIfAbsent(a.id, bereich)
+            if (a is FormelAusdruck.Operation) a.argumente.forEach { ergänzeBereiche(it.ausdruck, bereich) }
+        }
+        ergänzeBereiche(wurzel, 0 until text.length)
         return FormelRenderErgebnis(text.toString(), bereiche, bedingungen.toList())
     }
 
@@ -66,10 +89,26 @@ internal object ErweiterterFormelRenderer {
                 text.append("\\right)")
             }
             "zahl.addition" -> argumente.forEachIndexed { index, argument ->
-                if (index > 0) text.append(" + ")
-                schreibe(argument, praezedenz)
+                val positiv = positiverFormelGegenterm(argument)
+                if (positiv != null) {
+                    text.append(if (index == 0) "-" else " - ")
+                    schreibe(positiv, praezedenz + 1)
+                } else {
+                    if (index > 0) text.append(" + ")
+                    schreibe(argument, praezedenz)
+                }
             }
-            "zahl.subtraktion" -> binaer(argumente, " - ", praezedenz, text, schreibe)
+            "zahl.subtraktion" -> {
+                val links = argumente.argumentOderPlatzhalter(0, operation.id, "links")
+                val rechts = argumente.argumentOderPlatzhalter(1, operation.id, "rechts")
+                val positiv = positiverFormelGegenterm(rechts)
+                if ((links as? FormelAusdruck.Literal)?.wert == RationaleZahl.Null) {
+                    if (positiv != null) schreibe(positiv, praezedenz + 1)
+                    else { text.append("-"); schreibe(rechts, praezedenz + 1) }
+                } else if (positiv != null) {
+                    schreibe(links, praezedenz); text.append(" + "); schreibe(positiv, praezedenz + 1)
+                } else binaer(argumente, " - ", praezedenz, text, schreibe)
+            }
             "zahl.multiplikation" -> argumente.forEachIndexed { index, argument ->
                 if (index > 0) text.append(" \\cdot ")
                 schreibe(argument, praezedenz)
@@ -264,6 +303,28 @@ internal object ErweiterterFormelRenderer {
         schreibe(argumente.argumentOderPlatzhalter(0, "binaer", "links"), praezedenz)
         text.append(zeichen)
         schreibe(argumente.argumentOderPlatzhalter(1, "binaer", "rechts"), praezedenz + 1)
+    }
+
+    private fun positiverFormelGegenterm(ausdruck: FormelAusdruck): FormelAusdruck? = when (ausdruck) {
+        is FormelAusdruck.Literal -> (ausdruck.wert as? ZahlAusdruck)?.let(::positiverGegentermOderNull)?.let { ausdruck.copy(wert = it) }
+        is FormelAusdruck.Operation -> {
+            val args = ausdruck.argumente.sortedBy { it.position }
+            when {
+                ausdruck.operatorId == "zahl.subtraktion" && args.size == 2 &&
+                    (args[0].ausdruck as? FormelAusdruck.Literal)?.wert == RationaleZahl.Null ->
+                    args[1].ausdruck.takeIf { positiverFormelGegenterm(it) == null }
+                ausdruck.operatorId == "formel.gruppierung" && args.size == 1 ->
+                    positiverFormelGegenterm(args[0].ausdruck)?.let { ausdruck.copy(argumente = listOf(args[0].copy(ausdruck = it))) }
+                ausdruck.operatorId == "zahl.multiplikation" -> {
+                    val negativ = args.indexOfFirst { positiverFormelGegenterm(it.ausdruck) != null }
+                    if (negativ < 0) null else ausdruck.copy(argumente = args.mapIndexed { i, a ->
+                        if (i == negativ) a.copy(ausdruck = requireNotNull(positiverFormelGegenterm(a.ausdruck))) else a
+                    })
+                }
+                else -> null
+            }
+        }
+        else -> null
     }
 
     private fun praezedenz(operatorId: String): Int = when (operatorId) {

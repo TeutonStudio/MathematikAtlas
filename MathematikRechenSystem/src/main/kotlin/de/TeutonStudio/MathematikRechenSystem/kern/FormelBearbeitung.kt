@@ -154,7 +154,14 @@ fun bereichFürTyp(t:TypAusdruck):MengenAusdruck = when(t) {
         MathematischeTypen.Tupel -> Tupelraum(t.argumente.map(::bereichFürTyp))
         MathematischeTypen.Methode -> {require(t.argumente.size==2);Abbildungsmenge(bereichFürTyp(t.argumente[1]),bereichFürTyp(t.argumente[0]))}
         MathematischeTypen.SpaltenVektor,MathematischeTypen.ZeilenVektor -> {require(t.argumente.size==2);Vektorraum(if(t.konstruktor==MathematischeTypen.SpaltenVektor) VektorOrientierung.Spalte else VektorOrientierung.Zeile,(t.argumente[1] as TypAusdruck.Literal).wert.toInt(),bereichFürTyp(t.argumente[0]))}
-        MathematischeTypen.Matrix -> {require(t.argumente.size==3);Matrizenraum((t.argumente[1] as TypAusdruck.Literal).wert.toInt(),(t.argumente[2] as TypAusdruck.Literal).wert.toInt(),bereichFürTyp(t.argumente[0]))}
+        MathematischeTypen.Matrix -> {
+            require(t.argumente.size == 3)
+            val n = (t.argumente[1] as? TypAusdruck.Literal)?.wert?.toIntOrNull()
+            val m = (t.argumente[2] as? TypAusdruck.Literal)?.wert?.toIntOrNull()
+            // Ein Typliteral enthält keine Quellbindung. Daraus keine neue Variable erfinden.
+            if (n == null || m == null) FehlendeObermenge("Symbolische Matrixdimension ohne Quellenvertrag")
+            else Matrizenraum(n, m, bereichFürTyp(t.argumente[0]))
+        }
         MathematischeTypen.Tensor -> {require(t.argumente.size>1);Tensorraum(bereichFürTyp(t.argumente[0]),t.argumente.drop(1).map {RationaleZahl.parse((it as TypAusdruck.Literal).wert)})}
         MathematischeTypen.Menge -> Potenzmenge(bereichFürTyp(t.argumente.single()))
         else -> FehlendeObermenge("Strukturtyp")

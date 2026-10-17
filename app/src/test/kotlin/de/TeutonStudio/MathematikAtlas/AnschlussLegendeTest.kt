@@ -96,7 +96,7 @@ class AnschlussLegendeTest {
             .firstOrNull { it.arten.singleOrNull()?.id == MathematikAnschlussArten.Methode.id }
 
         assertNotNull(eintrag)
-        assertEquals("Methode", eintrag.titel)
+        assertEquals("Methode: Zahl → Menge", eintrag.titel)
         assertEquals(methodenTyp, eintrag.symbolAnschluss.vertrag.typ)
     }
 
@@ -125,6 +125,18 @@ class AnschlussLegendeTest {
         assertEquals(unbekannt, eintrag.arten.single().id)
         assertEquals("plugin.unbekannt", eintrag.titel)
         assertTrue(eintrag.arten.single().beschreibung.contains("Nicht registrierte Anschlussart"))
+    }
+
+    @Test fun `unterschiedliche Halbkreisfarben erzeugen eigene Legendeneintraege`() {
+        fun port(argument: String, ausgabe: String) = AnschlussDaten(name = "f", kante = AnschlussKante.Rechts,
+            art = MathematikAnschlussArten.Methode.id, vertrag = AnschlussVertrag(typ = TypAusdruck.Parameterisiert(
+                TypId("mathematik.methode"), listOf(TypAusdruck.Atom(TypId(argument)), TypAusdruck.Atom(TypId(ausgabe))))))
+        val a = port("mathematik.zahl", "mathematik.menge")
+        val b = port("mathematik.menge", "mathematik.zahl")
+        val karte = KartenDaten(name = "Legende", knoten = listOf(KnotenDaten(art = "test", name = "Test", anschlüsse = listOf(a,b,a.copy(name = "g")))))
+        val einträge = anschlussLegendenEinträge(karte, register)
+        assertEquals(setOf("Methode: Zahl → Menge", "Methode: Menge → Zahl"), einträge.map { it.titel }.toSet())
+        assertEquals(2, einträge.map { it.schlüssel }.distinct().size)
     }
 
     @Test

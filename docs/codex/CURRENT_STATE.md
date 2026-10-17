@@ -1,3 +1,102 @@
+## Releaseziel v3.4.12, 17. Oktober 2026
+
+Der Releaseabschluss umfasst die vorhandenen lokalen Änderungen an Graphbedienung, Mengen-/Tensorräumen, Urbild, Vorzeichenausgabe und automatischer Visualisierungsverfeinerung. Nutzer hat weitere Leistungsverbesserung ausdrücklich aus diesem Abschluss ausgenommen. Das 16,7-ms-Ziel und getrennte Vorschau-/Present-Abnahme bleiben Folgearbeit; keine 60-Hz-Freigabe. Android/ Desktop-Metadaten beschreiben den Zielbaum 3.4.12/3004012, Veröffentlichung erst mit finalem Mastercommit und grünen Releaseprüfungen. Unfertige spätere Optimierungsversuche gehören nicht zum Release.
+
+## Urbild im Mengenrechner, 17. Oktober 2026 (lokal)
+
+- Vorhandener Operator `menge.urbild` ist in Suche/Erstellen/Operatorauswahl
+  verfügbar. Einzelziel und Zielmenge liefern eine gemeinsame Urbildmenge;
+  der Zieleingang folgt der Ergebnissignatur der Methode. Android und Desktop
+  verwenden gemeinsame Eingangseinstellungen und Typableitung.
+- Endliche Definitionsräume und unterstützte Gleichungen werden exakt berechnet;
+  allgemeine Fälle bleiben strukturierte Mengen mit erhaltenen Bedingungen.
+  Effektive Definitionsräume, verschachtelte Tupel und Mengenwerte bleiben erhalten.
+  Historische Platzhalter migrieren idempotent mit stabilen IDs; mehrdeutige Rollen
+  bleiben diagnostizierbar. Verlustvorschau, Undo/Redo und Kopieren sind geprüft.
+- Vollständige JVM-/Desktoptests und reguläre APK-/Test-APK-/Desktopbuilds grün:
+  2.380 Fälle, 0 Fehler, 2 bestehende Opt-in-Skips. Android-Lint erfolgreich.
+  Gemeinsamer Inspector nativ auf Desktop und SM-X920/Android16 bedient,
+  einschließlich Moduswechsel/Undo/Redo/großer Schrift und Themewechsel;
+  Screenshots visuell geprüft. Isolierte Android-Prüf-App wieder entfernt.
+- Repository-/Standardkarten-/Releaseplan-/Versionsfolgeprüfungen und 14
+  Release-Guard-Regressionen grün. Zusätzliche Standalone-Kernprüfung mangels
+  `kotlinc` nicht ausführbar; Gradle-Kerntests grün. Unabhängige Quellabnahme
+  ohne offene Blocker. Keine neuen Typen, Abhängigkeiten oder Formatversion.
+- Arbeitsbranch `samai/v3.4.12/pie-methoden-matrizen`, HEAD `20356f1c`
+  unverändert; keine Commits, Pushes oder Veröffentlichung. Klassifikation x
+  innerhalb des bestehenden v3.4.12-Arbeitsumfangs; fremde Änderungen erhalten.
+  [Plan](plans/completed/2026-10-17-urbild-mengenrechner.md),
+  [Entscheidung](decisions/2026-10-17-urbild-mengenrechner.md).
+
+## Automatische Visualisierungsverfeinerung, 17. Oktober 2026 (lokal)
+
+## Mengenräume und Vorzeichenausgabe, 17. Oktober 2026 (lokal)
+
+- Mengenrechner bietet Tupelraum A^n und Tensorraum beliebiger endlicher Stufe
+  mit Zahlentupel als Dimensionsquelle. Menge besitzt Dimensionsart Tupel/Tensor;
+  Matrizenvarianten sind aus Erstellen und Suche entfernt. Zweidimensionale
+  Tensorräume akzeptieren passende Matrix-/Tensorwerte, historische Matrixräume
+  behalten ihren engeren Vertrag. Keine neuen Knotentypen oder Abhängigkeiten.
+- Gemeinsame idempotente Migration führt historische n/m-Rollen über einen
+  sichtbaren Tupelknoten zusammen und erhält IDs, Quellen und Standards.
+  Nicht eindeutig auflösbare Methoden-/Fallbackdimensionen bleiben mit Diagnose
+  im Original erhalten. Dimensionswechsel zeigen Verluste vorab und bilden einen
+  Undo-Schritt; eigene versionsfeste Mengenkarten behalten ihren Vertrag.
+- Summen stellen negative Terme als Subtraktion dar, mit Klammern für Summen,
+  negative Potenzbasen und verschachtelte Vorzeichen. Formelausgabe erhält
+  Bedingungen und Bearbeitungs-IDs; Vorzeichenroundtrips sind regressionsgeprüft.
+  Native Mengenklammern und indizierte Kreuzprodukte sind rendererkompatibel.
+- Finaler Gesamtprüflauf erfolgreich: 2.350 JVM-/Desktopfälle, 0 Fehler,
+  2 bestehende Opt-in-Skips, Android-Lint, reguläre App-/Test-APKs und Desktop.
+  Vier isolierte Androidtests am SM-X920/Android16 einschließlich Schalter und
+  Formeln beider Themes bestanden; native Bilder visuell geprüft. Repository-,
+  Standardkarten-, Releaseplan-/Versionsfolge- und 14 Guardprüfungen grün.
+  Standalone-Kernskript mangels kotlinc nicht ausführbar; Gradle-Kerntests grün.
+  Unabhängige Quellabnahme ohne offene Findings.
+- Branch samai/v3.4.12/pie-methoden-matrizen und HEAD 20356f1c unverändert.
+  Keine Commits, Versionsänderung, Pushes oder Veröffentlichung; vorherige lokale
+  Änderungen erhalten. [Abschlussplan](plans/completed/2026-10-17-mengenraeume-vorzeichen.md),
+  [Modellentscheidung](decisions/2026-10-17-mengenraeume-vorzeichen.md).
+
+
+- Android/Desktop verwenden automatische fortsetzbare Samplingarbeit ohne UI-Gesamtzählbudget. Symbolische Normalisierung, Nachweise und geschätzter Speicher bleiben geschützt. Budgeteingabe entfernt, historische Eigenschaften erhalten; keine Kartenformat-/Typ-/Anschlussänderung.
+- Faire kooperative Rechenquanten, geteilte Aufträge, Dialogreserve, gemeinsamer Geometrie-/Proben-LRU und vorreservierte Arbeits-/Zeichengeometrie. 2D verwendet vorbereitete relative Pfade; Touch-Nachladung verändert keine persistierte Kamera während der Geste. 3D nutzt zusammenhängende Interaktionsnetze einschließlich partieller Snapshots; bekannte Definitionslücken sperren veraltete Flächen.
+- Finaler Gradle-Gesamtlauf mit JVM-/Desktoptests, Android-Lint, App-/Test-APKs und Desktopkompilierung erfolgreich: 2333 Fälle, 0 Fehler, 2 opt-in Skips. 19 neue Regressionen bestanden. Repository-/Architektur-/Whitelist-, Releaseplan-, Versionsfolge- und Diffprüfungen grün. Standalone-Kernprüfung nicht ausführbar; Gradle-Kerntests grün.
+- Native Desktopmessung: drei Läufe pro Fall, je 20 Anfragen/300 Eingaben. 3D Canvas-CPU p95 3,61–3,72 ms, Eingabe-bis-Capture p95 14,21–14,58 ms mit 1024 Dreiecken. Keine Gleichsetzung mit vollständiger Display-Framezeit. Nach Entsperrung: SM-X920/Android16, 19/19 native Bild-/Gesten-/Typprüfungen und drei Leistungsläufe bestanden. Insgesamt 720 Geometrieanfragen/17737 Frames. Instrumentierte FrameMetrics p95 2D 25,36–26,66 ms; 3D 67,86–68,90 ms statt 499,18–508,86 ms. Vollständige 3D-Detailverfeinerung benötigt länger (p95 3,24–3,70 s statt 1,19–1,20 s); erste Vorschau nicht separat gemessen. 60-Hz-Ziel noch verfehlt; gesonderte Vorschau-/Present-Abnahme offen.
+- Keine Commits, Pushes, PRs, Versionswechsel oder Veröffentlichung. Arbeitsbranch und HEAD unverändert; fremde Änderungen erhalten.
+- [Aktiver Abnahmeplan](plans/active/2026-10-17-visualisierung-automatisch-verfeinern.md), [Architekturentscheidung](decisions/2026-10-17-automatische-visualisierungsverfeinerung.md), [Desktopmessung](measurements/2026-10-17-visualisierung-desktop.json), [Androidmessung](measurements/2026-10-17-visualisierung-android.json).
+
+## Pie-Anordnung, Methodenfarben und Matrizenmengen, 17. Oktober 2026 (lokal)
+
+- Nutzerbestätigter Umfang umgesetzt: vollständige Hexringe mit Zwischenplätzen,
+  gemeinsame Geometrie beider Pie-Pfade, farbstabile Methodenanschlüsse mit eigener
+  Inkompatibilitätsmarkierung und getrennte Legenden je sichtbarer Farbsignatur.
+- Matrizenmengen sind Varianten von Menge (ℝ/ℂ mit n,m) und Mengenrechner
+  (Grundmenge,n,m). Symbolische natürliche Dimensionsquellen behalten Bindungen
+  und offene Positivitätsbedingungen. Die gemeinsame Migration erhält historische
+  Anschluss-/Kanten-IDs und übernimmt Zeilen/Spalten als explizite Standardwerte.
+  Tensorraum.matrixForm unterscheidet Matrizen von allgemeinen Tensoren zweiter
+  Stufe; historische Wertformate bleiben lesbar. Katalog 120 gemeinsam/122 vollständig,
+  kein neuer Knotentyp und keine neue Produktionsabhängigkeit.
+- Vollständige lokale JVM-/Desktoptests, Android-Lint, Debug-/Test-APKs und
+  Desktopkompilierung grün: /tmp/atlas-pmm-final.log, 2m43s/248 Tasks,
+  2287 Fälle/0 Fehler/1 vorhandener Skip. Gezielter Kernnachlauf nach begrenzter
+  Verbraucherpräzisierung ebenfalls grün. Abschlussnachlauf /tmp/atlas-pmm-abschluss.log:
+  26s/154 Tasks, relevante Units und reguläre App-/Test-APKs erfolgreich.
+  Repository/Architektur, 15 Standardkarten,
+  Releaseplan, Versionsfolge und 14 Guardregressionen erfolgreich.
+- SM-X920/Android16: 12/12 Pie-Gestentests und separat 2/2 neue Farben-/Legendentests
+  unter isolierter Prüf-App-ID bestanden. Deckende Halbkreisfarben und lesender
+  Legendendialog geprüft; helle/dunkle Screenshots visuell kontrolliert. Prüf-App
+  entfernt. Manueller Hardware-Stifttest bleibt offen. Standalone-Kernskript mangels
+  kotlinc nicht ausführbar, Gradle-Kerntests grün.
+- Branch samai/v3.4.12/pie-methoden-matrizen, unveränderte Basis/HEAD 20356f1c
+  (v3.4.11). Version 3.4.12 als x/implementing reserviert; aktuelle veröffentlichte
+  Metadaten bleiben 3.4.11. Keine Commits, Pushes, PRs oder Veröffentlichung.
+  Unabhängige statische Prüfung ohne offene Findings.
+- [Abschlussplan](plans/completed/2026-10-17-pie-methoden-matrizenmengen.md),
+  [Modellentscheidung](decisions/2026-10-17-matrizenmengen-und-symbolsignaturen.md).
+
 ## Aktueller Konsolidierungsstand, 17. Oktober 2026
 
 M0–M6 und M7a vollständig veröffentlicht und abgenommen. Aktuelle Basis
@@ -744,3 +843,26 @@ Release-Head und dessen Veröffentlichung stehen weiterhin aus.
 M3 ist als v3.4.6/43726159 veröffentlicht; alle vier finalen Master-Workflows
 (38997004505/38997004486/38997004522/38997004509) grün. M4 wurde erst danach
 als v3.4.7/x reserviert und wird umgesetzt; noch keine M4-Produktfreigabe.
+
+Visualisierungs-Typverträge, lokaler Stand 17.10.2026: Kompakte Potenzen wie ℝ²,
+verschachtelte Produkte, orientierte Vektoren, Matrix-/Tensorräume und strukturierte
+Methodendomänen verwenden eine gemeinsame numerische Rauminterpretation. Diskrete
+Achsen bleiben auch in Filtern und Mengenoperationen vollständig budgetiert;
+Zusatzbedingungen und ursprüngliche Mitgliedschaft bleiben erhalten. Explizite
+Projektionen mit ein bis drei Koordinaten funktionieren auch für Matrix-/Tensor-
+und Quaternionwerte und ändern die Raumkonfiguration atomar. Quotienten und
+abstrakte Räume verlangen eine ausdrückliche numerische Abbildung; symbolische
+Dimensionen und offene Nachweise werden nicht als leere Räume ausgegeben.
+
+Lokale Abnahme: 2.313 JVM-Tests, 0 Fehler, 1 bestehender Skip; Android-Builds,
+Lint, Desktop-Paket und Desktop-Darstellungs-/Bedientests bestanden. Repository-,
+Standardkarten-, Releaseplan-/Versionsfolge- und 14 Release-Guard-Tests bestanden.
+Unabhängige Codeprüfung ohne offene Findings. Kein neuer Commit oder Release.
+[Entscheidung](decisions/2026-10-17-numerische-rauminterpretation.md).
+
+Android-Laufzeitgrenze dieser Typkorrektur: Frühere zwei Geräteprüfungen bestanden,
+finaler Wiederholungslauf inklusive Undo/Abbruch erreicht wegen geschützter
+Gerätesperre keine Compose-Oberfläche. Testpakete entfernt, Originalinstallation
+erhalten. Emulator endet mit Exit 139; zusätzliche CLI-Kernprüfung ohne `kotlinc`
+nicht ausführbar. Finale Android-Laufzeitabnahme bleibt damit offen. Details und
+Abnahmematrix im [abgeschlossenen Plan](plans/completed/2026-10-17-visualisierung-typenvertraege.md).

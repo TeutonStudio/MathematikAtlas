@@ -4,7 +4,7 @@ import java.math.BigInteger
 
 class Addition private constructor(val summanden: List<ZahlAusdruck>) : ZahlAusdruck {
     init { require(summanden.size >= 2) }
-    override fun zuLatex(): String = summanden.joinToString(" + ") { it.zuLatex() }
+    override fun zuLatex(): String = summenLatex(summanden)
     override fun equals(other: Any?) = other is Addition && summanden == other.summanden
     override fun hashCode() = summanden.hashCode()
     override fun toString() = summanden.joinToString(" + ")
@@ -13,8 +13,12 @@ class Addition private constructor(val summanden: List<ZahlAusdruck>) : ZahlAusd
 
 class Multiplikation private constructor(val faktoren: List<ZahlAusdruck>) : ZahlAusdruck {
     init { require(faktoren.size >= 2) }
-    override fun zuLatex(): String = faktoren.joinToString(" \\cdot ") {
-        if (it is Addition || it is KomplexeZahl) "\\left(${it.zuLatex()}\\right)" else it.zuLatex()
+    override fun zuLatex(): String {
+        val positiv = positiverGegentermOderNull(this)
+        if (positiv != null) return "-" + positiv.mitVorzeichenKlammern()
+        return faktoren.joinToString(" \\cdot ") {
+            if (it is Addition || it is KomplexeZahl) "\\left(${it.zuLatex()}\\right)" else it.zuLatex()
+        }
     }
     override fun equals(other: Any?) = other is Multiplikation && faktoren == other.faktoren
     override fun hashCode() = faktoren.hashCode()
@@ -39,11 +43,16 @@ class Minimum private constructor(val operanden: List<ZahlAusdruck>) : ZahlAusdr
 }
 
 data class Division(val dividend: ZahlAusdruck, val divisor: ZahlAusdruck) : ZahlAusdruck {
-    override fun zuLatex() = "\\frac{${dividend.zuLatex()}}{${divisor.zuLatex()}}"
+    override fun zuLatex(): String {
+        val a = positiverGegentermOderNull(dividend)
+        val b = positiverGegentermOderNull(divisor)
+        return if (a != null && b != null) "\\frac{${a.zuLatex()}}{${b.zuLatex()}}"
+        else "\\frac{${dividend.zuLatex()}}{${divisor.zuLatex()}}"
+    }
 }
 
 data class Potenz(val basis: ZahlAusdruck, val exponent: ZahlAusdruck) : ZahlAusdruck {
-    override fun zuLatex() = "{${basis.zuLatex()}}^{${exponent.zuLatex()}}"
+    override fun zuLatex() = "{${if (basis is Addition || basis is Multiplikation || basis is KomplexeZahl || positiverGegentermOderNull(basis) != null) "\\left(${basis.zuLatex()}\\right)" else basis.zuLatex()}}^{${exponent.zuLatex()}}"
 }
 
 data class Betrag(val argument: ZahlAusdruck) : ZahlAusdruck {
@@ -373,6 +382,7 @@ fun inferiereZahlenWertevorrat(
     is SymbolischeZahlKomponente -> when(val quelle=ausdruck.quelle) {
         is MethodenParameter -> when(val raum=quelle.bindungsId?.let(werteVorräte::get) ?: werteVorräte[quelle.name]) {
             is Matrizenraum -> raum.skalarMenge
+            is Tensorraum -> if (raum.matrixForm) raum.elementMenge else KomplexeZahlen
             is Vektorraum -> raum.skalarMenge
             is Tupelraum -> {
                 val index=(ausdruck.index as? RationaleZahl)?.positiveGanzeZahlOderNull()
@@ -511,4 +521,53 @@ fun nachgewieseneZahlenGrundmenge(menge: MengenAusdruck): MengenAusdruck? = when
         .takeIf { it.isNotEmpty() && it.all { grundmenge -> grundmenge != null } }
         ?.let { maximaleZahlenGrundmenge(it.filterNotNull()) }
     else -> menge.fundamentalerZahlbereichOderNull()?.alsMenge()
+}
+
+
+/** Entfernt ausschließlich ein algebraisch nachgewiesenes äußeres Minus. */
+internal fun positiverGegentermOderNull(term: ZahlAusdruck): ZahlAusdruck? = when (term) {
+    is RationaleZahl -> if (term.zähler.signum() < 0) RationaleZahl.von(term.zähler.negate(), term.nenner) else null
+    is Multiplikation -> {
+        val koeffizient = term.faktoren.filterIsInstance<RationaleZahl>().fold(RationaleZahl.Eins) { a, b -> a * b }
+        if (koeffizient.zähler.signum() < 0) multiplikation(
+            listOf(RationaleZahl.von(koeffizient.zähler.negate(), koeffizient.nenner)) + term.faktoren.filterNot { it is RationaleZahl }
+        ) else null
+    }
+    is Division -> {
+        val a = positiverGegentermOderNull(term.dividend)
+        val b = positiverGegentermOderNull(term.divisor)
+        when {
+            a != null && b == null -> Division(a, term.divisor)
+            a == null && b != null -> Division(term.dividend, b)
+            else -> null
+        }
+    }
+    else -> null
+}
+
+private fun ZahlAusdruck.mitVorzeichenKlammern(): String =
+    if (this is Addition || this is KomplexeZahl) "\\left(${zuLatex()}\\right)" else zuLatex()
+
+internal fun summenLatex(summanden: List<ZahlAusdruck>, kontext: RechenKontext? = null): String = buildString {
+    summanden.forEachIndexed { index, term ->
+        val gegenterm = positiverGegentermOderNull(term)
+        val negativBewiesen = gegenterm == null && kontext != null &&
+            (Vergleich(term, VergleichsArt.Kleiner, RationaleZahl.Null) in kontext.annahmen ||
+                Vergleich(RationaleZahl.Null, VergleichsArt.Größer, term) in kontext.annahmen ||
+                Vergleich(term, VergleichsArt.Kleiner, RationaleZahl.Null).entscheide(kontext).wahrheitswert == Wahrheitswert.Wahr)
+        val positiv = gegenterm ?: if (negativBewiesen) Betrag(term) else null
+        if (positiv != null) {
+            append(if (index == 0) "-" else " - ")
+            append(positiv.mitVorzeichenKlammern())
+        } else {
+            if (index > 0) append(" + ")
+            append(term.zuLatex())
+        }
+    }
+}
+
+/** Annahmen bleiben beim Aufrufer; unbekannte Vorzeichen verändern die Ausgabe nicht. */
+fun ZahlAusdruck.zuLatex(kontext: RechenKontext): String = when (this) {
+    is Addition -> summenLatex(summanden, kontext)
+    else -> zuLatex()
 }

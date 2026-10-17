@@ -51,6 +51,9 @@ import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.*
 import de.TeutonStudio.MathematikRechenSystem.kern.MengenAusdruck
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.ui.graphics.Matrix
 import kotlin.math.*
 
 /** Passive, begrenzte Vorschau. Der Editor besitzt sämtliche Knotengesten. */
@@ -78,31 +81,36 @@ private fun visualisierungsMeldungen(ergebnis: VisualisierungsErgebnis): List<Kn
     is VisualisierungsErgebnis.Teilweise -> ergebnis.hinweise.ifEmpty { listOf("Die Darstellung ist teilweise.") }
         .map { KnotenMeldung(it, KnotenMeldungsArt.Warnung) }
     is VisualisierungsErgebnis.Erfolgreich -> ergebnis.hinweise.map { KnotenMeldung(it) } +
-        if (ergebnis.statistik.budgetErschöpft) listOf(KnotenMeldung("Budget ausgeschöpft", KnotenMeldungsArt.Warnung)) else emptyList()
+        if (ergebnis.statistik.budgetErschöpft) listOf(KnotenMeldung("Darstellung an technischer Grenze; verbleibende Bereiche sind unvollständig.", KnotenMeldungsArt.Warnung)) else emptyList()
 }
 
 /** Ein neuer Schlüssel besitzt einen neuen Zustand; alte Resultate können keine Anfrage überspringen. */
 @Composable
 private fun erinnertesVisualisierungsErgebnis(menge: MengenAusdruck?, c: VisualisierungsKonfiguration, detail: Boolean): State<VisualisierungsBerechnungsStand> {
-    val inhalt = c.inhaltsSignatur(menge)
+    val automatisch = c.automatischeDarstellung()
+    val inhalt = automatisch.inhaltsSignatur(menge)
     var vorhanden by remember(inhalt) { mutableStateOf<VisualisierungsErgebnis?>(null) }
-    val schlüssel = listOf(inhalt, c.samplingSignatur(), detail)
+    var vorhandeneKonfiguration by remember(inhalt) { mutableStateOf<VisualisierungsKonfiguration?>(null) }
+    val schlüssel = listOf(inhalt, automatisch.samplingSignatur(), detail)
     val zustand = remember(schlüssel) {
-        val vollständig = menge?.let { gemeinsameVisualisierungsBerechnung.gecacht(it, c) }
+        val vollständig = menge?.let { gemeinsameVisualisierungsBerechnung.gecacht(it, automatisch) }
         mutableStateOf(VisualisierungsBerechnungsStand(vollständig ?: vorhanden, vollständig != null))
     }
     LaunchedEffect(schlüssel) {
-        if (zustand.value.fertig) { vorhanden = zustand.value.ergebnis; return@LaunchedEffect }
-        if (menge == null) { zustand.value = VisualisierungsBerechnungsStand(VisualisierungsErgebnis.NichtDarstellbar("Verbinde eine Menge mit dem Eingang."), true); return@LaunchedEffect }
+        if (zustand.value.fertig) { vorhanden=zustand.value.ergebnis;vorhandeneKonfiguration=automatisch; return@LaunchedEffect }
+        if(c.sampling.interaktion && vorhanden!=null && vorhandeneKonfiguration?.decktAb(automatisch)==true) {
+            zustand.value=VisualisierungsBerechnungsStand(vorhanden,true);return@LaunchedEffect
+        }
+        if (menge == null) { zustand.value=VisualisierungsBerechnungsStand(VisualisierungsErgebnis.NichtDarstellbar("Verbinde eine Menge mit dem Eingang."),true);return@LaunchedEffect }
         try {
-            berechneVisualisierungsFolge(c, vorhanden != null,
-                berechne = { gemeinsameVisualisierungsBerechnung.berechne(menge, it, detail) },
-                veröffentliche = { ergebnis, fertig ->
-                    vorhanden = ergebnis
-                    zustand.value = VisualisierungsBerechnungsStand(ergebnis, fertig)
-                })
-        } catch (abbruch: kotlinx.coroutines.CancellationException) { throw abbruch }
-        catch (fehler: Exception) { zustand.value = VisualisierungsBerechnungsStand(VisualisierungsErgebnis.NichtDarstellbar(fehler.message ?: "Darstellung konnte nicht berechnet werden."), true) }
+            if(vorhanden != null && !c.sampling.interaktion) delay(120)
+            gemeinsameVisualisierungsBerechnung.beobachte(menge,automatisch,detail).collectLatest { stand ->
+                vorhanden=stand.ergebnis
+                vorhandeneKonfiguration=if(stand.fertig) automatisch else null
+                zustand.value=VisualisierungsBerechnungsStand(stand.ergebnis,stand.fertig)
+            }
+        } catch(abbruch:kotlinx.coroutines.CancellationException) { throw abbruch }
+        catch(fehler:Exception) { zustand.value=VisualisierungsBerechnungsStand(VisualisierungsErgebnis.NichtDarstellbar(fehler.message ?: "Darstellung konnte nicht berechnet werden."),true) }
     }
     return zustand
 }
@@ -110,22 +118,24 @@ private fun erinnertesVisualisierungsErgebnis(menge: MengenAusdruck?, c: Visuali
 @Composable
 private fun VisualisierungsSzene(mengen: List<Pair<String, MengenAusdruck>>, konfiguration: VisualisierungsKonfiguration, interaktiv: Boolean,
     ändern: (VisualisierungsKonfiguration) -> Unit, modifier: Modifier = Modifier,
-    beiMeldungen: ((List<KnotenMeldung>) -> Unit)? = null) {
+    beiMeldungen: ((List<KnotenMeldung>) -> Unit)? = null,
+    beiZeichenDauer:((Long,Int)->Unit)?=null) {
     BoxWithConstraints(modifier.clipToBounds()) {
+        var bewegung by remember { mutableStateOf(false) }
+        var samplingKamera by remember { mutableStateOf<KameraZustand?>(null) }
+        LaunchedEffect(konfiguration.kamera) { samplingKamera=null }
         val dichte = androidx.compose.ui.platform.LocalDensity.current
         val breite = with(dichte) { maxWidth.toPx() }.coerceAtLeast(1f)
         val höhe = with(dichte) { maxHeight.toPx() }.coerceAtLeast(1f)
-        val t = VisualisierungsTransformation(konfiguration, breite.toDouble(), höhe.toDouble())
-        val basis = konfiguration
+        val t = VisualisierungsTransformation(konfiguration.copy(kamera=samplingKamera ?: konfiguration.kamera), breite.toDouble(), höhe.toDouble())
+        val basis = konfiguration.copy(kamera=samplingKamera ?: konfiguration.kamera)
         // Gerundete Pixelmaße vermeiden neue Anfragen bei subpixeligen Layoutänderungen.
-        val c = basis.copy(sampling = basis.sampling.copy(bildBreite = breite.toDouble(), bildHöhe = höhe.toDouble(),
+        val c = basis.copy(sampling = basis.sampling.copy(interaktion=bewegung,bildBreite = breite.roundToInt().toDouble(), bildHöhe = höhe.roundToInt().toDouble(),
             sichtBereiche = t.sichtBereiche(), zielFehlerPixel = 1.0 / if (basis.dimension == RaumDimension.R3) basis.kamera.zoom else 1.0))
         val aktiveMengen = mengen.filterIndexed { index, (name, _) -> konfiguration.ebenenStil(name, index).sichtbar }
-        val anzahl = aktiveMengen.size.coerceAtLeast(1)
         val ebenenConfig = aktiveMengen.map { (name, _) ->
             val stil = konfiguration.ebenenStil(name, mengen.indexOfFirst { it.first == name })
-            c.copy(sampling = c.sampling.copy(maximalesRasterBudget = (minOf(c.sampling.maximalesRasterBudget, c.detailBudget) / anzahl).coerceAtLeast(1)),
-                aktiverStil = stil, farbe = if (c.farbe.modus == FarbModus.Spektrum) c.farbe else c.farbe.copy(festeFarbe = stil.farbe))
+            c.copy(aktiverStil = stil, farbe = if (c.farbe.modus == FarbModus.Spektrum) c.farbe else c.farbe.copy(festeFarbe = stil.farbe))
         }
         val stände = aktiveMengen.mapIndexed { index, (name, menge) -> key(name) {
             val empfohlen = konfiguration.copy(dimensionsModus = DimensionsModus.Automatisch).mitWirksamerDimension(menge).dimension
@@ -140,13 +150,15 @@ private fun VisualisierungsSzene(mengen: List<Pair<String, MengenAusdruck>>, kon
             VisualisierungsZeichenEbene(name, ebenenConfig[i].inhaltsSignatur(menge), e.ergebnis, ebenenConfig[i])
         }
         var zeichenBereit by remember { mutableStateOf(false) }
+        var zeichenGrenze by remember { mutableStateOf(false) }
         Plot(konfiguration, { ändern(konfiguration.copy(kamera = it)) }, Modifier.fillMaxSize(), interaktiv, zeichenEbenen,
-            berechnungFertig = stand.fertig, beiZeichenBereit = { zeichenBereit = it })
+            berechnungFertig = stand.fertig, beiZeichenBereit = { zeichenBereit = it }, beiZeichenGrenze = { zeichenGrenze=it }, beiInteraktion={ bewegung=it },beiSamplingKamera={samplingKamera=it},beiZeichenDauer=beiZeichenDauer)
         val fertig = stand.fertig && zeichenBereit
+        if(zeichenGrenze) Text("Zeichendetails wegen Speichergrenze unvollständig.",Modifier.padding(8.dp),style=MaterialTheme.typography.labelSmall)
         val fortschritt = if (ergebnis == null) "Berechne Darstellung …" else "Verfeinere Darstellung …"
         if (beiMeldungen != null) {
             val meldungen = (stände.mapNotNull { it.ergebnis }.ifEmpty { listOfNotNull(ergebnis) })
-                .flatMap(::visualisierungsMeldungen) + if (!fertig) listOf(KnotenMeldung(fortschritt)) else emptyList()
+                .flatMap(::visualisierungsMeldungen) + (if(zeichenGrenze) listOf(KnotenMeldung("Zeichendetails wegen Speichergrenze unvollständig.",KnotenMeldungsArt.Warnung)) else emptyList()) + if (!fertig) listOf(KnotenMeldung(fortschritt)) else emptyList()
             SideEffect { beiMeldungen(meldungen) }
         }
         if (beiMeldungen == null && !fertig) Text(fortschritt,
@@ -157,7 +169,7 @@ private fun VisualisierungsSzene(mengen: List<Pair<String, MengenAusdruck>>, kon
             is VisualisierungsErgebnis.BedingtDarstellbar -> (listOf(e.grund) + e.bedingungen).joinToString(" ")
             is VisualisierungsErgebnis.Teilweise -> "Teilweise · " + e.hinweise.firstOrNull().orEmpty()
             is VisualisierungsErgebnis.Erfolgreich -> if (interaktiv) "${e.statistik.auswertungen} Auswertungen · " +
-                (if (e.istApproximation) "Numerische Approximation" else "Exakt") + if (e.statistik.budgetErschöpft) " · Budget ausgeschöpft" else "" else ""
+                (if (e.istApproximation) "Numerische Approximation" else "Exakt") + if (e.statistik.budgetErschöpft) " · Technische Grenze erreicht" else "" else ""
             null -> ""
         }
         if (interaktiv && aktiveMengen.isNotEmpty()) Surface(Modifier.align(androidx.compose.ui.Alignment.TopEnd).padding(6.dp), color=MaterialTheme.colorScheme.surface.copy(alpha=.92f)) {
@@ -231,11 +243,12 @@ private fun VisualisierungsSzene(mengen: List<Pair<String, MengenAusdruck>>, kon
 
 @Composable
 fun VisualisierungsDetailansicht(knoten: KnotenDaten, auswertung: KnotenAuswertungsErgebnis?,
-    eigenschaftenErsetzen: (Map<String, KnotenEigenschaft>) -> Unit, modifier: Modifier = Modifier) {
+    eigenschaftenErsetzen: (Map<String, KnotenEigenschaft>) -> Unit, modifier: Modifier = Modifier,
+    beiZeichenDauer:((Long,Int)->Unit)?=null) {
     val mengen = visualisierungsMengen(knoten, auswertung)
     val menge = mengen.firstOrNull()?.second
     val c = VisualisierungsKonfiguration.aus(knoten.eigenschaften).mitWirksamerDimension(menge)
-    VisualisierungsSzene(mengen, c, true, { eigenschaftenErsetzen(it.inEigenschaften(knoten.eigenschaften)) }, modifier)
+    VisualisierungsSzene(mengen, c, true, { eigenschaftenErsetzen(it.inEigenschaften(knoten.eigenschaften)) }, modifier,beiZeichenDauer=beiZeichenDauer)
 }
 
 internal fun standardKamera(dimension: RaumDimension) = KameraZustand(
@@ -295,12 +308,27 @@ private class EbenenDreieckSortierCache {
 }
 
 private data class VisualisierungsSegment(val von: VisualisierungsPunkt, val zu: VisualisierungsPunkt, val offen: Boolean = false)
+private data class RelativerZeichenPfad(val ursprung:VisualisierungsPunkt,val pfad:Path)
+private fun relativerPfad(punkte:List<VisualisierungsPunkt>, baue:(Path,Double,Double)->Unit):RelativerZeichenPfad? {
+    val ursprung=punkte.firstOrNull() ?: return null
+    if(punkte.any { !((it.x-ursprung.x).toFloat().isFinite() && (it.y-ursprung.y).toFloat().isFinite()) }) return null
+    return RelativerZeichenPfad(ursprung,Path().also { baue(it,ursprung.x,ursprung.y) })
+}
+private fun DrawScope.bildPfad(p:RelativerZeichenPfad,c:VisualisierungsKonfiguration):Path {
+    val t=VisualisierungsTransformation(c,size.width.toDouble(),size.height.toDouble())
+    val u=t.bild(p.ursprung.x,p.ursprung.y)
+    val matrix=Matrix().apply { translate(u.x.toFloat(),u.y.toFloat());scale(t.xMaßstab.toFloat(),-t.maßstab.toFloat()) }
+    return Path().apply { addPath(p.pfad);transform(matrix) }
+}
 private data class VisualisierungsZeichenDaten(
     val zellen: List<VisualisierungsZelle>,
     val punkte: List<VisualisierungsPunkt>,
     val segmente: List<VisualisierungsSegment>,
     val dreiecke: List<VisualisierungsDreieck>,
     val intervalle: List<VisualisierungsIntervall>,
+    val segmentPfade: Map<Boolean,RelativerZeichenPfad> = emptyMap(),
+    val zellPfade: Map<ZellenStatus,RelativerZeichenPfad> = emptyMap(),
+    val interaktionsDreiecke:List<VisualisierungsDreieck> = emptyList(),
 )
 
 private fun bereiteZeichenDatenVor(
@@ -315,12 +343,26 @@ private fun bereiteZeichenDatenVor(
         linien.forEach { linie -> linie.punkte.forEach { add(Triple(it.x, it.y, it.z)) } }
     }
     val allePunkte = erfolgreich?.punkte ?: teilweise?.punkte.orEmpty()
+    val segmente=linien.flatMap { linie -> linie.punkte.zipWithNext { a,b -> VisualisierungsSegment(a,b,linie.offenerRand) } }
+    val zellen=erfolgreich?.zellen ?: teilweise?.zellen.orEmpty()
+    val segmentPfade=segmente.groupBy { it.offen }.mapNotNull { (offen,gruppe) ->
+        relativerPfad(gruppe.flatMap { listOf(it.von,it.zu) }) { pfad,x,y -> gruppe.forEach {
+            pfad.moveTo((it.von.x-x).toFloat(),(it.von.y-y).toFloat());pfad.lineTo((it.zu.x-x).toFloat(),(it.zu.y-y).toFloat())
+        } }?.let { offen to it }
+    }.toMap()
+    val zellPfade=zellen.filter { it.minimum.size==2 && it.status!=ZellenStatus.Ausgeschlossen }.groupBy { it.status }.mapNotNull { (status,gruppe) ->
+        relativerPfad(gruppe.flatMap { listOf(VisualisierungsPunkt(it.minimum[0],it.minimum[1]),VisualisierungsPunkt(it.maximum[0],it.maximum[1])) }) { pfad,x,y ->
+            gruppe.forEach { pfad.addRect(androidx.compose.ui.geometry.Rect((it.minimum[0]-x).toFloat(),(it.minimum[1]-y).toFloat(),(it.maximum[0]-x).toFloat(),(it.maximum[1]-y).toFloat())) }
+        }?.let { status to it }
+    }.toMap()
     return VisualisierungsZeichenDaten(
         zellen = erfolgreich?.zellen ?: teilweise?.zellen.orEmpty(),
         punkte = allePunkte.filterNot { it.rasterProbe || Triple(it.x, it.y, it.z) in geometriePunkte },
-        segmente = linien.flatMap { linie -> linie.punkte.zipWithNext { a,b -> VisualisierungsSegment(a,b,linie.offenerRand) } },
+        segmente = segmente,
         dreiecke = dreiecke,
         intervalle = erfolgreich?.intervalle ?: teilweise?.intervalle.orEmpty(),
+        segmentPfade=segmentPfade,zellPfade=zellPfade,
+        interaktionsDreiecke=erfolgreich?.interaktionsDreiecke ?: teilweise?.interaktionsDreiecke.orEmpty(),
     )
 }
 
@@ -339,6 +381,10 @@ private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErge
     ebenen: List<VisualisierungsZeichenEbene>,
     berechnungFertig: Boolean,
     beiZeichenBereit: (Boolean) -> Unit,
+    beiZeichenGrenze: (Boolean) -> Unit,
+    beiInteraktion:(Boolean)->Unit,
+    beiSamplingKamera:(KameraZustand?)->Unit,
+    beiZeichenDauer:((Long,Int)->Unit)?,
 ) {
     val textMeasurer = rememberTextMeasurer(cacheSize = 128)
     var plotGröße by remember { mutableStateOf(IntSize(1, 1)) }
@@ -347,23 +393,43 @@ private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErge
     var inspektion by remember { mutableStateOf<Offset?>(null) }
     var kamera by remember { mutableStateOf(konfiguration.kamera) }
     var gesteAktiv by remember { mutableStateOf(false) }
+    val aktuelleSamplingKamera by rememberUpdatedState(beiSamplingKamera)
     val aktuelleKameraÜbernehmen by rememberUpdatedState(onKamera)
+    SideEffect { beiInteraktion(gesteAktiv) }
     LaunchedEffect(konfiguration.kamera, gesteAktiv) {
         if (!gesteAktiv) kamera = konfiguration.kamera
     }
     // Ein Ergebniswechsel setzt das veröffentlichte Paket nicht zurück. Erst ein vollständig
     // aufbereiteter Ersatz wird atomar sichtbar; ein fachlicher Eingangwechsel setzt es zurück.
-    val zeichenPakete = ebenen.map { ebene -> key(ebene.name, ebene.inhalt) {
+    val zeichenPaketeUndGrenzen = ebenen.map { ebene -> key(ebene.name, ebene.inhalt) {
         var paket by remember { mutableStateOf<VisualisierungsZeichenPaket?>(null) }
+        val reservierung=remember { visualisierungsArbeitsSpeicher.reserviere() }
+        var reserviert by remember { mutableStateOf(0L) }
+        var begrenzt by remember { mutableStateOf(false) }
+        DisposableEffect(Unit) { onDispose { reservierung.close() } }
         LaunchedEffect(ebene.ergebnis) {
-            if (ebene.ergebnis != null) {
-                paket = withContext(Dispatchers.Default) {
-                    VisualisierungsZeichenPaket(ebene.ergebnis, bereiteZeichenDatenVor(ebene.ergebnis))
-                }
+            if(ebene.ergebnis != null) {
+                val vorher=reserviert
+                val neu=ebene.ergebnis.geschätzteBytes()*2
+                try {
+                    reservierung.setze(vorher+neu)
+                    val fertig=withContext(Dispatchers.Default) {
+                        VisualisierungsZeichenPaket(ebene.ergebnis,bereiteZeichenDatenVor(ebene.ergebnis))
+                    }
+                    paket=fertig;reserviert=neu;begrenzt=false
+                } catch(e:VisualisierungsSpeicherGrenze) {
+                    begrenzt=true
+                    paket=VisualisierungsZeichenPaket(ebene.ergebnis,paket?.daten ?: bereiteZeichenDatenVor(null))
+                } finally { reservierung.setze(reserviert) }
             }
         }
-        paket
+        paket to begrenzt
     } }
+    val zeichenPakete=zeichenPaketeUndGrenzen.map { (paket,_) ->
+        if(gesteAktiv && konfiguration.dimension==RaumDimension.R3 && paket?.daten?.interaktionsDreiecke?.isNotEmpty()==true)
+            paket.copy(daten=paket.daten.copy(dreiecke=paket.daten.interaktionsDreiecke)) else paket
+    }
+    SideEffect { beiZeichenGrenze(zeichenPaketeUndGrenzen.any { it.second }) }
     // Samplingabschluss allein garantiert noch kein veröffentlichtes Zeichenpaket.
     val zeichenFertig = zeichenPakete.zip(ebenen).all { (paket, ebene) -> paket != null && paket.ergebnis == ebene.ergebnis }
     SideEffect { beiZeichenBereit(zeichenFertig) }
@@ -396,9 +462,9 @@ private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErge
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
             fokus.requestFocus()
-            gesteAktiv = true
             var gestenKamera = kamera
             var bewegt = false
+            var letzteNachladung=0L
             try {
                 do {
                     val ereignis = awaitPointerEvent()
@@ -406,16 +472,19 @@ private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErge
                     val centroid = ereignis.calculateCentroid(useCurrent = false)
                     if (pan != Offset.Zero || zoom != 1f) {
                         bewegt = true
+                        gesteAktiv=true
                         inspektion = null
                         val transform = VisualisierungsTransformation(aktuelleKonfiguration.copy(kamera = gestenKamera), size.width.toDouble(), size.height.toDouble())
                         val rotieren = konfiguration.dimension == RaumDimension.R3 && ereignis.changes.count { it.pressed } < 2 && !ereignis.keyboardModifiers.isShiftPressed
                         gestenKamera = transform.navigiere(pan.x.toDouble(), pan.y.toDouble(), zoom.toDouble(), centroid.x.toDouble(), centroid.y.toDouble(), rotieren)
                         kamera = gestenKamera
+                        val jetzt=System.nanoTime()
+                        if(jetzt-letzteNachladung>=160_000_000L) { aktuelleSamplingKamera(gestenKamera);letzteNachladung=jetzt }
                         ereignis.changes.forEach { if (it.positionChanged()) it.consume() }
                     }
                 } while (ereignis.changes.any { it.pressed })
                 if (bewegt) aktuelleKameraÜbernehmen(gestenKamera) else inspektion = down.position
-            } finally { gesteAktiv = false }
+            } finally { gesteAktiv = false;aktuelleSamplingKamera(null) }
         }
     }.pointerInput(konfiguration.dimension) {
         awaitPointerEventScope {
@@ -434,6 +503,7 @@ private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErge
         stateDescription = if (darstellungFertig) "Darstellung fertig" else "Darstellung wird vorbereitet"
     }.then(gesten)) {
         if (size.width <= 0 || size.height <= 0) return@Canvas
+        val zeichenStart=if(beiZeichenDauer!=null) System.nanoTime() else 0L
         val darstellungsKonfiguration = konfiguration.copy(kamera = kamera)
         clipRect {
         drawRect(hintergrund)
@@ -448,7 +518,7 @@ private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErge
         val unSortierteZeichenDaten = paket?.daten ?: return@forEachIndexed
         val darstellungsKonfiguration = ebenen[index].konfiguration.copy(kamera = kamera)
         val sortierteDreiecke = if (darstellungsKonfiguration.dimension == RaumDimension.R3) emptyList() else sortierCaches[index].sortiere(unSortierteZeichenDaten.dreiecke, darstellungsKonfiguration)
-        zeichneZellen(unSortierteZeichenDaten.zellen, darstellungsKonfiguration)
+        zeichneZellen(unSortierteZeichenDaten.zellen, darstellungsKonfiguration, unSortierteZeichenDaten.zellPfade)
         if (darstellungsKonfiguration.dimension == RaumDimension.R1) {
             unSortierteZeichenDaten.intervalle.forEach { zeichneIntervall(it, darstellungsKonfiguration, farbeFür(null, darstellungsKonfiguration)) }
         }
@@ -457,8 +527,9 @@ private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErge
             sortierteDreiecke.forEach { zeichneDreieck(it, darstellungsKonfiguration, zeichnetDreieckKanten) }
         if (darstellungsKonfiguration.farbe.modus != FarbModus.Spektrum) {
             listOf(false, true).forEach { offen ->
-            val pfad = Path()
-            unSortierteZeichenDaten.segmente.filter { it.offen == offen }.forEach { segment ->
+            val vorbereitet=if(darstellungsKonfiguration.dimension==RaumDimension.R2 || darstellungsKonfiguration.dimension==RaumDimension.C) unSortierteZeichenDaten.segmentPfade[offen] else null
+            val pfad=vorbereitet?.let { bildPfad(it,darstellungsKonfiguration) } ?: Path()
+            if(vorbereitet==null) unSortierteZeichenDaten.segmente.asSequence().filter { it.offen == offen }.forEach { segment ->
                 val a = projekt(segment.von, darstellungsKonfiguration, size.width, size.height)
                 val b = projekt(segment.zu, darstellungsKonfiguration, size.width, size.height)
                 if (sichtbar(a, b)) { pfad.moveTo(a.x,a.y); pfad.lineTo(b.x,b.y) }
@@ -502,6 +573,7 @@ private data class VisualisierungsZeichenPaket(val ergebnis: VisualisierungsErge
         if (interaktiv && inspektion != null) zeichneInspektion(inspektion!!, unSortierteZeichenDaten, darstellungsKonfiguration, textMeasurer, beschriftung)
         }
         drawRect(rahmen, style = Stroke(1f))
+        beiZeichenDauer?.invoke(System.nanoTime()-zeichenStart,zeichenPakete.sumOf { it?.daten?.dreiecke?.size ?: 0 })
     }
 }
 
@@ -509,11 +581,12 @@ private fun DrawScope.sichtbar(a: Offset, b: Offset, c: Offset = b): Boolean =
     a.x.isFinite() && a.y.isFinite() && b.x.isFinite() && b.y.isFinite() && c.x.isFinite() && c.y.isFinite() &&
         maxOf(a.x,b.x,c.x) >= 0 && minOf(a.x,b.x,c.x) <= size.width && maxOf(a.y,b.y,c.y) >= 0 && minOf(a.y,b.y,c.y) <= size.height
 
-private fun DrawScope.zeichneZellen(zellen: List<VisualisierungsZelle>, c: VisualisierungsKonfiguration) {
+private fun DrawScope.zeichneZellen(zellen: List<VisualisierungsZelle>, c: VisualisierungsKonfiguration, vorbereitet:Map<ZellenStatus,RelativerZeichenPfad> = emptyMap()) {
     if (c.dimension != RaumDimension.R2 && c.dimension != RaumDimension.C) { zellen.forEach { zeichneZelle(it, c) }; return }
     ZellenStatus.entries.filter { it != ZellenStatus.Ausgeschlossen }.forEach { status ->
-        val pfad = Path()
-        zellen.asSequence().filter { it.status == status && it.minimum.size == 2 }.forEach { z ->
+        val basis=vorbereitet[status]
+        val pfad=basis?.let { bildPfad(it,c) } ?: Path()
+        if(basis==null) zellen.asSequence().filter { it.status == status && it.minimum.size == 2 }.forEach { z ->
             val a = projekt(VisualisierungsPunkt(z.minimum[0], z.minimum[1]), c, size.width, size.height)
             val b = projekt(VisualisierungsPunkt(z.maximum[0], z.maximum[1]), c, size.width, size.height)
             val links = min(a.x,b.x).coerceAtLeast(0f); val rechts = max(a.x,b.x).coerceAtMost(size.width)

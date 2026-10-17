@@ -153,13 +153,12 @@ fun VisualisierungsEinstellungen(c: VisualisierungsKonfiguration, dimension: Rau
     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         FilterChip(c.dimensionsModus == DimensionsModus.Automatisch, { ändern(c.copy(dimensionsModus = DimensionsModus.Automatisch)) }, label = { Text("Auto") })
         RaumDimension.entries.forEach { d -> FilterChip(c.dimensionsModus == DimensionsModus.Manuell && c.dimension == d,
-            { ändern(c.copy(dimension = d, dimensionsModus = DimensionsModus.Manuell, kamera = standardKamera(d),
-                achsen = if (d == RaumDimension.C) AchsenZuordnung("re", "im", null) else c.achsen)) }, label = { Text(d.name) }) }
+            { ändern(c.mitDarstellungsRaum(d).copy(kamera = standardKamera(d))) }, label = { Text(d.name) }) }
     }
     FlowRow { MethodenDarstellungsModus.entries.forEach { m -> FilterChip(c.methodenModus == m, { ändern(c.copy(methodenModus = m)) }, label = { Text(when(m) {
         MethodenDarstellungsModus.Automatisch -> "Auto"; MethodenDarstellungsModus.Bild -> "Bild"; MethodenDarstellungsModus.Funktionsgraph -> "Graph"; MethodenDarstellungsModus.Koordinatenausgabe -> "Koordinaten"
     }) }) } }
-    feld("Ausgabeprojektion", c.ausgabeKoordinaten.joinToString(", ")) { ändern(c.copy(ausgabeKoordinaten = parseAusgabeKoordinaten(it))) }
+    feld("Ausgabeprojektion", c.ausgabeKoordinaten.joinToString(", ")) { ändern(c.mitAusgabeProjektion(parseAusgabeKoordinaten(it))) }
     feld("Feste Parameter: Name=Wert", c.festeSchnitte.entries.joinToString("; ") { "${it.key}=${it.value}" }) { ändern(c.copy(festeSchnitte = parseFesteSchnitte(it))) }
     Text("Achsen und Parameterbereiche", style = MaterialTheme.typography.titleSmall)
     feld("X-Achse", c.achsen.x) { require(it.isNotBlank()) { "Achsenname erforderlich." }; ändern(c.copy(achsen = c.achsen.copy(x = it.trim()))) }
@@ -177,13 +176,11 @@ fun VisualisierungsEinstellungen(c: VisualisierungsKonfiguration, dimension: Rau
     Row { Checkbox(c.sampling.fensterBegrenztePrädikatsMengen, { ändern(c.copy(sampling = c.sampling.copy(fensterBegrenztePrädikatsMengen = it))) }); Text("Prädikatsmengen im Sichtfenster") }
     Text("Qualität", style = MaterialTheme.typography.titleSmall)
     FlowRow { DarstellungsQualität.entries.forEach { q -> FilterChip(c.qualität == q, {
-        ändern(c.copy(qualität = q, sampling = c.sampling.copy(maximalesRasterBudget = if (q == DarstellungsQualität.Hoch) HOHES_VISUALISIERUNGS_DETAIL_BUDGET else MAXIMALES_VISUALISIERUNGS_DETAIL_BUDGET,
-            auflösung1D = if(q == DarstellungsQualität.Hoch) 2000 else 160,
+        ändern(c.copy(qualität = q, sampling = c.sampling.copy(auflösung1D = if(q == DarstellungsQualität.Hoch) 2000 else 160,
             auflösung2D = if(q == DarstellungsQualität.Hoch) 240 else 72,
             auflösung3D = if(q == DarstellungsQualität.Hoch) 40 else 22)))
     }, label = { Text(q.name) }) } }
     fun zahl(text: String, min: Int, max: Int): Int = (text.toIntOrNull() ?: error("Ganze Zahl erforderlich.")).also { require(it in min..max) { "Wert zwischen $min und $max erforderlich." } }
-    feld("Maximale Auswertungen", c.sampling.maximalesRasterBudget.toString()) { ändern(c.copy(sampling = c.sampling.copy(maximalesRasterBudget = zahl(it, 1_000, c.detailBudget)))) }
     feld("Orbit-Schritte je Prüfpunkt", c.sampling.maximaleOrbitSchritte.toString()) { ändern(c.copy(sampling = c.sampling.copy(maximaleOrbitSchritte = zahl(it, 1, 100_000)))) }
     feld("Kurvenauflösung", c.sampling.auflösung1D.toString()) { ändern(c.copy(sampling = c.sampling.copy(auflösung1D = zahl(it, 16, 2_000)))) }
     if (dimension != RaumDimension.R1) feld("Flächenauflösung", c.sampling.auflösung2D.toString()) { ändern(c.copy(sampling = c.sampling.copy(auflösung2D = zahl(it, 16, 240)))) }

@@ -1,6 +1,6 @@
 package de.TeutonStudio.MathematikKnoten.visualisierung.sampling
 
-import de.TeutonStudio.MathematikKnoten.visualisierung.koordinaten.KoordinatenAdapter
+import de.TeutonStudio.MathematikKnoten.visualisierung.koordinaten.*
 import de.TeutonStudio.MathematikKnoten.visualisierung.koordinaten.KoordinatenErgebnis
 import de.TeutonStudio.MathematikKnoten.visualisierung.koordinaten.ReelleKoordinatenKomponente
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.*
@@ -98,6 +98,7 @@ sealed interface VisualisierungsErgebnis {
         val linien: List<VisualisierungsLinie> = emptyList(),
         val dreiecke: List<VisualisierungsDreieck> = emptyList(),
         val statistik: VisualisierungsStatistik = VisualisierungsStatistik(),
+        val interaktionsDreiecke: List<VisualisierungsDreieck> = emptyList(),
     ) : VisualisierungsErgebnis
 
     data class Teilweise(
@@ -109,6 +110,7 @@ sealed interface VisualisierungsErgebnis {
         val linien: List<VisualisierungsLinie> = emptyList(),
         val dreiecke: List<VisualisierungsDreieck> = emptyList(),
         val statistik: VisualisierungsStatistik = VisualisierungsStatistik(),
+        val interaktionsDreiecke: List<VisualisierungsDreieck> = emptyList(),
     ) : VisualisierungsErgebnis
 
     data class BedingtDarstellbar(
@@ -146,10 +148,12 @@ sealed interface VisualisierungsDefinition {
         val zellArbeitsBudget: AuswertungsBudget? = null,
         val farbProbenAnzahl: Int = 1,
         val numerischeFläche: Boolean = false,
+        val samplingDomänen: List<NumerischeDomäne>? = null,
     ) : VisualisierungsDefinition
 
     data class ProduktDomänen(
         val faktoren: List<NumerischeDomäne>,
+        val mitgliedschaft: ((List<Double>) -> NumerischeMitgliedschaft)? = null,
     ) : VisualisierungsDefinition
 
     data class Zahlengerade(
@@ -212,14 +216,42 @@ object VisualisierungsSampler {
         abbruchPrüfen: () -> Unit = {},
     ): VisualisierungsDefinition {
         val dimension = konfiguration.raumDimension
-        if (menge is EndlicheMenge && menge.elemente.size > konfiguration.sampling.maximalesRasterBudget) {
+        if (konfiguration.dimension == RaumDimension.R3 && (konfiguration.achsen.z.isNullOrBlank() || konfiguration.bereiche.z == null))
+            return VisualisierungsDefinition.NichtRäumlich("Für R³ fehlen eine Z-Achse oder ein Z-Achsenbereich.")
+        raumInterpretationsHinweis(menge)?.let { grund ->
+            return if (menge is KartesischerPotenzraum || menge is Tensorraum)
+                VisualisierungsDefinition.BedingtRäumlich(grund) else VisualisierungsDefinition.NichtRäumlich(grund)
+        }
+        if (menge is GefilterteMenge) {
+            raumInterpretationsHinweis(menge.menge)?.let {
+                return if (menge.menge is KartesischerPotenzraum || menge.menge is Tensorraum)
+                    VisualisierungsDefinition.BedingtRäumlich(it) else VisualisierungsDefinition.NichtRäumlich(it)
+            }
+            val n = if (menge.menge is EndlicheMenge) null else numerischeArgumentStruktur(menge.menge)?.blätter?.size
+            if (n == 0) return VisualisierungsDefinition.ProjektionErforderlich(0, dimension,
+                "Der nulldimensionale Raum enthält (); er besitzt keine räumlichen Achsen.")
+            val projektion = konfiguration.ausgabeKoordinaten
+            if (n != null && projektion.isNotEmpty() && (projektion.size != dimension || projektion.distinct().size != projektion.size || projektion.any { it !in 1..n }))
+                return VisualisierungsDefinition.NichtRäumlich("Die Filterprojektion benötigt verschiedene vorhandene Koordinaten passend zum Darstellungsraum.")
+            if (n != null && n != dimension) {
+                val auswahl = konfiguration.ausgabeKoordinaten
+                if (auswahl.isEmpty()) return VisualisierungsDefinition.ProjektionErforderlich(n, dimension,
+                    "Die Filtergrundmenge benötigt eine ausdrückliche Projektion und feste Schnitte für ausgelassene Koordinaten.")
+                if (auswahl.size != dimension || auswahl.distinct().size != auswahl.size || auswahl.any { it !in 1..n })
+                    return VisualisierungsDefinition.NichtRäumlich("Die Filterprojektion benötigt verschiedene vorhandene Koordinaten passend zum Darstellungsraum.")
+                val fehlende = (1..n).filterNot { it in auswahl || "k$it" in konfiguration.festeSchnitte }
+                if (fehlende.isNotEmpty()) return VisualisierungsDefinition.BedingtRäumlich(
+                    "Für ausgelassene Filterkoordinaten ${fehlende.joinToString { "k$it" }} fehlen feste Schnitte. Eine allgemeine existenzielle Projektion erfordert eine ausdrückliche Bildmengenabbildung.")
+            }
+        }
+        if (!konfiguration.sampling.automatisch && menge is EndlicheMenge && menge.elemente.size > konfiguration.sampling.maximalesRasterBudget) {
             return VisualisierungsDefinition.NichtRäumlich(
                 "Die endliche Menge enthält ${menge.elemente.size} Elemente und überschreitet das Rasterbudget von ${konfiguration.sampling.maximalesRasterBudget}.",
             )
         }
         val endlicheSchätzung = schätzeEndlicheAlgebra(menge)
         val budget = BigInteger.valueOf(konfiguration.sampling.maximalesRasterBudget.toLong())
-        if (endlicheSchätzung != null &&
+        if (endlicheSchätzung != null && !(konfiguration.sampling.automatisch && menge is EndlicheMenge) &&
             (endlicheSchätzung.kardinalität > budget || endlicheSchätzung.arbeit > budget)
         ) {
             return VisualisierungsDefinition.NichtRäumlich(
@@ -227,12 +259,52 @@ object VisualisierungsSampler {
                     "Auswertungsschritte und überschreitet das Rasterbudget von ${konfiguration.sampling.maximalesRasterBudget}.",
             )
         }
+        if (konfiguration.ausgabeKoordinaten.isNotEmpty() && endlicheSchätzung != null) {
+            when (val endlich = normalisiereEndlicheAlgebra(menge, konfiguration.sampling.maximalesRasterBudget)) {
+                is EndlicheMenge -> return normalisiereEndlicheMenge(endlich, dimension, konfiguration.ausgabeKoordinaten, konfiguration.dimension == RaumDimension.C)
+                LeereMenge -> return VisualisierungsDefinition.ExaktePunkte(dimension, emptyList())
+                else -> Unit
+            }
+        }
         if (menge is GefilterteMenge && endlicheSchätzung == null) {
             normalisiereFilter(menge, konfiguration, abbruchPrüfen)?.let { return it }
         }
-        if (menge is KoordinatenBild) return normalisiereKoordinatenBild(menge, dimension)
+        if (menge is KoordinatenBild) return normalisiereKoordinatenBild(menge, dimension, konfiguration.ausgabeKoordinaten)
         if (menge is OrbitBeschraenktheitsMenge) {
             return normalisiereOrbitMenge(menge, konfiguration, abbruchPrüfen)
+        }
+        if (menge is Tupelraum || menge is KartesischerPotenzraum || menge is Vektorraum ||
+            menge is Matrizenraum || menge is Tensorraum || menge is KartesischesProdukt ||
+            menge == GaußscheGanzeZahlen || menge == GaußschePrimzahlen ||
+            menge == NichtnegativeGanzeZahlenSemantik.menge || menge == Primzahlen) {
+            val ursprünglicherRaum = numerischerRaum(menge)
+            if (ursprünglicherRaum == null && menge is KartesischesProdukt && menge.mengen.all { produktFaktorDimension(it) != null })
+                return normalisiereProdukt(menge, konfiguration, abbruchPrüfen)
+            val raum = ursprünglicherRaum ?: numerischeArgumentStruktur(menge)
+                ?: return VisualisierungsDefinition.NichtRäumlich("Die numerische Raumstruktur ist unbekannt oder überschreitet das Koordinatenbudget.")
+            val n = raum.blätter.size
+            if (n == 0) return VisualisierungsDefinition.ProjektionErforderlich(0, dimension,
+                "Der nulldimensionale Raum enthält das leere Tupel (); er ist keine leere Menge und hat keine räumlichen Achsen.")
+            val auswahl = konfiguration.ausgabeKoordinaten
+            if (auswahl.isNotEmpty()) {
+                if (auswahl.size != dimension || auswahl.distinct().size != auswahl.size || auswahl.any { it !in 1..n })
+                    return VisualisierungsDefinition.NichtRäumlich("Die Projektion benötigt verschiedene vorhandene Koordinaten passend zum Darstellungsraum.")
+                // Independent component spaces project onto their selected component factors.
+                if (ursprünglicherRaum == null || raum.hatZusatzBedingung()) return VisualisierungsDefinition.NichtRäumlich("Projiziere diesen eingeschränkten Raum über eine ausdrückliche Bildmengenabbildung.")
+                return normalisiereProdukt(KartesischesProdukt(auswahl.map { raum.blätter[it - 1] }), konfiguration, abbruchPrüfen)
+            }
+            if (n < dimension) return VisualisierungsDefinition.NichtRäumlich("Der Raum besitzt nur $n reelle Blattkoordinaten statt $dimension.")
+            if (n > dimension) return VisualisierungsDefinition.ProjektionErforderlich(n, dimension,
+                "Der Raum besitzt $n reelle Blattkoordinaten. Wähle eine ausdrückliche Projektion passend zum Darstellungsraum.")
+            if (ursprünglicherRaum == null || raum.hatZusatzBedingung()) {
+                val p = AllgemeinerParameter("punkt")
+                return normalisiereFilter(GefilterteMenge(menge, MathematischeMethode("P", listOf(p), WahrheitsKonstante(true), WahrheitsMenge,
+                    werteVorräte = mapOf(p.name to menge))), konfiguration, abbruchPrüfen)
+                    ?: VisualisierungsDefinition.NichtRäumlich("Gaußsche Primzahlen konnten nicht normalisiert werden.")
+            }
+            if (menge is KartesischesProdukt && menge.mengen.any { it == KomplexeZahlen })
+                return normalisiereProdukt(menge, konfiguration, abbruchPrüfen)
+            return normalisiereProdukt(KartesischesProdukt(raum.blätter), konfiguration, abbruchPrüfen)
         }
         if (konfiguration.dimension == RaumDimension.R1 && menge is DefinierteMenge) {
             return normalisiereDefinierteMenge(menge, konfiguration, abbruchPrüfen)
@@ -243,7 +315,7 @@ object VisualisierungsSampler {
         if (konfiguration.dimension == RaumDimension.R1) {
             val exakt = ZahlengeradenNormalisierer.normalisiere(menge, konfiguration)
             if (exakt !is VisualisierungsDefinition.BedingtRäumlich) return exakt
-            if (menge is EndlicheMenge) return normalisiereEndlicheMenge(menge, dimension)
+            if (menge is EndlicheMenge) return normalisiereEndlicheMenge(menge, dimension, konfiguration.ausgabeKoordinaten, konfiguration.dimension == RaumDimension.C)
             if (menge is Vereinigung || menge is Schnitt || menge is MengenDifferenz ||
                 menge is SymmetrischeDifferenz || menge is GefilterteMenge ||
                 menge is PrädikatsMenge || menge is MengenFallAusdruck
@@ -251,9 +323,6 @@ object VisualisierungsSampler {
                 return normalisiereAllgemeineRegion(menge, konfiguration, abbruchPrüfen)
             }
             return exakt
-        }
-        if (konfiguration.dimension == RaumDimension.R3 && (konfiguration.achsen.z.isNullOrBlank() || konfiguration.bereiche.z == null)) {
-            return VisualisierungsDefinition.NichtRäumlich("Für R³ fehlen eine Z-Achse oder ein Z-Achsenbereich.")
         }
         return when (menge) {
             LeereMenge -> VisualisierungsDefinition.ExaktePunkte(dimension, emptyList())
@@ -268,7 +337,7 @@ object VisualisierungsSampler {
                 erwarteteDimension = dimension,
                 grund = "ℂ wird über Real- und Imaginärteil im komplexen Darstellungsraum visualisiert.",
             )
-            is EndlicheMenge -> normalisiereEndlicheMenge(menge, dimension)
+            is EndlicheMenge -> normalisiereEndlicheMenge(menge, dimension, konfiguration.ausgabeKoordinaten, konfiguration.dimension == RaumDimension.C)
             is KartesischesProdukt -> normalisiereProdukt(menge, konfiguration, abbruchPrüfen)
             is DefinierteMenge -> normalisiereDefinierteMenge(menge, konfiguration, abbruchPrüfen)
             is Vereinigung, is Schnitt, is MengenDifferenz, is SymmetrischeDifferenz,
@@ -286,13 +355,19 @@ object VisualisierungsSampler {
         abbruchPrüfen: () -> Unit = {},
     ): VisualisierungsErgebnis {
         val laufzeit = konfiguration.copy(sampling = konfiguration.sampling.copy(
-            maximalesRasterBudget = minOf(konfiguration.sampling.maximalesRasterBudget,
+            maximalesRasterBudget = if(konfiguration.sampling.automatisch) konfiguration.sampling.maximalesRasterBudget else minOf(konfiguration.sampling.maximalesRasterBudget,
                 konfiguration.detailBudget),
         ))
-        if (menge is Vereinigung && menge.mengen.any { it is EndlicheMenge }) {
-            val teil = laufzeit.copy(sampling = laufzeit.sampling.copy(maximalesRasterBudget = (laufzeit.sampling.maximalesRasterBudget / menge.mengen.size).coerceAtLeast(1)))
-            return vereinigeVisualisierungsErgebnisse(menge.mengen.map { sample(it, teil, abbruchPrüfen) })
-                ?: VisualisierungsErgebnis.Erfolgreich(emptyList(), false)
+        if (menge is Vereinigung && menge.mengen.any { it is EndlicheMenge || numerischeTrägerAchsen(it)?.any(::istDiskreteZahlmenge) == true }) {
+            val teil = if(laufzeit.sampling.automatisch) laufzeit else laufzeit.copy(sampling = laufzeit.sampling.copy(maximalesRasterBudget = (laufzeit.sampling.maximalesRasterBudget / menge.mengen.size).coerceAtLeast(1)))
+            val ergebnisse=mutableListOf<VisualisierungsErgebnis>()
+            for(m in menge.mengen) {
+                val sitzung=SamplingSitzung.aktuelle()
+                val ergebnis=if(sitzung==null) sample(m,teil,abbruchPrüfen) else sitzung.mitAbbildung(
+                    { vereinigeVisualisierungsErgebnisse(ergebnisse+it)!! }, { sample(m,teil,abbruchPrüfen) })
+                ergebnisse+=ergebnis
+            }
+            return vereinigeVisualisierungsErgebnisse(ergebnisse) ?: VisualisierungsErgebnis.Erfolgreich(emptyList(),false)
         }
         if (menge is MethodenGraphMenge) {
             val m = menge.methode
@@ -301,13 +376,17 @@ object VisualisierungsSampler {
                 signatur.argumente.single().definitionsMenge else m.argumentRaum()
             val graphConfig = laufzeit.copy(methodenModus = MethodenDarstellungsModus.Funktionsgraph)
             val abbild = Abbild(if (m.parameter.size > 1 && domäne is Tupelraum) KartesischesProdukt(domäne.komponenten) else domäne, m)
-            return if (m.parameter.size == 1 && (domäne is Tupelraum || domäne is KartesischesProdukt || domäne is Vektorraum) || m.vorschrift !is ZahlAusdruck)
+            return if (m.parameter.size == 1 && (numerischeArgumentStruktur(domäne) is NumerischerRaum.Produkt) || m.vorschrift !is ZahlAusdruck)
                 sampleStrukturierteBildmenge(abbild, graphConfig, abbruchPrüfen, graph = true)
             else sampleAbbild(abbild, graphConfig, abbruchPrüfen)
         }
         if (menge is Abbild) return sampleAbbild(menge, laufzeit, abbruchPrüfen)
         val räumlich = laufzeit.copy(bereiche = laufzeit.sampling.sichtBereiche ?: laufzeit.bereiche)
-        return materialisiere(normalisiere(menge, räumlich, abbruchPrüfen), räumlich, abbruchPrüfen)
+        // Die synchrone symbolische Normalisierung besitzt eine eigene Schutzgrenze.
+        // Fortlaufende Materialisierung und adaptives Sampling enden am Speicher-/Qualitätsziel.
+        val normalisierung=if(räumlich.sampling.automatisch) räumlich.copy(sampling=räumlich.sampling.copy(
+            maximalesRasterBudget=AUTOMATISCHE_MATERIALISIERUNGS_GRENZE)) else räumlich
+        return materialisiere(normalisiere(menge, normalisierung, abbruchPrüfen), räumlich, abbruchPrüfen)
     }
 
     private fun materialisiere(
@@ -433,7 +512,7 @@ object VisualisierungsSampler {
     }
 
     private fun orbitParameterGeometrie(menge: MengenAusdruck): OrbitParameterGeometrie? = when (menge) {
-        NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, is ReellesIntervall ->
+        NatürlicheZahlen, GanzeZahlen, RationaleZahlen, ReelleZahlen, NichtnegativeGanzeZahlenSemantik.menge, Primzahlen, is ReellesIntervall ->
             OrbitParameterGeometrie(OrbitParameterArt.Reell, 1)
         KomplexeZahlen -> OrbitParameterGeometrie(OrbitParameterArt.Komplex, 2)
         is KartesischesProdukt -> orbitTupelGeometrie(menge.mengen)
@@ -515,13 +594,24 @@ object VisualisierungsSampler {
     private fun normalisiereEndlicheMenge(
         menge: EndlicheMenge,
         dimension: Int,
+        projektion: List<Int> = emptyList(),
+        komplex: Boolean = false,
     ): VisualisierungsDefinition.ExaktePunkte {
         val punkte = mutableListOf<List<Double>>()
         val diagnosen = mutableListOf<KoordinatenErgebnis>()
         menge.elemente.forEach { element ->
-            when (val adapter = KoordinatenAdapter.extrahiere(element, dimension)) {
+            SamplingSitzung.aktuelle()?.prüfe()
+            samplingSpeicher(384)
+            val punkt = if (komplex && element is ZahlAusdruck &&
+                (DomaenenAuswerter.wert(element) as? DomaenenErgebnis.Wert)?.wert is DomaenenWert.Reell)
+                KomplexeZahl(element, RationaleZahl.Null) else element
+            when (val adapter = KoordinatenAdapter.extrahiere(punkt, dimension, ausgabeKoordinaten = projektion)) {
                 is KoordinatenErgebnis.Darstellbar -> punkte += adapter.werte
                 else -> diagnosen += adapter
+            }
+            if(punkte.size % 256 == 0) samplingZwischenstand {
+                VisualisierungsErgebnis.Teilweise(punkte.map { VisualisierungsPunkt(it[0],it.getOrElse(1){0.0},it.getOrNull(2)) },
+                    listOf("Endliche Menge wird aufgezählt; noch nicht vollständig."))
             }
         }
         return VisualisierungsDefinition.ExaktePunkte(dimension, punkte.distinct(), diagnosen)
@@ -530,7 +620,8 @@ object VisualisierungsSampler {
     private fun normalisiereKoordinatenBild(
         bild: KoordinatenBild,
         dimension: Int,
-    ): VisualisierungsDefinition = when (val ergebnis = KoordinatenAdapter.extrahiere(bild, dimension)) {
+        projektion: List<Int> = emptyList(),
+    ): VisualisierungsDefinition = when (val ergebnis = KoordinatenAdapter.extrahiere(bild, dimension, ausgabeKoordinaten = projektion)) {
         is KoordinatenErgebnis.Darstellbar -> VisualisierungsDefinition.ExaktePunkte(
             dimension,
             listOf(ergebnis.werte),
@@ -586,6 +677,14 @@ object VisualisierungsSampler {
             )
         }
         if (produkt.mengen.any(::benötigtProduktRegion)) {
+            val träger = numerischeTrägerAchsen(produkt)
+            if (träger?.size == dimension && träger.any(::istDiskreteZahlmenge)) {
+                val domänen = träger.mapIndexed { i, m -> when (val d = faktorDomäne(m, konfiguration.achsenBereiche[i], konfiguration)) {
+                    is DomänenErgebnis.Erfolgreich -> d.domäne
+                    is DomänenErgebnis.Fehler -> return if (d.offen) VisualisierungsDefinition.BedingtRäumlich(d.grund) else VisualisierungsDefinition.NichtRäumlich(d.grund)
+                } }
+                return VisualisierungsDefinition.ProduktDomänen(domänen) { punkt -> mitgliedschaft(produkt, punkt, konfiguration) }
+            }
             val intervallBudget = AuswertungsBudget(
                 (konfiguration.sampling.maximalesRasterBudget / 2).coerceAtLeast(1),
                 abbruchPrüfen,
@@ -605,9 +704,8 @@ object VisualisierungsSampler {
         val domänen = produkt.mengen.mapIndexed { index, faktor ->
             when (val ergebnis = faktorDomäne(faktor, bereiche[index], konfiguration)) {
                 is DomänenErgebnis.Erfolgreich -> ergebnis.domäne
-                is DomänenErgebnis.Fehler -> return VisualisierungsDefinition.NichtRäumlich(
-                    "Faktor ${index + 1} ist nicht darstellbar: ${ergebnis.grund}",
-                )
+                is DomänenErgebnis.Fehler -> return if (ergebnis.offen) VisualisierungsDefinition.BedingtRäumlich(ergebnis.grund)
+                    else VisualisierungsDefinition.NichtRäumlich("Faktor ${index + 1} ist nicht darstellbar: ${ergebnis.grund}")
             }
         }
         return VisualisierungsDefinition.ProduktDomänen(domänen)
@@ -738,6 +836,18 @@ object VisualisierungsSampler {
             }
             return werteAussage(menge.bedingung, umgebung, konfiguration.sampling.toleranz)
         }
+        val samplingDomänen = if (farbVariable == null && menge.variablen.any { istDiskreteZahlmenge(it.grundMenge) }) {
+            val faktoren = achsen.mapIndexed { i, achse ->
+                val grund = menge.variablen.single { it.variable.name == achse }.grundMenge
+                when (val d = faktorDomäne(grund, konfiguration.achsenBereiche[i], konfiguration)) {
+                    is DomänenErgebnis.Erfolgreich -> d.domäne
+                    is DomänenErgebnis.Fehler -> if (grund is ReellesIntervall && grund.freieVariablen().isNotEmpty())
+                        (faktorDomäne(ReelleZahlen, konfiguration.achsenBereiche[i], konfiguration) as DomänenErgebnis.Erfolgreich).domäne
+                        else return if (d.offen) VisualisierungsDefinition.BedingtRäumlich(d.grund) else VisualisierungsDefinition.NichtRäumlich(d.grund)
+                }
+            }
+            faktoren
+        } else null
         val farbMitgliedschaft = farbVariable?.let { variable ->
             val farbBereich = konfiguration.farbe.bereich ?: ZahlenBereich(-1.0, 1.0)
             val werte = rasterWerte(farbBereich, minOf(48, konfiguration.sampling.auflösung2D))
@@ -763,6 +873,7 @@ object VisualisierungsSampler {
         val hatStetigenRand = dimension == 2 && farbVariable == null && vergleich != null &&
             menge.variablen.all { it.grundMenge == ReelleZahlen } && istPolynom(vergleich.links) && istPolynom(vergleich.rechts)
         return VisualisierungsDefinition.Region(
+            samplingDomänen = samplingDomänen,
             randResiduum = if (hatStetigenRand) { punkt ->
                 val env = achsen.zip(punkt).toMap() + konfiguration.festeSchnitte
                 val a = numerischerWert(vergleich!!.links, env); val b = numerischerWert(vergleich.rechts, env)
@@ -806,13 +917,20 @@ object VisualisierungsSampler {
     /** Entpackt Definitionsräume strukturell; ein Tupelargument bleibt ein Argument. */
     private fun filterBedingung(aussage: Aussage, reelleKoordinaten: Set<Variable> = emptySet()): Aussage {
         fun inMenge(element: MathematischesObjekt, menge: MengenAusdruck): Aussage {
-            val komponenten = when(menge) {
-                is Tupelraum -> menge.komponenten
-                is KartesischesProdukt -> menge.mengen
-                else -> null
+            when (menge) {
+                is MengenDifferenz -> return Konjunktion(listOf(inMenge(element, menge.links), Negation(inMenge(element, menge.rechts))))
+                is Vereinigung -> return Disjunktion(menge.mengen.map { inMenge(element, it) })
+                is Schnitt -> return if (menge.mengen.isEmpty()) menge.grundMenge?.let { inMenge(element, it) } ?: ElementBeziehung(element, menge)
+                    else Konjunktion(menge.mengen.map { inMenge(element, it) })
+                else -> Unit
             }
-            if (element is Tupel && komponenten != null && element.elemente.size == komponenten.size) {
+            val komponenten = menge.kartesischeFaktorenOderNull()
+            if (element is Tupel && komponenten != null && element.elemente.size == komponenten.size)
                 return Konjunktion(element.elemente.zip(komponenten).map { (e, m) -> inMenge(e, m) })
+            val raum = numerischerRaum(menge)
+            if (raum is NumerischerRaum.Produkt) {
+                val b = raum.bedingung(element)
+                return if (menge == GaußschePrimzahlen) b else filterBedingung(b, reelleKoordinaten)
             }
             if (menge is DefinierteMenge) {
                 val elemente = if (menge.variablen.size == 1) listOf(element) else (element as? Tupel)?.elemente
@@ -841,23 +959,19 @@ object VisualisierungsSampler {
     ): VisualisierungsDefinition? {
         val variablen = mutableListOf<GebundeneMengenVariable>()
         fun blatt(menge: MengenAusdruck): Variable {
-            val name = c.achsenNamen.getOrNull(variablen.size) ?: error("Die Filtermenge benötigt eine explizite Projektion.")
+            val auswahl = c.ausgabeKoordinaten
+            val achse = if (auswahl.isEmpty()) variablen.size else auswahl.indexOf(variablen.size + 1)
+            val name = if (achse >= 0) c.achsenNamen.getOrNull(achse) ?: error("Für die Filterkoordinate fehlt eine Achse.")
+                else "k${variablen.size + 1}"
             return Variable(name).also { variablen += GebundeneMengenVariable(it, menge) }
         }
-        fun packe(menge: MengenAusdruck): MathematischesObjekt = when(menge) {
-            is KartesischesProdukt -> Tupel(menge.mengen.map(::packe))
-            is Tupelraum -> Tupel(menge.komponenten.map(::packe))
-            is Vektorraum -> {
-                val werte = List(menge.dimension) { packe(menge.skalarMenge) as ZahlAusdruck }
-                if(menge.orientierung == VektorOrientierung.Zeile) ZeilenVektor(werte) else SpaltenVektor(werte)
-            }
-            KomplexeZahlen -> KomplexeZahl(blatt(ReelleZahlen), blatt(ReelleZahlen))
-            ReelleZahlen, RationaleZahlen, GanzeZahlen, NatürlicheZahlen, is ReellesIntervall, is EndlicheMenge -> blatt(menge)
-            else -> error("Die Filtergrundmenge benötigt numerische Mitgliedschaft ohne Koordinatenzertifikat.")
+        fun packe(menge: MengenAusdruck): MathematischesObjekt {
+            val raum = numerischeArgumentStruktur(menge) ?: error(raumInterpretationsHinweis(menge) ?: "Die Grundmenge hat keine numerische Koordinatenstruktur.")
+            return raum.packe(raum.blätter.map(::blatt).iterator())
         }
         return try {
             val punkt = packe(filter.menge)
-            if (variablen.size != c.raumDimension) return null
+            if (c.ausgabeKoordinaten.isEmpty() && variablen.size != c.raumDimension) return null
             val methode = filter.methode.alsMathematischeMethode("die Filterdarstellung")
             val extern = externeFilterParameter(methode)
             if (extern.isNotEmpty()) return VisualisierungsDefinition.BedingtRäumlich(
@@ -874,7 +988,10 @@ object VisualisierungsSampler {
                 it is ElementBeziehung && it.element == punkt && it.menge == filter.menge
             }
             fun teile(a: Aussage): List<Aussage> = if(a is Konjunktion) a.aussagen.flatMap(::teile) else listOf(vereinfacheAussage(a, RechenKontext()))
-            val teile = (listOf(prädikat) + voraussetzungen).map { filterBedingung(it, variablen.map { v -> v.variable }.toSet()) }.flatMap(::teile).filterNot { it is WahrheitsKonstante && it.wert }
+            val basisRaum = numerischerRaum(filter.menge)
+            val basisBedingungen = if (basisRaum == null) listOf(ElementBeziehung(punkt, filter.menge))
+                else if (basisRaum.hatZusatzBedingung()) listOf(basisRaum.bedingung(punkt)) else emptyList()
+            val teile = (listOf(prädikat) + voraussetzungen + basisBedingungen).map { filterBedingung(it, variablen.map { v -> v.variable }.toSet()) }.flatMap(::teile).filterNot { it is WahrheitsKonstante && it.wert }
             val bedingung = if(teile.any { it is WahrheitsKonstante && !it.wert }) WahrheitsKonstante(false)
                 else teile.singleOrNull() ?: if(teile.isEmpty()) WahrheitsKonstante(true) else Konjunktion(teile)
             val definition = normalisiereDefinierteMenge(DefinierteMenge(variablen, bedingung), c, abbruchPrüfen)
@@ -893,7 +1010,7 @@ object VisualisierungsSampler {
         is Schnitt -> menge.mengen.all(::hatZellNachweis) && (menge.mengen.isNotEmpty() || menge.grundMenge?.let(::hatZellNachweis) == true)
         is MengenDifferenz -> hatZellNachweis(menge.links) && hatZellNachweis(menge.rechts)
         is SymmetrischeDifferenz -> hatZellNachweis(menge.links) && hatZellNachweis(menge.rechts)
-        else -> false
+        else -> numerischerRaum(menge)?.blätter?.all { it != menge && hatZellNachweis(it) } == true
     }
 
     private fun normalisiereAllgemeineRegion(
@@ -915,7 +1032,15 @@ object VisualisierungsSampler {
             (konfiguration.sampling.maximalesRasterBudget / 2).coerceAtLeast(1),
             abbruchPrüfen,
         )
+        val träger = numerischeTrägerAchsen(menge)
+        val domänen = if (träger?.size == konfiguration.raumDimension && träger.any(::istDiskreteZahlmenge)) {
+            träger.mapIndexed { i, m -> when (val d = faktorDomäne(m, konfiguration.achsenBereiche[i], konfiguration)) {
+                is DomänenErgebnis.Erfolgreich -> d.domäne
+                is DomänenErgebnis.Fehler -> return if (d.offen) VisualisierungsDefinition.BedingtRäumlich(d.grund) else VisualisierungsDefinition.NichtRäumlich(d.grund)
+            } }
+        } else null
         return VisualisierungsDefinition.Region(
+            samplingDomänen = domänen,
             dimension = konfiguration.raumDimension,
             numerischeFläche = menge is PrädikatsMenge && konfiguration.sampling.fensterBegrenztePrädikatsMengen,
             fensterBegrenzt = hinweise.isNotEmpty(),
@@ -1011,7 +1136,13 @@ object VisualisierungsSampler {
         zelle: List<RationalesIntervall>,
         c: VisualisierungsKonfiguration,
         budget: AuswertungsBudget,
-    ): ZellNachweis = when (menge) {
+    ): ZellNachweis {
+        val raum = numerischerRaum(menge)
+        if (raum is NumerischerRaum.Produkt && raum.blätter.size == zelle.size) {
+            if (raum.hatZusatzBedingung()) return ZellNachweis.Unbekannt("Zusätzliche diskrete Raumbedingungen werden punktweise geprüft.")
+            return kombiniereZellNachweise(raum.blätter.zip(zelle).map { (m, z) -> zellNachweisGrundmenge(m, z) }, und = true)
+        }
+        return when (menge) {
         LeereMenge -> ZellNachweis.Ausgeschlossen
         ReelleZahlen, RationaleZahlen, GanzeZahlen, NatürlicheZahlen, is ReellesIntervall, is EndlicheMenge -> {
             if (zelle.size == 1) zellNachweisGrundmenge(menge, zelle.single())
@@ -1044,6 +1175,8 @@ object VisualisierungsSampler {
             null -> ZellNachweis.Unbekannt("Die Fallbedingung ist nicht bewiesen.")
         }
         else -> ZellNachweis.Unbekannt("${menge::class.simpleName} besitzt keinen Zellnachweis.")
+    }
+
     }
 
     private fun zellNachweisGrundmenge(menge: MengenAusdruck, zelle: RationalesIntervall): ZellNachweis = when (menge) {
@@ -1158,21 +1291,39 @@ object VisualisierungsSampler {
             }
             akk * domäne.werte.size
         }
-        if (größe > konfiguration.sampling.maximalesRasterBudget) {
+        if (!konfiguration.sampling.automatisch && größe > konfiguration.sampling.maximalesRasterBudget) {
             return VisualisierungsErgebnis.NichtDarstellbar(
                 "Das Produkt würde $größe Punkte materialisieren und überschreitet das Rasterbudget von ${konfiguration.sampling.maximalesRasterBudget}.",
             )
         }
-        var kombinationen = listOf(emptyList<Double>())
-        definition.faktoren.forEach { domäne ->
-            kombinationen = kombinationen.flatMap { präfix -> domäne.werte.map { präfix + it } }
-        }
         val approximation = definition.faktoren.any { it.istApproximation }
-        return VisualisierungsErgebnis.Erfolgreich(
-            punkte = kombinationen.map { it.alsPunkt(konfiguration) },
-            istApproximation = approximation,
-            hinweise = definition.faktoren.flatMap { it.hinweise }.distinct(),
-        )
+        val diagnosen = linkedSetOf<String>()
+        val punkte = mutableListOf<VisualisierungsPunkt>()
+        val koordinaten = MutableList(definition.faktoren.size) { 0.0 }
+        var besucht=0
+        fun besuche(achse:Int) {
+            SamplingSitzung.aktuelle()?.prüfe()
+            if(achse<definition.faktoren.size) {
+                definition.faktoren[achse].werte.forEach { koordinaten[achse]=it;besuche(achse+1) }
+                return
+            }
+            besucht++
+            val enthalten=when(val m=definition.mitgliedschaft?.invoke(koordinaten)) {
+                null,NumerischeMitgliedschaft.Enthalten -> true
+                NumerischeMitgliedschaft.NichtEnthalten -> false
+                is NumerischeMitgliedschaft.Grenze -> abs(m.residuum)<=konfiguration.sampling.toleranz
+                is NumerischeMitgliedschaft.Unbekannt -> { diagnosen+=m.grund;false }
+            }
+            if(enthalten) { samplingSpeicher(192);punkte+=koordinaten.alsPunkt(konfiguration) }
+            if(besucht%256==0) samplingZwischenstand {
+                VisualisierungsErgebnis.Teilweise(punkte.toList(),listOf("Produkt wird aufgezählt; noch nicht vollständig.")+diagnosen)
+            }
+        }
+        besuche(0)
+        if(diagnosen.isNotEmpty()) return VisualisierungsErgebnis.Teilweise(punkte,diagnosen.toList())
+        return VisualisierungsErgebnis.Erfolgreich(punkte,approximation,
+            definition.faktoren.flatMap { it.hinweise }.distinct(),
+            if(punkte.isEmpty()) VisualisierungsQualität.KeineTrefferImFenster else if(approximation) VisualisierungsQualität.Approximation else VisualisierungsQualität.Exakt)
     }
 
     private fun sampleRegion(
@@ -1180,6 +1331,9 @@ object VisualisierungsSampler {
         c: VisualisierungsKonfiguration,
         abbruchPrüfen: () -> Unit,
     ): VisualisierungsErgebnis {
+        region.samplingDomänen?.let {
+            return materialisiereProdukt(VisualisierungsDefinition.ProduktDomänen(it, region.mitgliedschaft), c)
+        }
         val gesamtBudget = c.sampling.maximalesRasterBudget
         val zellLimit = if(region.zellNachweis == null) 0 else gesamtBudget / 2
         val zellBudget = region.zellArbeitsBudget ?: AuswertungsBudget(zellLimit.coerceAtLeast(1), abbruchPrüfen)
@@ -1216,6 +1370,10 @@ object VisualisierungsSampler {
                     besuche(tiefe + 1)
                 }
                 return
+            }
+            samplingSpeicher(512L + region.farbProbenAnzahl * 128L)
+            if(rasterWerte.size % 256 == 0) samplingZwischenstand {
+                VisualisierungsErgebnis.Teilweise(punkte.toList(),listOf("Region wird verfeinert; noch nicht vollständig."),zellen=zellen)
             }
             val koordinaten = indices.mapIndexed { index, rasterIndex ->
                 lerp(bereiche[index], rasterIndex.toDouble() / (n - 1))
@@ -1385,6 +1543,7 @@ object VisualisierungsSampler {
         // Breitensuche klassifiziert zuerst alle groben Bereiche, bevor Randdetails Budget verbrauchen.
         while (wartend.isNotEmpty()) {
             abbruchPrüfen()
+            samplingSpeicher(384)
             val (minimum, maximum, tiefe) = wartend.removeFirst()
             if (!budget.schritt()) {
                 ergebnis += VisualisierungsZelle(minimum, maximum, ZellenStatus.Unbekannt, "Zellbudget ausgeschöpft.")
@@ -1395,6 +1554,7 @@ object VisualisierungsSampler {
             val unterstützt = (wert as? ZellNachweis.Unbekannt)?.grund?.let { "besitzt" !in it && "verfügbar" !in it } ?: true
             val offen = unterstützt && (wert is ZellNachweis.Unbekannt || wert is ZellNachweis.Gemischt)
             if (offen && tiefe < maximaleTiefe && budget.verbraucht + wartend.size + (1 shl region.dimension) <= budget.maximum) {
+                samplingSpeicher((1 shl region.dimension)*384L)
                 val mitten = minimum.zip(maximum) { a,b -> a+(b-a)/2 }
                 repeat(1 shl region.dimension) { maske ->
                     wartend.add(Auftrag(minimum.indices.map { if(maske and (1 shl it)==0) minimum[it] else mitten[it] },
@@ -1406,7 +1566,12 @@ object VisualisierungsSampler {
                 is ZellNachweis.Gemischt -> ZellenStatus.Gemischt
                 is ZellNachweis.Unbekannt -> ZellenStatus.Unbekannt
             },when(wert) {is ZellNachweis.Gemischt -> wert.grund;is ZellNachweis.Unbekannt -> wert.grund;else -> null})
+            if(budget.verbraucht % 256 == 0) samplingZwischenstand {
+                VisualisierungsErgebnis.Teilweise(emptyList(),listOf("Zellen werden klassifiziert; offene Bereiche sind unbekannt."),
+                    zellen=ergebnis.toList()+wartend.map { VisualisierungsZelle(it.minimum,it.maximum,ZellenStatus.Unbekannt,"Noch nicht klassifiziert.") })
+            }
         }
+        samplingZwischenstand(true) { VisualisierungsErgebnis.Teilweise(emptyList(),listOf("Numerische Details werden berechnet."),zellen=ergebnis.toList()) }
         return ergebnis
     }
 
@@ -1418,7 +1583,7 @@ object VisualisierungsSampler {
         val methode = abbild.methode
         if (methode.parameter.any { it !is Variable } || methode.parameter.size > 3 ||
             konfiguration.ausgabeKoordinaten.isNotEmpty() ||
-            methode.parameter.size == 1 && (abbild.menge is Tupelraum || abbild.menge is KartesischesProdukt || abbild.menge is Vektorraum)) {
+            methode.parameter.size == 1 && numerischeArgumentStruktur(abbild.menge) is NumerischerRaum.Produkt) {
             return sampleStrukturierteBildmenge(abbild, konfiguration, abbruchPrüfen)
         }
         if (methode.parameter.isEmpty()) {
@@ -1473,6 +1638,7 @@ object VisualisierungsSampler {
         val parameterAuflösung = min(basisAuflösung, budgetAuflösung).coerceAtLeast(2)
         val domänenKonfiguration = konfiguration.copy(
             sampling = konfiguration.sampling.copy(
+                maximalesRasterBudget=if(konfiguration.sampling.automatisch) AUTOMATISCHE_MATERIALISIERUNGS_GRENZE else konfiguration.sampling.maximalesRasterBudget,
                 auflösung1D = parameterAuflösung,
                 auflösung2D = parameterAuflösung,
                 auflösung3D = parameterAuflösung,
@@ -1491,7 +1657,8 @@ object VisualisierungsSampler {
                 beschränkeEndlichesIntervallAufSichtfenster = modus == MethodenDarstellungsModus.Funktionsgraph,
             )) {
                 is DomänenErgebnis.Erfolgreich -> ergebnis.domäne
-                is DomänenErgebnis.Fehler -> return VisualisierungsErgebnis.NichtDarstellbar(
+                is DomänenErgebnis.Fehler -> return if (ergebnis.offen) VisualisierungsErgebnis.BedingtDarstellbar(ergebnis.grund)
+                    else VisualisierungsErgebnis.NichtDarstellbar(
                     "Parameter '${parameter[index].name}' ist nicht darstellbar: ${ergebnis.grund}",
                 )
             }
@@ -1541,6 +1708,7 @@ object VisualisierungsSampler {
                     }
                 },
                 abbruchPrüfen = abbruchPrüfen,
+                herkunft=abbild,
             )
             val abtastung = if (parameter.size == 2 && konfiguration.sampling.vorschau) "gleichmäßige Punktvorschau" else "adaptive Bildraumabtastung"
             val hinweise = domänen.flatMap { it.hinweise }.distinct() +
@@ -1562,6 +1730,7 @@ object VisualisierungsSampler {
                     linien = adaptiv.linien,
                     dreiecke = adaptiv.dreiecke,
                     statistik = adaptiv.statistik,
+                    interaktionsDreiecke=adaptiv.interaktionsDreiecke,
                 )
             } else {
                 VisualisierungsErgebnis.Erfolgreich(
@@ -1571,25 +1740,27 @@ object VisualisierungsSampler {
                     linien = adaptiv.linien,
                     dreiecke = adaptiv.dreiecke,
                     statistik = adaptiv.statistik,
+                    interaktionsDreiecke=adaptiv.interaktionsDreiecke,
                 )
             }
         }
         val erwartetePunkte = domänen.fold(1L) { akk, domäne ->
             if (akk > Long.MAX_VALUE / domäne.werte.size) Long.MAX_VALUE else akk * domäne.werte.size
         }
-        if (erwartetePunkte > konfiguration.sampling.maximalesRasterBudget) {
+        if (!konfiguration.sampling.automatisch && erwartetePunkte > konfiguration.sampling.maximalesRasterBudget) {
             return VisualisierungsErgebnis.NichtDarstellbar(
                 "Das Methodensampling würde $erwartetePunkte Parameterkombinationen materialisieren und überschreitet das Gesamtbudget von ${konfiguration.sampling.maximalesRasterBudget}.",
             )
         }
-        var kombinationen = listOf(emptyList<Double>())
-        domänen.forEach { domäne ->
-            kombinationen = kombinationen.flatMap { präfix -> domäne.werte.map { präfix + it } }
-        }
+        val kombinationen=kartesischeStützwerte(domänen)
         val punkte = mutableListOf<VisualisierungsPunkt>()
         val diagnosen = mutableListOf<KoordinatenErgebnis>()
         kombinationen.forEach { argumente ->
             abbruchPrüfen()
+            samplingSpeicher(256)
+            if(punkte.size%256==0) samplingZwischenstand {
+                VisualisierungsErgebnis.Teilweise(punkte.toList(),listOf("Methodenargumente werden ausgewertet; noch nicht vollständig."))
+            }
             val umgebung = parameter.map { it.name }.zip(argumente).toMap()
             val koordinaten = werteKoordinaten(argumente)
             when (koordinaten) {
@@ -1702,7 +1873,17 @@ object VisualisierungsSampler {
         menge: MengenAusdruck,
         punkt: List<Double>,
         c: VisualisierungsKonfiguration,
-    ): NumerischeMitgliedschaft = when (menge) {
+    ): NumerischeMitgliedschaft {
+        val raum = if (menge is GefilterteMenge) null else numerischeArgumentStruktur(menge)
+        if (raum is NumerischerRaum.Blatt && punkt.size == 1)
+            return faktorEnthält(menge, punkt.single(), c.sampling.toleranz)
+        if (raum is NumerischerRaum.Produkt && raum.blätter.size == punkt.size) {
+            val objekt = raum.packe(punkt.map(::rationaleZahl).iterator())
+            val bedingung = if (numerischerRaum(menge) == null) ElementBeziehung(objekt, menge) else raum.bedingung(objekt)
+            val entscheidung = werteAussage(bedingung, emptyMap(), c.sampling.toleranz)
+            if (entscheidung !is NumerischeMitgliedschaft.Unbekannt || menge !is MengenDifferenz && menge !is Schnitt) return entscheidung
+        }
+        return when (menge) {
         LeereMenge -> NumerischeMitgliedschaft.NichtEnthalten
         ReelleZahlen, GanzeZahlen, NatürlicheZahlen, RationaleZahlen, is ReellesIntervall -> {
             if (punkt.size == 1) faktorEnthält(menge, punkt.single(), c.sampling.toleranz)
@@ -1745,12 +1926,16 @@ object VisualisierungsSampler {
         else -> NumerischeMitgliedschaft.Unbekannt("${menge::class.simpleName} besitzt keine numerische Mitgliedschaftssemantik.")
     }
 
+    }
+
     private fun werteFilter(
         menge: GefilterteMenge, punkt: List<Double>, c: VisualisierungsKonfiguration,
     ): NumerischeMitgliedschaft { return try {
         val methode = menge.methode.alsMathematischeMethode("die Filtermitgliedschaft")
         if (externeFilterParameter(methode).isNotEmpty()) return NumerischeMitgliedschaft.Unbekannt("Der Filter enthält ungebundene externe Parameter.")
-        val argumente = Tupel(listOf(punktObjekt(punkt, c)))
+        val raum = numerischeArgumentStruktur(menge.menge)
+        val objekt = if (raum != null && raum.blätter.size == punkt.size) raum.packe(punkt.map(::rationaleZahl).iterator()) else punktObjekt(punkt, c)
+        val argumente = Tupel(listOf(objekt))
         val env = c.achsenNamen.zip(punkt).toMap() + c.festeSchnitte
         val voraussetzungen = kombiniereMitgliedschaften(methode.prüfeDefinitionsBedingungen(argumente).map {
             werteAussage(filterBedingung(it), env, c.sampling.toleranz)
@@ -1955,7 +2140,7 @@ object VisualisierungsSampler {
 
     private sealed interface DomänenErgebnis {
         data class Erfolgreich(val domäne: NumerischeDomäne) : DomänenErgebnis
-        data class Fehler(val grund: String) : DomänenErgebnis
+        data class Fehler(val grund: String, val offen: Boolean = false) : DomänenErgebnis
     }
 
     private fun faktorDomäne(
@@ -1963,7 +2148,17 @@ object VisualisierungsSampler {
         bereich: ZahlenBereich,
         c: VisualisierungsKonfiguration,
         beschränkeEndlichesIntervallAufSichtfenster: Boolean = true,
-    ): DomänenErgebnis = when (faktor) {
+    ): DomänenErgebnis {
+        try {
+            diskreteAchsenWerte(faktor, bereich.minimum, bereich.maximum, c.sampling.maximalesRasterBudget)?.let { werte ->
+                return DomänenErgebnis.Erfolgreich(NumerischeDomäne(werte.map { numerischerWert(it as ZahlAusdruck, emptyMap())!! }, false,
+                    if (faktor is EndlicheMenge) emptyList() else listOf("Die diskrete Achse wird im Sichtfenster vollständig aufgezählt."),
+                    mathematischLeer = faktor is EndlicheMenge && faktor.elemente.isEmpty()))
+            }
+        } catch (fehler: OffeneRaumBedingung) { return DomänenErgebnis.Fehler(fehler.message ?: "Offene Mitgliedschaft.", offen = true)
+        } catch (fehler: IllegalArgumentException) { return DomänenErgebnis.Fehler(fehler.message ?: "Ungültige diskrete Achse.")
+        } catch (fehler: IllegalStateException) { return DomänenErgebnis.Fehler(fehler.message ?: "Offene diskrete Mitgliedschaft.") }
+        return when (faktor) {
         LeereMenge -> DomänenErgebnis.Erfolgreich(NumerischeDomäne(emptyList(), false, mathematischLeer = true))
         is EndlicheMenge -> {
             val werte = faktor.elemente.map { element ->
@@ -2018,7 +2213,7 @@ object VisualisierungsSampler {
                 ),
             )
         }
-        ReelleZahlen -> DomänenErgebnis.Erfolgreich(
+        ReelleZahlen, RationaleZahlen -> DomänenErgebnis.Erfolgreich(
             NumerischeDomäne(rasterWerte(bereich, c.achsenAuflösung), true, listOf("ℝ wird auf den sichtbaren Achsenbereich begrenzt.")),
         )
         GanzeZahlen -> ganzzahlDomäne(bereich, natürliche = false, c)
@@ -2031,6 +2226,8 @@ object VisualisierungsSampler {
             )
         }
         else -> DomänenErgebnis.Fehler("${faktor::class.simpleName} ist keine unterstützte eindimensionale Faktor-Domäne.")
+    }
+
     }
 
     private fun ganzzahlDomäne(
@@ -2067,6 +2264,11 @@ object VisualisierungsSampler {
         RationaleZahlen -> if (wert.isFinite()) NumerischeMitgliedschaft.Enthalten else NumerischeMitgliedschaft.NichtEnthalten
         GanzeZahlen -> if (wert.isFinite() && wert == round(wert)) NumerischeMitgliedschaft.Enthalten else NumerischeMitgliedschaft.NichtEnthalten
         NatürlicheZahlen -> if (wert.isFinite() && wert >= 1.0 && wert == round(wert)) NumerischeMitgliedschaft.Enthalten else NumerischeMitgliedschaft.NichtEnthalten
+        NichtnegativeGanzeZahlenSemantik.menge, Primzahlen -> when (ElementBeziehung(rationaleZahl(wert), faktor).entscheide().wahrheitswert) {
+            Wahrheitswert.Wahr -> NumerischeMitgliedschaft.Enthalten
+            Wahrheitswert.Lüge -> NumerischeMitgliedschaft.NichtEnthalten
+            null -> NumerischeMitgliedschaft.Unbekannt("Die Mitgliedschaft ist noch nicht bewiesen.")
+        }
         is ReellesIntervall -> {
             val links = numerischerWert(faktor.links, emptyMap()) ?: return NumerischeMitgliedschaft.Unbekannt("Intervallgrenze nicht numerisch.")
             val rechts = numerischerWert(faktor.rechts, emptyMap()) ?: return NumerischeMitgliedschaft.Unbekannt("Intervallgrenze nicht numerisch.")
@@ -2096,10 +2298,21 @@ object VisualisierungsSampler {
         umgebung: Map<String, Double>,
         toleranz: Double,
     ): NumerischeMitgliedschaft {
+        if (aussage is Negation) return differenz(NumerischeMitgliedschaft.Enthalten, werteAussage(aussage.aussage, umgebung, toleranz))
+        if (aussage is Konjunktion) return kombiniereMitgliedschaften(aussage.aussagen.map { werteAussage(it, umgebung, toleranz) }, und = true)
+        if (aussage is Disjunktion) return kombiniereMitgliedschaften(aussage.aussagen.map { werteAussage(it, umgebung, toleranz) }, und = false)
         if (aussage is Gleichheit && aussage.links is ZahlAusdruck && aussage.rechts is ZahlAusdruck) {
             val links = numerischerWert(aussage.links as ZahlAusdruck, umgebung)
             val rechts = numerischerWert(aussage.rechts as ZahlAusdruck, umgebung)
             if (links != null && rechts != null) return NumerischeMitgliedschaft.Grenze(links - rechts)
+        }
+        if (aussage is ElementBeziehung) {
+            val gebunden = ersetze(aussage, umgebung.mapValues { rationaleZahl(it.value) }) as Aussage
+            when (gebunden.entscheide().wahrheitswert) {
+                Wahrheitswert.Wahr -> return NumerischeMitgliedschaft.Enthalten
+                Wahrheitswert.Lüge -> return NumerischeMitgliedschaft.NichtEnthalten
+                null -> Unit
+            }
         }
         return when (val ergebnis = NumerischerAuswerter.aussage(
             aussage,
@@ -2261,12 +2474,14 @@ internal fun vereinigeVisualisierungsErgebnisse(ergebnisse: List<Visualisierungs
     } } + e.flatMap { it.hinweise } + t.flatMap { it.hinweise }
     val punkte=e.flatMap { it.punkte }+t.flatMap { it.punkte };val linien=e.flatMap { it.linien }+t.flatMap { it.linien }
     val dreiecke=e.flatMap { it.dreiecke }+t.flatMap { it.dreiecke };val zellen=e.flatMap { it.zellen }+t.flatMap { it.zellen }
+    val interaktionsDreiecke=if(e.any { it.interaktionsDreiecke.isNotEmpty() } || t.any { it.interaktionsDreiecke.isNotEmpty() })
+        e.flatMap { it.interaktionsDreiecke.ifEmpty { it.dreiecke } }+t.flatMap { it.interaktionsDreiecke.ifEmpty { it.dreiecke } } else emptyList()
     val intervalle=e.flatMap { it.intervalle }+t.flatMap { it.intervalle }
     val statistik=VisualisierungsStatistik(auswertungen=(e.map { it.statistik }+t.map { it.statistik }).sumOf { it.auswertungen },
         budgetErschöpft=(e.map { it.statistik }+t.map { it.statistik }).any { it.budgetErschöpft },
         zellArbeit=(e.map {it.statistik}+t.map {it.statistik}).sumOf {it.zellArbeit},
         punktArbeit=(e.map {it.statistik}+t.map {it.statistik}).sumOf {it.punktArbeit},
         randArbeit=(e.map {it.statistik}+t.map {it.statistik}).sumOf {it.randArbeit})
-    return if(t.isNotEmpty() || e.size!=ergebnisse.size) VisualisierungsErgebnis.Teilweise(punkte,hinweise,zellen=zellen,linien=linien,dreiecke=dreiecke,intervalle=intervalle,statistik=statistik)
-        else VisualisierungsErgebnis.Erfolgreich(punkte,e.any { it.istApproximation },hinweise,zellen=zellen,linien=linien,dreiecke=dreiecke,intervalle=intervalle,statistik=statistik)
+    return if(t.isNotEmpty() || e.size!=ergebnisse.size) VisualisierungsErgebnis.Teilweise(punkte,hinweise,zellen=zellen,linien=linien,dreiecke=dreiecke,intervalle=intervalle,statistik=statistik,interaktionsDreiecke=interaktionsDreiecke)
+        else VisualisierungsErgebnis.Erfolgreich(punkte,e.any { it.istApproximation },hinweise,zellen=zellen,linien=linien,dreiecke=dreiecke,intervalle=intervalle,statistik=statistik,interaktionsDreiecke=interaktionsDreiecke)
 }

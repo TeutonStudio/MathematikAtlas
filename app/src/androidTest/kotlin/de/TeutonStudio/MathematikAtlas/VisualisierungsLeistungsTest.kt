@@ -56,7 +56,7 @@ class VisualisierungsLeistungsTest {
         try {
             for(baseline in if(InstrumentationRegistry.getArguments().getString("atlas.measureBaseline")=="false")listOf(false)else listOf(true,false)) for(detail in listOf(false,true)) for(dimension in listOf(RaumDimension.R2,RaumDimension.R3)) {
                 val zeiten=mutableListOf<Double>();var allokationen=0L
-                repeat(5){index ->
+                repeat(20){index ->
                     val x=Variable("x");val y=Variable("y")
                     val parameter=if(dimension==RaumDimension.R3)listOf(x,y)else listOf(x)
                     val vorschrift=if(dimension==RaumDimension.R3)addition(multiplikation(x,x),multiplikation(y,y),RationaleZahl.von((index+1).toLong()))else addition(x,RationaleZahl.von((index+1).toLong()))
@@ -84,7 +84,7 @@ class VisualisierungsLeistungsTest {
                     val node=compose.onNodeWithTag("perf-surface")
                     val center=node.fetchSemanticsNode().size.let{Offset(it.width*.3f,it.height*.5f)}
                     node.performTouchInput {down(center)}
-                    repeat(50){index ->if(index==5)erfassen.set(true);node.performTouchInput {advanceEventTime(16);moveTo(center+Offset(index*3f,index*1.1f))};Thread.sleep(16)}
+                    repeat(305){index ->if(index==5)erfassen.set(true);node.performTouchInput {advanceEventTime(16);moveTo(center+Offset((index%100)*.6f,(index%80)*.2f))};Thread.sleep(16)}
                     erfassen.set(false);node.performTouchInput {up()};compose.waitForIdle()
                 }
                 erfassen.set(false)
@@ -101,7 +101,8 @@ class VisualisierungsLeistungsTest {
                     chunks.forEachIndexed { i, text -> Log.i("AtlasVisualisierungBild", "$i/${chunks.size}:$text") }
                 }
             }
-            val bericht=JSONObject().put("geraet",android.os.Build.MODEL).put("android",android.os.Build.VERSION.RELEASE).put("resultate",resultate)
+            val bericht=JSONObject().put("geraet",android.os.Build.MODEL).put("android",android.os.Build.VERSION.RELEASE)
+                .put("laufKennung",InstrumentationRegistry.getArguments().getString("atlas.measureRun")).put("resultate",resultate)
             File(compose.activity.cacheDir,"visualisierung-messung.json").writeText(bericht.toString(2))
             Log.i("AtlasVisualisierungMessung",bericht.toString())
         }finally {compose.runOnUiThread{compose.activity.window.removeOnFrameMetricsAvailableListener(listener)};thread.quitSafely()}
@@ -128,7 +129,7 @@ class VisualisierungsLeistungsTest {
         try {
             for(anzahl in listOf(1,2)) for(q in listOf(DarstellungsQualität.Standard,DarstellungsQualität.Hoch)) {
                 val zeiten=mutableListOf<Double>();var allokationen=0L
-                repeat(5) { index ->
+                repeat(20) { index ->
                     val p=TypisiertesElement("p","tupel")
                     val a=strukturKomponente(p,RationaleZahl.Eins,true) as ZahlAusdruck
                     val b=strukturKomponente(p,RationaleZahl.von(2),true) as ZahlAusdruck
@@ -155,20 +156,21 @@ class VisualisierungsLeistungsTest {
                 val node=compose.onNodeWithTag("filter-perf")
                 val mitte=node.fetchSemanticsNode().size.let{Offset(it.width*.3f,it.height*.5f)}
                 node.performTouchInput {down(mitte)}
-                repeat(50) { index ->
+                repeat(305) { index ->
                     if(index==5) erfassen.set(true)
-                    node.performTouchInput {advanceEventTime(16);moveTo(mitte+Offset(index*3f,index*1.1f))}
+                    node.performTouchInput {advanceEventTime(16);moveTo(mitte+Offset((index%100)*.6f,(index%80)*.2f))}
                     Thread.sleep(16)
                 }
                 erfassen.set(false);node.performTouchInput {up()};compose.waitForIdle()
                 val zeitenFrame=synchronized(frames){frames.toList().sorted()}
                 val messung=JSONObject().put("ebenen",anzahl).put("qualität",q.name)
-                    .put("detailSichtbarMs",JSONArray(zeiten)).put("allokationenBytesFuenfAnfragen",allokationen)
+                    .put("detailSichtbarMs",JSONArray(zeiten)).put("allokationenBytesZwanzigAnfragen",allokationen)
                     .put("frames",zeitenFrame.size).put("frameP95Ms",if(zeitenFrame.isEmpty())JSONObject.NULL else zeitenFrame[((zeitenFrame.size-1)*.95).toInt()]/1e6)
                 resultate.put(messung)
             }
             val bericht=JSONObject().put("geraet",android.os.Build.MODEL).put("android",android.os.Build.VERSION.RELEASE)
-                .put("hinweis","Opt-in Instrumentierung, fünf kalte Geometrievarianten; Detailzeit enthält Compose-Test-Synchronisierung. Frame-Messung während kontinuierlichem Pan nach fünf Aufwärmschritten. Keine Zeitassertionen.")
+                .put("laufKennung",InstrumentationRegistry.getArguments().getString("atlas.measureRun"))
+                .put("hinweis","Opt-in Instrumentierung, zwanzig kalte Geometrievarianten; Detailzeit enthält Compose-Test-Synchronisierung. Frame-Messung während kontinuierlichem Pan nach fünf Aufwärmschritten. Keine Zeitassertionen.")
                 .put("resultate",resultate)
             File(compose.activity.cacheDir,"filter-messung.json").writeText(bericht.toString(2))
             Log.i("AtlasFilterMessung",bericht.toString())

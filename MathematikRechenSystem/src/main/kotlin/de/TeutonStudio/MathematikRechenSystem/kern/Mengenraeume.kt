@@ -42,8 +42,10 @@ data class Abbildungsmenge(
 data class Tensorraum(
     val elementMenge: MengenAusdruck,
     val dimensionen: List<ZahlAusdruck>,
+    val matrixForm: Boolean = false,
 ) : MengenAusdruck {
     init {
+        require(!matrixForm || dimensionen.size == 2) { "Eine Matrizenmenge benötigt genau zwei Dimensionen." }
         require(dimensionen.isNotEmpty()) { "Ein Tensorraum benötigt mindestens eine Dimension." }
         dimensionen.forEachIndexed { index, dimension ->
             if (dimension is RationaleZahl) {
@@ -64,4 +66,14 @@ data class Tensorraum(
 data class ModuloZahlenraum(val modul: Int) : MengenAusdruck {
     init { require(modul >= 2) { "Der Modul muss mindestens 2 sein." } }
     override fun zuLatex() = "\\mathbb{Z}/${modul}\\mathbb{Z}"
+}
+
+/** Konkrete Matrixform für bestehende Verbraucher; symbolische Achsen bleiben unaufgelöst. */
+fun MengenAusdruck.konkreterMatrizenraumOderNull(): Matrizenraum? = when (this) {
+    is Matrizenraum -> this
+    is Tensorraum -> if (!matrixForm) null else {
+        val achsen = dimensionen.map { (vereinfache(it) as? RationaleZahl)?.positiveGanzeZahlOderNull() }
+        if (achsen.any { it == null }) null else Matrizenraum(achsen[0]!!, achsen[1]!!, elementMenge)
+    }
+    else -> null
 }

@@ -2,6 +2,7 @@ package de.TeutonStudio.MathematikKnoten.visualisierung.sampling
 
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.VisualisierungsKonfiguration
 import de.TeutonStudio.MathematikKnoten.visualisierung.modell.ZahlenBereich
+import de.TeutonStudio.MathematikKnoten.visualisierung.sampling.inhaltsSignatur
 import kotlin.math.ceil
 import kotlin.math.ln
 import kotlin.math.max
@@ -18,6 +19,7 @@ internal data class AdaptiveMethodenErgebnis(
     val dreiecke: List<VisualisierungsDreieck>,
     val diagnosen: List<String>,
     val statistik: VisualisierungsStatistik,
+    val interaktionsDreiecke:List<VisualisierungsDreieck> = emptyList(),
 )
 
 internal fun gleichmäßigeFlächenAuflösung(gewünschteAuflösung: Int, budget: Int): Int =
@@ -34,12 +36,20 @@ internal object AdaptiveMethodenGeometrie {
         konfiguration: VisualisierungsKonfiguration,
         auswerten: (List<Double>) -> AdaptivePunktAuswertung,
         abbruchPrüfen: () -> Unit,
-    ): AdaptiveMethodenErgebnis = when (parameterBereiche.size) {
-        1 -> kurve(parameterBereiche.single(), konfiguration, auswerten, abbruchPrüfen)
+        herkunft:Any?=null,
+    ): AdaptiveMethodenErgebnis {
+        val cacheKey=listOf(herkunft,konfiguration.inhaltsSignatur(null))
+        val auswerter:(List<Double>)->AdaptivePunktAuswertung = { argumente ->
+            if(herkunft==null) auswerten(argumente) else SamplingSitzung.aktuelle()?.probe(cacheKey,argumente) { auswerten(argumente) } ?: auswerten(argumente)
+        }
+        return when (parameterBereiche.size) {
+        1 -> kurve(parameterBereiche.single(), konfiguration, auswerter, abbruchPrüfen)
         2 -> if (konfiguration.sampling.vorschau) {
-            vorschauFläche(parameterBereiche[0], parameterBereiche[1], konfiguration, auswerten, abbruchPrüfen)
-        } else fläche(parameterBereiche[0], parameterBereiche[1], konfiguration, auswerten, abbruchPrüfen)
+            vorschauFläche(parameterBereiche[0], parameterBereiche[1], konfiguration, auswerter, abbruchPrüfen)
+        } else fläche(parameterBereiche[0], parameterBereiche[1], konfiguration, auswerter, abbruchPrüfen)
         else -> AdaptiveMethodenErgebnis(emptyList(), emptyList(), emptyList(), emptyList(), VisualisierungsStatistik())
+    }
+
     }
 
     private fun kurve(
@@ -56,6 +66,7 @@ internal object AdaptiveMethodenGeometrie {
         var erreichteTiefe = 0
         fun wert(t: Double): AdaptivePunktAuswertung {
             cache[t]?.let { return it }
+            samplingSpeicher(256)
             abbruchPrüfen()
             if (cache.size >= c.sampling.maximalesRasterBudget) {
                 budgetErschöpft = true
@@ -87,7 +98,7 @@ internal object AdaptiveMethodenGeometrie {
                 budgetErschöpft = true
             }
             // Keine Brücke über undefinierte Stellen oder einen ungelösten großen Sprung.
-            if (gültig && krümmung < 1.0) segmente += a.punkt!! to b.punkt!!
+            if (gültig && krümmung < 1.0) { samplingSpeicher(144);segmente += a.punkt!! to b.punkt!! }
         }
         val startSegmente = minOf(if (c.sampling.bildBreite > 0) c.sampling.auflösung1D - 1 else 8,
             c.sampling.auflösung1D - 1, (c.sampling.maximalesRasterBudget - 1) / 2).coerceAtLeast(1)
@@ -97,6 +108,15 @@ internal object AdaptiveMethodenGeometrie {
         }
         start.forEach(::wert)
         start.zipWithNext { a, b -> wert(a + (b - a) / 2) }
+        fun vorschauLinien() = start.zipWithNext().mapNotNull { (t0,t1) ->
+            val a=cache[t0]?.punkt; val z=cache[t1]?.punkt
+            val m=cache[t0+(t1-t0)/2]?.punkt
+            if(a != null && z != null && m != null && normierterAbstand(m,mittelpunkt(a,z),c)<1.0)
+                VisualisierungsLinie(listOf(a,z)) else null
+        }
+        samplingZwischenstand(true) {
+            VisualisierungsErgebnis.Teilweise(emptyList(),listOf("Kurve wird verfeinert."),linien=vorschauLinien())
+        }
         repeat(startSegmente) { index ->
             val t0 = start[index]; val t1 = start[index + 1]
             teile(t0, t1, wert(t0), wert(t1), 0)
@@ -127,15 +147,21 @@ internal object AdaptiveMethodenGeometrie {
         val dreiecke = mutableListOf<VisualisierungsDreieck>()
         var budgetErschöpft = false
         var erreichteTiefe = 0
+        var hatDefinitionsLücken=false
+        var verfeinerungsGrenze=false
         fun wert(u: Double, v: Double): AdaptivePunktAuswertung {
             val schlüssel = Schlüssel(u, v)
             cache[schlüssel]?.let { return it }
+            samplingSpeicher(512)
             abbruchPrüfen()
             if (cache.size >= c.sampling.maximalesRasterBudget) {
                 budgetErschöpft = true
                 return AdaptivePunktAuswertung(null, "Auswertungsbudget ausgeschöpft.")
             }
             return auswerten(listOf(u, v)).also {
+                if(it.punkt==null || it.diagnose!=null) {
+                    hatDefinitionsLücken=true;SamplingSitzung.aktuelle()?.definitionsLücke()
+                }
                 cache[schlüssel] = it
                 it.diagnose?.let(diagnosen::add)
             }
@@ -196,7 +222,49 @@ internal object AdaptiveMethodenGeometrie {
                 dreiecke += VisualisierungsDreieck(pd, pa, pm)
             }
         }
-        teile(uBereich.minimum, uBereich.maximum, vBereich.minimum, vBereich.maximum, 0)
+        var interaktionsDreiecke=emptyList<VisualisierungsDreieck>()
+        if (c.sampling.automatisch) {
+            data class Zelle(val u0:Double,val u1:Double,val v0:Double,val v1:Double,val tiefe:Int)
+            val blätter=linkedMapOf<Zelle,List<VisualisierungsDreieck>>()
+            val wartend=java.util.ArrayDeque<Zelle>()
+            fun vorbereiten(z:Zelle) {
+                abbruchPrüfen()
+                val um=z.u0+(z.u1-z.u0)/2; val vm=z.v0+(z.v1-z.v0)/2
+                val a=wert(z.u0,z.v0).punkt;val b=wert(z.u1,z.v0).punkt
+                val d=wert(z.u0,z.v1).punkt;val e=wert(z.u1,z.v1).punkt;val m=wert(um,vm).punkt
+                erreichteTiefe=max(erreichteTiefe,z.tiefe)
+                val gültig=a!=null && b!=null && d!=null && e!=null && m!=null
+                blätter[z]=if(gültig) listOf(VisualisierungsDreieck(a!!,b!!,m!!),VisualisierungsDreieck(b,e!!,m),
+                    VisualisierungsDreieck(e,d!!,m),VisualisierungsDreieck(d,a,m)) else emptyList()
+                val fehler=if(gültig) normierterAbstand(m!!,mittelpunkt(mittelpunkt(a!!,e!!),mittelpunkt(b!!,d!!)),c) else Double.POSITIVE_INFINITY
+                if(z.tiefe<maximaleTiefe && fehler>ziel && !budgetErschöpft) wartend.add(z)
+                else if(gültig && fehler>ziel) verfeinerungsGrenze=true
+            }
+            vorbereiten(Zelle(uBereich.minimum,uBereich.maximum,vBereich.minimum,vBereich.maximum,0))
+            fun veröffentliche(sofort:Boolean=false) = samplingZwischenstand(sofort) {
+                VisualisierungsErgebnis.Teilweise(emptyList(),listOf("Fläche wird verfeinert; ungelöste Stellen bleiben offen."),
+                    dreiecke=blätter.values.flatten(),interaktionsDreiecke=if(hatDefinitionsLücken) emptyList() else interaktionsDreiecke)
+            }
+            interaktionsDreiecke=blätter.values.flatten()
+            veröffentliche(true)
+            while(wartend.isNotEmpty() && !budgetErschöpft) {
+                abbruchPrüfen()
+                val z=wartend.removeFirst()
+                val um=z.u0+(z.u1-z.u0)/2;val vm=z.v0+(z.v1-z.v0)/2
+                if(um==z.u0 || um==z.u1 || vm==z.v0 || vm==z.v1) continue
+                val kinder=listOf(Zelle(z.u0,um,z.v0,vm,z.tiefe+1),Zelle(um,z.u1,z.v0,vm,z.tiefe+1),
+                    Zelle(z.u0,um,vm,z.v1,z.tiefe+1),Zelle(um,z.u1,vm,z.v1,z.tiefe+1))
+                kinder.forEach(::vorbereiten)
+                blätter.remove(z)
+                if(blätter.size<=256) interaktionsDreiecke=blätter.values.flatten()
+                veröffentliche()
+            }
+            dreiecke += blätter.values.flatten()
+        } else {
+            teile(uBereich.minimum, uBereich.maximum, vBereich.minimum, vBereich.maximum, 0)
+        }
+        if(hatDefinitionsLücken) interaktionsDreiecke=emptyList()
+        if(verfeinerungsGrenze) diagnosen+="Die numerische Verfeinerungsgrenze wurde vor Erreichen des Pixelziels erreicht."
         val punkte = dreiecke.flatMap { listOf(it.a, it.b, it.c) }.distinct()
         return AdaptiveMethodenErgebnis(
             punkte,
@@ -204,6 +272,7 @@ internal object AdaptiveMethodenGeometrie {
             dreiecke,
             diagnosen.toList(),
             VisualisierungsStatistik(cache.size, punkte.size, 0, dreiecke.size, 0, erreichteTiefe, budgetErschöpft),
+            interaktionsDreiecke=interaktionsDreiecke,
         )
     }
 

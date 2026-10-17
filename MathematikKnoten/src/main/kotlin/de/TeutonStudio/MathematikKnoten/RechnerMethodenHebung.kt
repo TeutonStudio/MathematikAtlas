@@ -32,7 +32,7 @@ private val methodenHebbareWertArten: Set<AnschlussArtId> = setOf(
 )
 
 fun normalisiereRechnerMethodenAnschluesse(knoten: KnotenDaten): KnotenDaten {
-    if (RECHNER_MIGRATION_DIAGNOSE in knoten.parameter || knoten.art !in methodenHebbareRechnerArten) return knoten
+    if (istUrbildKnoten(knoten) || RECHNER_MIGRATION_DIAGNOSE in knoten.parameter || knoten.art !in methodenHebbareRechnerArten) return knoten
 
     if (knoten.anschlüsse.any {
             it.richtung == AnschlussRichtung.Ausgang && it.art == MathematikAnschlussArten.Methode.id
@@ -181,6 +181,7 @@ private fun bereiteAllgemeineMethodenHebungVor(
 
 internal fun mitRechnerMethodenHebung(basis: de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter): de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter =
     de.TeutonStudio.MathematikKartenAdapter.MathematikKnotenAuswerter { kontext ->
+            if (istUrbildKnoten(kontext.knoten)) return@MathematikKnotenAuswerter basis.auswerten(kontext)
             val hebbareNamen = kontext.knoten.anschlüsse
                 .filter { anschluss ->
                     anschluss.richtung == AnschlussRichtung.Eingang &&

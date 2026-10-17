@@ -1,6 +1,7 @@
 package de.TeutonStudio.MathematikKnoten.visualisierung.modell
 
 import de.TeutonStudio.MathematikRechenSystem.kern.*
+import de.TeutonStudio.MathematikKnoten.visualisierung.koordinaten.numerischerRaum
 
 /** Leitet nur dann einen Darstellungsraum ab, wenn die Mengenstruktur ihn eindeutig festlegt. */
 fun empfohleneRaumDimension(menge: MengenAusdruck): RaumDimension? = when (menge) {
@@ -11,26 +12,15 @@ fun empfohleneRaumDimension(menge: MengenAusdruck): RaumDimension? = when (menge
     is ReellesIntervall -> RaumDimension.R1
     is KoordinatenBild -> menge.koordinatensystem.raum.dimension.alsReellerRaum()
     is OrbitBeschraenktheitsMenge -> empfohleneRaumDimension(menge.parameterRaum)
-    is Vektorraum -> when (empfohleneRaumDimension(menge.skalarMenge)) {
-        RaumDimension.R1 -> menge.dimension.alsReellerRaum()
-        RaumDimension.C -> if (menge.dimension == 1) RaumDimension.C else (menge.dimension * 2).alsReellerRaum()
-        else -> null
-    }
-    is Matrizenraum -> menge.vektorDimension()?.let { dimension ->
-        when (empfohleneRaumDimension(menge.skalarMenge)) {
-            RaumDimension.R1 -> dimension.alsReellerRaum()
-            RaumDimension.C -> if (dimension == 1) RaumDimension.C else (dimension * 2).alsReellerRaum()
-            else -> null
-        }
-    }
+    NichtnegativeGanzeZahlenSemantik.menge, Primzahlen -> RaumDimension.R1
+    GaußscheGanzeZahlen, GaußschePrimzahlen -> RaumDimension.C
+    is Vektorraum -> if (menge.dimension == 1 && menge.skalarMenge == KomplexeZahlen) RaumDimension.C
+        else numerischerRaum(menge)?.blätter?.size?.alsReellerRaum()
+    is Tensorraum, is Matrizenraum, is KartesischerPotenzraum -> numerischerRaum(menge)?.blätter?.size?.alsReellerRaum()
     is Tupelraum -> menge.komponenten.mapNotNull(::reelleKoordinatenDimension)
-        .takeIf { it.size == menge.komponenten.size }
-        ?.sum()
-        ?.alsReellerRaum()
+        .takeIf { it.size == menge.komponenten.size }?.sum()?.alsReellerRaum()
     is KartesischesProdukt -> menge.mengen.mapNotNull(::reelleKoordinatenDimension)
-        .takeIf { it.size == menge.mengen.size }
-        ?.sum()
-        ?.alsReellerRaum()
+        .takeIf { it.size == menge.mengen.size }?.sum()?.alsReellerRaum()
     is EndlicheMenge -> endlicheMengenDimension(menge)
     is DefinierteMenge -> menge.variablen.mapNotNull { reelleKoordinatenDimension(it.grundMenge) }
         .takeIf { it.size == menge.variablen.size }
@@ -39,7 +29,7 @@ fun empfohleneRaumDimension(menge: MengenAusdruck): RaumDimension? = when (menge
     is GefilterteMenge -> empfohleneRaumDimension(menge.menge)
     is Vereinigung -> gemeinsameDimension(menge.mengen)
     is Schnitt -> gemeinsameDimension(menge.mengen.ifEmpty { listOfNotNull(menge.grundMenge) })
-    is MengenDifferenz -> gemeinsameDimension(listOf(menge.links, menge.rechts))
+    is MengenDifferenz -> empfohleneRaumDimension(menge.links)
     is SymmetrischeDifferenz -> gemeinsameDimension(listOf(menge.links, menge.rechts))
     else -> null
 }
@@ -70,8 +60,9 @@ fun VisualisierungsKonfiguration.mitWirksamerDimension(menge: MengenAusdruck?): 
 }
 
 private fun gemeinsameDimension(mengen: List<MengenAusdruck>): RaumDimension? =
-    mengen.mapNotNull(::empfohleneRaumDimension)
-        .takeIf { it.size == mengen.size }
+    mengen.filterNot { it == LeereMenge || it is EndlicheMenge && it.elemente.isEmpty() }.let { nichtleer ->
+        nichtleer.mapNotNull(::empfohleneRaumDimension).takeIf { it.size == nichtleer.size }
+    }
         ?.distinct()
         ?.singleOrNull()
 
@@ -85,7 +76,8 @@ private fun reelleKoordinatenDimension(menge: MengenAusdruck): Int? = when (empf
 private fun endlicheMengenDimension(menge: EndlicheMenge): RaumDimension? {
     if (menge.elemente.isEmpty()) return null
     if (menge.elemente.all { it is ZahlAusdruck }) {
-        return if (menge.elemente.any { it is KomplexeZahl }) RaumDimension.C else RaumDimension.R1
+        val dimensionen = menge.elemente.map { elementDimension(it) ?: return null }
+        return if (dimensionen.any { it > 2 }) null else if (dimensionen.any { it == 2 }) RaumDimension.C else RaumDimension.R1
     }
     return menge.elemente.mapNotNull(::elementDimension)
         .takeIf { it.size == menge.elemente.size }
@@ -96,7 +88,15 @@ private fun endlicheMengenDimension(menge: EndlicheMenge): RaumDimension? {
 
 private fun elementDimension(element: MathematischesObjekt): Int? = when (element) {
     is KomplexeZahl -> 2
-    is ZahlAusdruck -> 1
+    is ZahlAusdruck -> when ((DomaenenAuswerter.wert(element) as? DomaenenErgebnis.Wert)?.wert) {
+        is DomaenenWert.Reell -> 1
+        is DomaenenWert.Komplex -> 2
+        is DomaenenWert.Quaternion -> 4
+        null -> null
+    }
+    is ZeilenVektor -> element.werte.sumOf { elementDimension(it) ?: return null }
+    is SpaltenVektor -> element.werte.sumOf { elementDimension(it) ?: return null }
+    is Tensor -> if (element.dimensionen.count { it > 1 } <= 1) element.werte.sumOf { elementDimension(it) ?: return null } else null
     is Matrix -> element.vektorKomponenten()
         ?.mapNotNull(::elementDimension)
         ?.takeIf { it.size == element.zeilenAnzahl * element.spaltenAnzahl }
@@ -104,12 +104,6 @@ private fun elementDimension(element: MathematischesObjekt): Int? = when (elemen
     is Tupel -> element.elemente.mapNotNull(::elementDimension)
         .takeIf { it.size == element.elemente.size }
         ?.sum()
-    else -> null
-}
-
-private fun Matrizenraum.vektorDimension(): Int? = when {
-    zeilen == 1 -> spalten
-    spalten == 1 -> zeilen
     else -> null
 }
 

@@ -43,4 +43,14 @@ class MengenQuellenKonfigurationTest {
         assertEquals(vorher.anschlüsse, zurück.anschlüsse)
         assertEquals("P", zurück.parameter[MENGEN_KNOTEN_AUSWAHL])
     }
+    @Test fun `Wechsel aus Tensorraum behaelt den bisherigen Vertrag eigener Mengenkarten`() {
+        val tensor = konfiguriereMengenDimensionsart(MengenKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero),MENGEN_DIMENSION_TENSOR)
+        val ref = KartenVerweis(KartenId("eigene-menge"),4)
+        val eigene = konfiguriereMengenQuelle(tensor,MengenAuswahlEintrag("karte:eigene-menge:4","Meine Menge","Eigene Quelle",eigeneKarte=EigeneMengenKarte("Meine Menge",ref,"resultat")))
+        assertEquals(ref,eigene.kartenVerweis)
+        assertEquals(tensor.anschlüsse.single { it.name=="dimension" }.id,eigene.anschlüsse.single { it.name=="dimension" }.id)
+        assertEquals(MathematikAnschlussArten.Zahl.id,eigene.anschlüsse.single { it.name=="dimension" }.art)
+        assertFalse(MENGEN_DIMENSIONSART_PARAMETER in eigene.parameter)
+        assertFalse(hatMengenDimensionsart(eigene))
+    }
 }

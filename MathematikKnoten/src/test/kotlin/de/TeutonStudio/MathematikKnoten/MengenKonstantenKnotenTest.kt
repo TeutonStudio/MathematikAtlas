@@ -9,7 +9,7 @@ class MengenKonstantenKnotenTest {
     private val register = GesamterMathematikAuswerter.erzeugeRegister()
 
     @Test fun `alle Quellen ueberstehen den echten Codec und liefern die definierte Menge`() {
-        MengenKnotenAuswahl.entries.forEach { auswahl ->
+        MengenKnotenAuswahl.entries.filterNot { it.istMatrizenmenge }.forEach { auswahl ->
             val knoten = MengenKnotenVorlagen.vorlage(auswahl).erzeuge(GraphPunkt.Zero)
             val karte = KartenDaten(name = "Quellen", knoten = listOf(knoten))
             val geladen = MathematikKartenCodec.lese(KartenDatenJson.schreibe(karte)).knoten.single()

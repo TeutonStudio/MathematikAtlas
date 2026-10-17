@@ -12,6 +12,8 @@ const val MENGEN_MASS_SYMBOL_PARAMETER = "massSymbol"
 const val MENGEN_NORM_KNOTEN_ART = "mathematik.mengenNorm"
 
 private val sichtbareMengenRechnerOperatoren = listOf(
+    MengenRechnerOperator.TUPELRAUM,
+    MengenRechnerOperator.TENSORRAUM,
     MengenRechnerOperator.UNTERRAUM,
     MengenRechnerOperator.SCHNITT,
     MengenRechnerOperator.VEREINIGUNG,
@@ -26,11 +28,15 @@ private val sichtbareMengenRechnerOperatoren = listOf(
     MengenRechnerOperator.FOLGENMENGE,
     MengenRechnerOperator.HALBFOLGENMENGE,
     MengenRechnerOperator.KLASSIFIZIERTE_MENGE,
+    MengenRechnerOperator.URBILD,
 )
 
 fun sichtbareMengenRechnerOperatoren(): List<MengenRechnerOperator> = sichtbareMengenRechnerOperatoren
 
 fun MengenRechnerOperator.titel(): String = when (this) {
+    MengenRechnerOperator.TUPELRAUM -> "Tupelraum"
+    MengenRechnerOperator.TENSORRAUM -> "Tensorraum"
+    MengenRechnerOperator.MATRIZENMENGE -> "Matrizenmenge"
     MengenRechnerOperator.UNTERRAUM -> "Unterraum / affiner Spann"
     MengenRechnerOperator.SCHNITT -> "Schnitt"
     MengenRechnerOperator.VEREINIGUNG -> "Vereinigung"
@@ -51,6 +57,9 @@ fun MengenRechnerOperator.titel(): String = when (this) {
 }
 
 fun MengenRechnerOperator.vorschauLatex(): String = when (this) {
+    MengenRechnerOperator.TUPELRAUM -> "A^n"
+    MengenRechnerOperator.TENSORRAUM -> "A^{n(1)\\times\\cdots\\times n(r)}"
+    MengenRechnerOperator.MATRIZENMENGE -> "A^{n\\times m}"
     MengenRechnerOperator.UNTERRAUM -> "\\{c+\\sum_k b_k a^k\\mid b\\in\\mathbb{R}^n\\}"
     MengenRechnerOperator.SCHNITT -> "A\\cap B"
     MengenRechnerOperator.VEREINIGUNG -> "A\\cup B"
@@ -68,10 +77,11 @@ fun MengenRechnerOperator.vorschauLatex(): String = when (this) {
     MengenRechnerOperator.HALBFOLGENMENGE -> "M^{\\mathbb N_0}"
     MengenRechnerOperator.KLASSIFIZIERTE_MENGE -> "M\\div r"
     MengenRechnerOperator.BILD -> "f(A)"
-    MengenRechnerOperator.URBILD -> "f^{-1}(A)"
+    MengenRechnerOperator.URBILD -> "f^{-1}[B]"
 }
 
 fun MengenRechnerOperator.definitionLatex(): String = when (this) {
+    MengenRechnerOperator.URBILD -> "f^{-1}[B]=\\{x\\in D\\mid f(x)\\in B\\}"
     MengenRechnerOperator.SCHNITT -> "A\\cap B=\\{x\\mid x\\in A\\land x\\in B\\}"
     MengenRechnerOperator.VEREINIGUNG -> "A\\cup B=\\{x\\mid x\\in A\\lor x\\in B\\}"
     MengenRechnerOperator.DIFFERENZ -> "A\\setminus B=\\{x\\in A\\mid x\\notin B\\}"
@@ -161,7 +171,7 @@ fun konfiguriereMengenRechner(
     festeEingänge: Int = knoten.parameter["festeEingänge"]?.toIntOrNull()?.coerceAtLeast(2) ?: 2,
 ): KnotenDaten {
     require(knoten.art == MengenRechner.KNOTEN_ART)
-    val gewuenscht = mengenRechnerAnschluesse(operator, festeEingänge)
+    val gewuenscht = if (operator == MengenRechnerOperator.URBILD) urbildAnschluesse(knoten) else mengenRechnerAnschluesse(operator, festeEingänge)
     val anschluesse = erhalteDynamischeOperanden(knoten, erhalteAnschlussIds(knoten.anschlüsse, gewuenscht),
         knoten.parameter[MENGENRECHNER_OPERATOR_PARAMETER] == operator.stabileId &&
                 (knoten.parameter["festeEingänge"]?.toIntOrNull() ?: 2) == festeEingänge)
@@ -172,7 +182,8 @@ fun konfiguriereMengenRechner(
         knoten.copy(
             name = if (automatischerName) operator.titel() else knoten.name,
             anschlüsse = anschluesse,
-            parameter = knoten.parameter + mapOf(
+            parameter = (knoten.parameter - "raum.matrixHistorisch" - URBILD_VERTRAGSFEHLER) +
+                (if (operator == MengenRechnerOperator.URBILD) mapOf(URBILD_EINGABEFORM to urbildEingabeform(knoten)) else emptyMap()) + mapOf(
                 MENGENRECHNER_OPERATOR_PARAMETER to operator.stabileId,
                 "festeEingänge" to festeEingänge.toString(),
             ),
@@ -254,7 +265,31 @@ private fun werteMengenRechnerAus(kontext: KnotenAuswertungsKontext): KnotenAusw
     val objekt: MengenAusdruck
     val warnungen = mutableListOf<String>()
 
-    if (operator == MengenRechnerOperator.UNTERRAUM) {
+    if (operator == MengenRechnerOperator.URBILD) {
+        knotenUrbildDiagnose(kontext.knoten)?.let { error(it) }
+        val methode = kontext.eingänge["methode"]?.objekt as? Methode
+            ?: error("Urbild benötigt eine verbundene mathematische Methode.")
+        val ziel = kontext.eingänge["ziel"]?.mathematischesObjekt("Urbild-Ziel")
+            ?: error("Der Zielwert beziehungsweise die Zielmenge fehlt.")
+        val zielmenge = if (urbildEingabeform(kontext.knoten) == URBILD_ZIELMENGE)
+            ziel as? MengenAusdruck ?: error("Der Zielmengeneingang erwartet eine Menge.")
+        else EndlicheMenge(setOf(ziel))
+        val ergebnis = bildeUrbild(methode, zielmenge, kontext.rechenKontext)
+        return KnotenAuswertungsErgebnis(
+            ausgaben = mapOf("menge" to BedingterWert(ergebnis.menge, annahmen,
+                reelleVariablen = reelleVariablen(kontext.eingänge.values),
+                variablenQuellen = kontext.eingänge.values.flatMap { it.variablenQuellen }.geordnetEindeutig())),
+            eingänge = kontext.eingänge, schritte = ergebnis.schritte, warnungen = ergebnis.warnungen,
+        )
+    } else if (operator in setOf(MengenRechnerOperator.TUPELRAUM, MengenRechnerOperator.TENSORRAUM)) {
+        val grundmenge = kontext.eingänge["grundmenge"]?.objekt as? MengenAusdruck
+            ?: error("Der Raumoperator benötigt eine Grundmenge A.")
+        return mengenDimensionsErgebnis(kontext, grundmenge, operator == MengenRechnerOperator.TENSORRAUM)
+    } else if (operator == MengenRechnerOperator.MATRIZENMENGE) {
+        val grundmenge = kontext.eingänge["grundmenge"]?.objekt as? MengenAusdruck
+            ?: error("Die Matrizenmenge benötigt eine Grundmenge A.")
+        return matrizenMengenErgebnis(kontext, grundmenge)
+    } else if (operator == MengenRechnerOperator.UNTERRAUM) {
         val ports = kontext.knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith("a.") }.sortedBy { it.reihenfolge }
         val letzteBelegte = ports.indexOfLast { it.name in kontext.eingänge }
         val richtungen = ports.take(letzteBelegte + 1).map { port ->
@@ -367,6 +402,27 @@ private fun werteMengenRelationAus(kontext: KnotenAuswertungsKontext): KnotenAus
 }
 
 fun KartenDaten.migriereMengenOperatorKnoten(): KartenDaten = migrierePraedikatKnoten().migriereHistorischeKnotenRollen { alt ->
+    if (alt.art == "mathematik.matrizenraum") {
+        prüfeHistorischeAnschlussForm(alt)
+        require(alt.anschlüsse.map { it.name }.toSet() == setOf("grundmenge", "menge") && alt.anschlüsse.size == 2) {
+            "Die historischen Matrizenraumrollen sind nicht eindeutig."
+        }
+        require(alt.anschlüsse.single { it.name == "grundmenge" }.richtung == AnschlussRichtung.Eingang &&
+            alt.anschlüsse.single { it.name == "menge" }.richtung == AnschlussRichtung.Ausgang) { "Ungültige Matrizenraumrichtungen." }
+        alt.anschlüsse.forEach { prüfeHistorischenPortTyp(it, setOf(MathematikAnschlussArten.Menge.id)) }
+        listOf("zeilen", "spalten").forEach { name ->
+            val zahl = alt.parameter[name] ?: "2"
+            require(zahl.toIntOrNull()?.let { it > 0 } == true) { "Ungültige historische Matrixdimension '$name'." }
+        }
+        val neu = konfiguriereMengenRechner(alt.copy(art = MengenRechner.KNOTEN_ART), MengenRechnerOperator.MATRIZENMENGE)
+        return@migriereHistorischeKnotenRollen neu.copy(anschlüsse = neu.anschlüsse.map { port ->
+            val historisch = alt.anschlüsse.firstOrNull { it.name == port.name }
+            historisch ?: port.copy(id = AnschlussId("${alt.id.wert}:matrizenmenge:${port.name}"))
+        }, parameter = (neu.parameter - "zeilen" - "spalten") + mapOf(
+            "standardwert.n" to (alt.parameter["zeilen"] ?: "2"),
+            "standardwert.m" to (alt.parameter["spalten"] ?: "2"),
+        ))
+    }
     val operator=MengenRechnerMigration.alteKnotenArten[alt.art] ?: return@migriereHistorischeKnotenRollen alt
     prüfeHistorischeAnschlussForm(alt)
     val eingänge=alt.anschlüsse.filter {it.richtung==AnschlussRichtung.Eingang}.sortedBy {it.reihenfolge}
@@ -395,6 +451,18 @@ private fun mengenRechnerAnschluesse(
     operator: MengenRechnerOperator,
     festeEingänge: Int,
 ): List<AnschlussDaten> = when (operator) {
+    MengenRechnerOperator.URBILD -> urbildAnschluesse(null)
+    MengenRechnerOperator.TUPELRAUM, MengenRechnerOperator.TENSORRAUM -> listOf(
+        eingang("grundmenge", MathematikAnschlussArten.Menge.id, 0),
+        eingang("dimension", if (operator == MengenRechnerOperator.TENSORRAUM) MathematikAnschlussArten.Tupel.id else MathematikAnschlussArten.Zahl.id, 1),
+        ausgang("menge", MathematikAnschlussArten.Menge.id),
+    )
+    MengenRechnerOperator.MATRIZENMENGE -> listOf(
+        eingang("grundmenge", MathematikAnschlussArten.Menge.id, 0),
+        eingang("n", MathematikAnschlussArten.Zahl.id, 1),
+        eingang("m", MathematikAnschlussArten.Zahl.id, 2),
+        ausgang("menge", MathematikAnschlussArten.Menge.id),
+    )
     MengenRechnerOperator.UNTERRAUM -> List(festeEingänge.coerceAtLeast(1)) { index ->
         eingang("a.${index+1}", MathematikAnschlussArten.Objekt.id, index, erweiterbar = true).copy(
             zulässigeArten = setOf(MathematikAnschlussArten.Tupel.id, MathematikAnschlussArten.SpaltenVektor.id, MathematikAnschlussArten.ZeilenVektor.id))

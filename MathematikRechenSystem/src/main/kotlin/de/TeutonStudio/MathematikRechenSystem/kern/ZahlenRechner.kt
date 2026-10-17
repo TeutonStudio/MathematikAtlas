@@ -101,6 +101,7 @@ object ZahlenRechnerKatalog {
         ZahlenOperatorSpezifikation(
             ZahlenRechnerOperator.MULTIPLIKATION,
             listOf(ZahlenArgumentRolle("faktor", "Faktor", 2, Int.MAX_VALUE)),
+            // Keine bereichsübergreifende Garantie (Quaternionen); kein Gegenbeweis für ℤ.
             kommutativ = false,
             assoziativ = true,
             definitionsIds = definitionen("multiplikation"),

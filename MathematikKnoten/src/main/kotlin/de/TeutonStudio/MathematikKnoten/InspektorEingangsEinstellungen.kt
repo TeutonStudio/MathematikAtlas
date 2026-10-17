@@ -10,6 +10,7 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.*
 import de.TeutonStudio.MathematikRechenSystem.kern.*
 
 fun hatRechnerEingangsEinstellungen(knoten: KnotenDaten): Boolean {
+    if (istUrbildKnoten(knoten)) return true
     if (knoten.art == ENDLICHE_MENGE_ART) return true
     if (knoten.art == TensorRechner.KNOTEN_ART) return aktuelleTensorOperationDefinition(knoten).benoetigtAchsenEingabe()
     if (knoten.art == MatrixRechner.KNOTEN_ART) return knoten.parameter[RECHNER_OPERATOR_PARAMETER] == "matrix.produkt" && knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach }
@@ -23,6 +24,10 @@ fun hatRechnerEingangsEinstellungen(knoten: KnotenDaten): Boolean {
 
 @Composable
 fun InspektorRechnerEingangsEinstellungen(knoten: KnotenDaten, übernehmen: (KnotenDaten) -> Unit) {
+    if (istUrbildKnoten(knoten)) {
+        InspektorUrbildEingabe(knoten, übernehmen)
+        return
+    }
     when (knoten.art) {
         ENDLICHE_MENGE_ART -> InspektorEndlicheMengeEingänge(knoten, übernehmen)
         ZAHLENRECHNER_ART -> { InspektorZahlenRechnerEingänge(knoten, übernehmen); InspektorKomplexEingabe(knoten, übernehmen) }
@@ -269,4 +274,19 @@ private fun InspektorPolynomArgument(knoten: KnotenDaten, übernehmen: (KnotenDa
             Text("Variable übernehmen")
         }
     }
+}
+
+@Composable
+fun InspektorUrbildEingabe(knoten: KnotenDaten, übernehmen: (KnotenDaten) -> Unit) {
+    if (!istUrbildKnoten(knoten)) return
+    Text("Zieleingabe", style = MaterialTheme.typography.titleSmall)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(URBILD_EINZELWERT to "Einzelwert", URBILD_ZIELMENGE to "Zielmenge").forEach { (modus, titel) ->
+            FilterChip(selected = urbildEingabeform(knoten) == modus,
+                onClick = { übernehmen(konfiguriereUrbildEingabeform(knoten, modus)) }, label = { Text(titel) })
+        }
+    }
+    Text("Der Einzelwert richtet sich nach der Methodenausgabe. Eine Zielmenge liefert das gemeinsame Urbild aller enthaltenen Werte.",
+        style = MaterialTheme.typography.bodySmall)
+    knotenUrbildDiagnose(knoten)?.let { Text(it, color = MaterialTheme.colorScheme.error) }
 }

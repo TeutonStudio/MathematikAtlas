@@ -1,5 +1,6 @@
 package de.TeutonStudio.MathematikAtlas
 
+import de.TeutonStudio.MathematikKnoten.*
 import de.TeutonStudio.MathematikKnoten.mitGradmengenDimension
 import de.TeutonStudio.MathematikKnoten.mitEinheitlicherMengenDimension
 
@@ -222,27 +223,47 @@ internal data class MengenAuswahlEintrag(
 )
 
 internal fun konfiguriereMengenQuelle(knoten: KnotenDaten, eintrag: MengenAuswahlEintrag): KnotenDaten {
+    eintrag.eingebaut?.let { return de.TeutonStudio.MathematikKnoten.konfiguriereMengenAuswahl(knoten, it) }
     val ausgangsName = eintrag.eigeneKarte?.ausgangsName ?: "menge"
     return knoten.copy(
-        parameter = knoten.parameter + (MENGEN_KNOTEN_AUSWAHL to (eintrag.eingebaut?.stabileId ?: eintrag.schlüssel)),
+        parameter = (knoten.parameter - MENGEN_DIMENSIONSART_PARAMETER - "raum.matrixHistorisch") + (MENGEN_KNOTEN_AUSWAHL to (eintrag.eingebaut?.stabileId ?: eintrag.schlüssel)),
         kartenVerweis = eintrag.eigeneKarte?.verweis,
-        anschlüsse = knoten.anschlüsse.map { anschluss ->
+        anschlüsse = knoten.anschlüsse.filter { it.name !in setOf("n", "m") || it.richtung != AnschlussRichtung.Eingang }.map { anschluss ->
             if (anschluss.richtung == AnschlussRichtung.Ausgang) anschluss.copy(
                 name = ausgangsName, kante = AnschlussKante.Rechts, art = MathematikAnschlussArten.Menge.id,
-            ) else anschluss
+            ) else if (anschluss.richtung == AnschlussRichtung.Eingang && anschluss.name in setOf("dim", "dimension"))
+                anschluss.copy(art = MathematikAnschlussArten.Zahl.id, zulässigeArten = emptySet()) else anschluss
         },
     ).mitEinheitlicherMengenDimension()
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 internal object MengenKnotenInspektor : KnotenInspektor {
+    override fun hatBereich(knoten: KnotenDaten, bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich): Boolean =
+        bereich == de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Knotendaten ||
+            bereich == de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten && hatMengenDimensionsart(knoten)
+
+    @Composable override fun BereichInhalt(knoten: KnotenDaten, ergebnis: KnotenAuswertungsErgebnis?, aktionen: KnotenInspektorAktionen,
+        bereich: de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich) {
+        if (bereich == de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Knotendaten) Inhalt(knoten, ergebnis, aktionen)
+        else if (bereich == de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.KnotenInspektorBereich.Eingangsdaten && hatMengenDimensionsart(knoten)) {
+            Text("Dimensionsart", style = MaterialTheme.typography.titleSmall)
+            Row(horizontalArrangement = Arrangement.spacedBy(LocalAtlasAbstände.current.eng)) {
+                listOf(MENGEN_DIMENSION_TUPEL to "Tupel", MENGEN_DIMENSION_TENSOR to "Tensor").forEach { (art, titel) ->
+                    androidx.compose.material3.FilterChip(selected = mengenDimensionsart(knoten) == art,
+                        onClick = { aktionen.knoten(konfiguriereMengenDimensionsart(knoten, art)) }, label = { Text(titel) })
+                }
+            }
+        }
+    }
+
     @Composable
     override fun Inhalt(
         knoten: KnotenDaten,
         ergebnis: KnotenAuswertungsErgebnis?,
         aktionen: KnotenInspektorAktionen,
     ) {
-        val eingebaute = MengenKnotenAuswahl.entries.map { auswahl ->
+        val eingebaute = sichtbareMengenAuswahlen().map { auswahl ->
             MengenAuswahlEintrag(
                 schlüssel = "intern:${auswahl.stabileId}",
                 titel = auswahl.titel,
@@ -269,10 +290,10 @@ internal object MengenKnotenInspektor : KnotenInspektor {
             RechnerOperatorAuswahlEintrag(
                 id = eintrag.schlüssel,
                 titel = eintrag.titel,
-                symbolLatex = eintrag.eingebaut?.operator?.symbolLatex ?: "\\operatorname{Menge}",
+                symbolLatex = eintrag.eingebaut?.let { if (it.istMatrizenmenge) it.beschreibung else it.operator.symbolLatex } ?: "\\operatorname{Menge}",
                 kategorie = if (eintrag.eingebaut != null) "Vordefinierte Mengen" else "Eigene Mengenkarten",
-                beschreibung = if (eintrag.eingebaut != null) "Konstante Mengenquelle ohne Argumente." else eintrag.beschreibung,
-                definitionLatex = eintrag.eingebaut?.operator?.definitionLatex,
+                beschreibung = if (eintrag.eingebaut?.istMatrizenmenge == true) "Matrizenmenge mit positiven natürlichen Dimensionen n und m." else eintrag.beschreibung,
+                definitionLatex = eintrag.eingebaut?.beschreibung,
                 suchbegriffe = setOfNotNull(eintrag.eingebaut?.stabileId, eintrag.eingebaut?.name),
                 kandidat = kandidat,
             )
@@ -291,7 +312,7 @@ internal object MengenKnotenInspektor : KnotenInspektor {
         androidx.compose.material3.OutlinedButton(onClick = { geöffnet = true }, modifier = Modifier.fillMaxWidth()) {
             Text(aktuell?.titel ?: "Unbekannte Mengenquelle: $aktuelleId")
         }
-        aktuell?.eingebaut?.let { de.TeutonStudio.MathematikKnoten.LatexText(it.operator.definitionLatex) }
+        aktuell?.eingebaut?.let { de.TeutonStudio.MathematikKnoten.LatexText(it.beschreibung) }
         if (geöffnet) {
             RechnerOperatorAuswahlDialog(
                 familienTitel = "Menge",

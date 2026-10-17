@@ -21,19 +21,21 @@ import de.TeutonStudio.KnotenKartenVerwalter.daten.AnschlussDaten
 import de.TeutonStudio.KnotenKartenVerwalter.daten.KartenDaten
 import de.TeutonStudio.KnotenKartenVerwalter.logik.AnschlussArtRegister
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.symbolAnschluss
+import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.anschlussSymbolBeschreibung
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.AnschlussSymbol
 import de.TeutonStudio.KnotenKartenVerwalter.schnittstelle.sichtbareAnschlussArtIds
 
 internal data class AnschlussLegendenEintrag(
     val arten: List<AnschlussArt>,
     val symbolAnschluss: AnschlussDaten,
+    val methodenTitel: String? = null,
 ) {
     init {
         require(arten.isNotEmpty()) { "Ein Legendeneintrag benötigt mindestens eine Anschlussart." }
     }
 
-    val schlüssel: String = arten.joinToString("|") { it.id.wert }
-    val titel: String = arten.joinToString(" oder ") { it.name }
+    val schlüssel: String = anschlussSymbolBeschreibung(symbolAnschluss).schlüssel
+    val titel: String = methodenTitel ?: arten.joinToString(" oder ") { it.name }
     val gestreift: Boolean = arten.size > 1
 }
 
@@ -60,13 +62,19 @@ internal fun anschlussLegendenEinträge(
                 symbolAnschluss = anschluss,
             )
         }
-        .distinctBy { it.ids }
+        .distinctBy { anschlussSymbolBeschreibung(it.symbolAnschluss).schlüssel }
 
     return signaturen
         .map { signatur ->
             AnschlussLegendenEintrag(
                 arten = signatur.ids.map { id -> register.legendenArt(id) },
                 symbolAnschluss = signatur.symbolAnschluss,
+                methodenTitel = anschlussSymbolBeschreibung(signatur.symbolAnschluss).let { symbol ->
+                    if (symbol.methodenArgumente.isEmpty()) null else {
+                        fun titel(ids: List<String>) = ids.joinToString(" oder ") { register.legendenArt(AnschlussArtId(it)).name }
+                        "Methode: ${titel(symbol.methodenArgumente)} → ${titel(symbol.methodenAusgaben)}"
+                    }
+                },
             )
         }
         .sortedWith(
@@ -185,7 +193,8 @@ private fun AnschlussLegendenZeile(eintrag: AnschlussLegendenEintrag) {
                 }
             } else {
                 Text(
-                    eintrag.arten.single().beschreibung,
+                    if (eintrag.methodenTitel != null) "Der linke Halbkreis zeigt die Eingabetypen, der rechte die Ausgabetypen."
+                    else eintrag.arten.single().beschreibung,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
