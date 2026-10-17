@@ -1,0 +1,36 @@
+{
+  "erstelltAm": 1785883810545,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Äquivalente Darstellungen Division",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 620,
+        "höhe": 210
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.zahlenrechner",
+        "regel": "a/b ist bei b ungleich null äquivalent zu a·b^{-1}; in nichtkommutativen Bereichen bleibt die Seitenwahl Teil der Definition."
+      },
+      "name": "Äquivalente Darstellung",
+      "id": "zahlenrechner-zahl-division-aequivalente-regel",
+      "position": {
+        "x": 70,
+        "y": 65
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.5d7c91ae.aequivalente",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

@@ -80,27 +80,14 @@ private class ÜbersetzungsFehler(val diagnose: ÜbersetzungsErgebnis.NichtDefin
 private fun übersetzerZielFürKontext(k: KnotenAuswertungsKontext) = if (k.knoten.art == ÜBERSETZER_ART) ÜbersetzungsZiel.vonId(übersetzerZiel(k.knoten)) else null
 
 internal fun MathematikAuswerterRegister.bezeugeHistorischeÜbersetzer() {
-    listOf("mathematik.spalteZuTupel", "mathematik.zeileZuTupel").forEach { art ->
-        if (finde(art) != null) bezeugeÜbersetzer(art) { ÜbersetzungsZiel.TUPEL }
-    }
-    listOf("mathematik.tupelZuSpalte","mathematik.tupelZuZeile").forEach { art ->
-        if (finde(art) != null) bezeugeÜbersetzer(art) { k ->
-            if (orientierungFürOrientierungsKnoten(k.knoten) == VEKTOR_ORIENTIERUNG_ZEILE) ÜbersetzungsZiel.ZEILE else ÜbersetzungsZiel.SPALTE
-        }
-    }
     if (finde("mathematik.termZuMethode") != null) bezeugeÜbersetzer("mathematik.termZuMethode") { ÜbersetzungsZiel.METHODE }
     if (finde("mathematik.geometrie.zuTrägermenge") != null) bezeugeÜbersetzer("mathematik.geometrie.zuTrägermenge") { ÜbersetzungsZiel.KOORDINATENMENGE }
 }
 
 /** Strukturänderung und Zeugnis entstehen gemeinsam im vorhandenen Fachkern. */
 private fun übersetzeStrukturMitZeugnis(k:KnotenAuswertungsKontext,ziel:ÜbersetzungsZiel):KnotenAuswertungsErgebnis {
-    val kanonisch = k.knoten.art == ÜBERSETZER_ART
-    val zuVektor = k.knoten.art in setOf("mathematik.tupelZuSpalte","mathematik.tupelZuZeile")
-    if (zuVektor) require(k.knoten.parameter[VEKTOR_ORIENTIERUNG_PARAMETER] in setOf(null,VEKTOR_ORIENTIERUNG_SPALTE,VEKTOR_ORIENTIERUNG_ZEILE)) {
-        "Unbekannte gespeicherte Vektororientierung."
-    }
-    val eingang = if (kanonisch) "wert" else if (zuVektor || k.knoten.art == TUPEL_ABFLACHEN_ART) "tupel" else "vektor"
-    val ausgang = if (kanonisch) "ergebnis" else if (zuVektor) "vektor" else "tupel"
+    val eingang = "wert"
+    val ausgang = "ergebnis"
     val quelle = k.eingänge[eingang] ?: error("Übersetzungsquelle '$eingang' fehlt.")
     val übersetzt = when (val r = ÜbersetzungsDienst.übersetze(ÜbersetzungsAnfrage(
         quelle.mathematischesObjekt("Übersetzungsquelle"),ziel,quelle.übersetzungsKontext(),k.knoten.parameter))) {

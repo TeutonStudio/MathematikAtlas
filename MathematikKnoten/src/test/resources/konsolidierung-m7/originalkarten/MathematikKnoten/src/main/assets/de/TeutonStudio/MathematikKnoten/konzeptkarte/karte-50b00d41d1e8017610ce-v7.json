@@ -1,0 +1,36 @@
+{
+  "erstelltAm": 1785883810568,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Äquivalente Darstellungen Kubikwurzel",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 620,
+        "höhe": 210
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.zahlenrechner",
+        "regel": "Äquivalente Darstellungen verändern weder Eingangsbereiche noch offene Definitionsbedingungen."
+      },
+      "name": "Äquivalente Darstellung",
+      "id": "zahlenrechner-zahl-kubikwurzel-aequivalente-regel",
+      "position": {
+        "x": 70,
+        "y": 65
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.4e0789c2.aequivalente",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

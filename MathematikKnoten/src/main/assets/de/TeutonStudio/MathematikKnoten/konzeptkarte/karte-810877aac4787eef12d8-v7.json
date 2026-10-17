@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810221,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-methode",
         "anschlussId": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-methode-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-indexmenge",
         "anschlussId": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-indexmenge-wert"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor",
         "anschlussId": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor-anschluss-2"
@@ -35,6 +38,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-disjunktion-11-neutral",
         "anschlussId": "definition-iterierteAussagenverknüpfung-disjunktion-11-neutral-anschluss-0"
@@ -46,6 +50,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor",
         "anschlussId": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor-anschluss-3"
@@ -57,6 +62,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-disjunktion-11-methoden-anwendung",
         "anschlussId": "definition-iterierteAussagenverknüpfung-disjunktion-11-methoden-anwendung-anschluss-2"
@@ -68,6 +74,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-disjunktion-11-verknuepfung",
         "anschlussId": "definition-iterierteAussagenverknüpfung-disjunktion-11-verknuepfung-anschluss-2"
@@ -79,6 +86,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungsdefinator",
         "anschlussId": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungsdefinator-anschluss-1"
@@ -100,22 +108,22 @@
         "breite": 250,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.methode",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-methode-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.methode",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-methode-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.methode",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "P",
       "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-methode",
@@ -126,13 +134,26 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.leereMenge",
+      "art": "mathematik.menge",
       "größe": {
         "breite": 250,
         "höhe": 92
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "dimension",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-indexmenge-mengen-dimension",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -140,10 +161,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-indexmenge-wert",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
-      "parameter": {},
+      "parameter": {"mengeAuswahl": "leer"},
       "name": "Leere Menge",
       "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-eingang-indexmenge",
       "position": {
@@ -158,18 +180,18 @@
         "breite": 180,
         "höhe": 90
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.aussage",
-          "kannSichErweitern": false,
-          "name": "aussage",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-neutral-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.aussage",
+        "kannSichErweitern": false,
+        "name": "aussage",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-neutral-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {},
       "name": "Lüge",
       "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-neutral",
@@ -187,6 +209,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
@@ -194,9 +217,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -204,9 +229,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -214,9 +241,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -225,14 +254,15 @@
           "artFolgtEingang": "neutral",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor-anschluss-3",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
         "faltung.paar": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltung",
         "faltung.akkumulatorName": "a",
-        "faltung.operator": "disjunktion",
-        "faltung.indexName": "i"
+        "faltung.indexName": "i",
+        "faltung.operator": "disjunktion"
       },
       "name": "Faltungskonstruktor",
       "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungskonstruktor",
@@ -243,13 +273,14 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.methodenAnwendung",
+      "art": "mathematik.methodeAufrufen",
       "größe": {
         "breite": 265,
         "höhe": 115
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.methode",
           "kannSichErweitern": false,
@@ -257,9 +288,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-methoden-anwendung-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -267,9 +300,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-methoden-anwendung-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -277,11 +312,16 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-methoden-anwendung-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
-        "methodenAnwendung.ergebnisArt": "mathematik.aussage"
+        "methodenAufruf.argumentprojektion": "separiert",
+        "methodenAufruf.projektionFest": "true",
+        "methodenAnwendung.ergebnisArt": "mathematik.aussage",
+        "methodenAufruf.ergebnisprojektion": "direkt",
+        "festeEingänge": "1"
       },
       "name": "Aussagenmethode anwenden",
       "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-methoden-anwendung",
@@ -292,46 +332,68 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.disjunktion",
+      "art": "mathematik.aussagensatz",
       "größe": {
         "breite": 230,
         "höhe": 115
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.aussage",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.aussage",
+            "mathematik.methode"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-verknuepfung-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.aussage",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.aussage",
+            "mathematik.methode"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-verknuepfung-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
-          "name": "aussage",
+          "name": "wert",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-verknuepfung-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
+        "operatorAnzeige": "wert",
         "festeEingänge": "2",
-        "operatorAnzeige": "wert"
+        "operator": "aussage.disjunktion"
       },
       "name": "Disjunktion",
       "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-verknuepfung",
@@ -349,6 +411,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -356,9 +419,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungsdefinator-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.aussage",
           "kannSichErweitern": false,
@@ -367,6 +432,7 @@
           "artFolgtEingang": "nächsterAkkumulator",
           "dynamischErzeugt": false,
           "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-faltungsdefinator-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -388,21 +454,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.aussage",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-karten-ausgang-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "aussage"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.aussage",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-karten-ausgang-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "aussage"},
       "name": "Karten-Ausgang",
       "id": "definition-iterierteAussagenverknüpfung-disjunktion-11-karten-ausgang",
       "position": {
@@ -418,6 +482,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

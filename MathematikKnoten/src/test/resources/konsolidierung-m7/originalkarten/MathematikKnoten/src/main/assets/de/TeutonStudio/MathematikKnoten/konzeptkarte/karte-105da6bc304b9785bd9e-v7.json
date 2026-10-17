@@ -1,0 +1,468 @@
+{
+  "erstelltAm": 1785883810243,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "division-definition-nenner",
+        "anschlussId": "division-definition-nenner-ausgang-wert"
+      },
+      "id": "division-d1",
+      "zu": {
+        "knotenId": "division-definition-gleich",
+        "anschlussId": "division-definition-gleich-eingang-links"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-definition-null",
+        "anschlussId": "division-definition-null-ausgang-wert"
+      },
+      "id": "division-d2",
+      "zu": {
+        "knotenId": "division-definition-gleich",
+        "anschlussId": "division-definition-gleich-eingang-rechts"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-definition-nenner",
+        "anschlussId": "division-definition-nenner-ausgang-wert"
+      },
+      "id": "division-d3",
+      "zu": {
+        "knotenId": "division-definition-kehrwert",
+        "anschlussId": "division-definition-kehrwert-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-definition-zaehler",
+        "anschlussId": "division-definition-zaehler-ausgang-wert"
+      },
+      "id": "division-d4",
+      "zu": {
+        "knotenId": "division-definition-produkt",
+        "anschlussId": "division-definition-produkt-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-definition-kehrwert",
+        "anschlussId": "division-definition-kehrwert-ausgang-wert"
+      },
+      "id": "division-d5",
+      "zu": {
+        "knotenId": "division-definition-produkt",
+        "anschlussId": "division-definition-produkt-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-definition-nullwert",
+        "anschlussId": "division-definition-nullwert-ausgang-wert"
+      },
+      "id": "division-d6",
+      "zu": {
+        "knotenId": "division-definition-fall",
+        "anschlussId": "division-definition-fall-eingang-wahr"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-definition-gleich",
+        "anschlussId": "division-definition-gleich-ausgang-aussage"
+      },
+      "id": "division-d7",
+      "zu": {
+        "knotenId": "division-definition-fall",
+        "anschlussId": "division-definition-fall-eingang-aussage"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-definition-produkt",
+        "anschlussId": "division-definition-produkt-ausgang-wert"
+      },
+      "id": "division-d8",
+      "zu": {
+        "knotenId": "division-definition-fall",
+        "anschlussId": "division-definition-fall-eingang-lüge"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-definition-fall",
+        "anschlussId": "division-definition-fall-ausgang-wert"
+      },
+      "id": "division-d9",
+      "zu": {
+        "knotenId": "division-definition-ausgang",
+        "anschlussId": "division-definition-ausgang-eingang-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Division mit Nullfall",
+  "knoten": [
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-definition-zaehler-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Zähler a"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-definition-zaehler",
+      "position": {
+        "x": 30,
+        "y": 60
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-definition-nenner-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Nenner b"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-definition-nenner",
+      "position": {
+        "x": 30,
+        "y": 240
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-definition-nullwert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Falls Nenner 0"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-definition-nullwert",
+      "position": {
+        "x": 30,
+        "y": 480
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-definition-null-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "wert": "0"
+      },
+      "name": "Zahl",
+      "id": "division-definition-null",
+      "position": {
+        "x": 330,
+        "y": 420
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.gleichheit",
+      "größe": {
+        "breite": 220,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "links",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-gleich-eingang-links",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "rechts",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-gleich-eingang-rechts",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-definition-gleich-ausgang-aussage",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Gleichheit",
+      "id": "division-definition-gleich",
+      "position": {
+        "x": 620,
+        "y": 330
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-kehrwert-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-definition-kehrwert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.kehrwert"
+      },
+      "name": "Kehrwert",
+      "id": "division-definition-kehrwert",
+      "position": {
+        "x": 620,
+        "y": 180
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-produkt-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-produkt-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-definition-produkt-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-definition-produkt",
+      "position": {
+        "x": 920,
+        "y": 100
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.fall",
+      "größe": {
+        "breite": 260,
+        "höhe": 150
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "wahr",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-fall-eingang-wahr",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-fall-eingang-aussage",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "name": "lüge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-fall-eingang-lüge",
+          "reihenfolge": 2
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.objekt",
+          "kannSichErweitern": false,
+          "artVereinigtEingänge": [
+            "wahr",
+            "lüge"
+          ],
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-definition-fall-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Fallunterscheidung",
+      "id": "division-definition-fall",
+      "position": {
+        "x": 1220,
+        "y": 270
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-definition-ausgang-eingang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Ergebnis"
+      },
+      "name": "Karten-Ausgang",
+      "id": "division-definition-ausgang",
+      "position": {
+        "x": 1570,
+        "y": 300
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.5d7c91ae.definition",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.65
+  },
+  "formatVersion": 7,
+  "version": 1
+}

@@ -1,18 +1,17 @@
 {
   "erstelltAm": 1785883810213,
-  "verbindungen": [
-    {
-      "von": {
-        "knotenId": "definition-mathematik-endlichemenge-endliche-menge-0-regel",
-        "anschlussId": "definition-mathematik-endlichemenge-endliche-menge-0-regel-0"
-      },
-      "id": "definition-mathematik-endlichemenge-endliche-menge-0-a-0",
-      "zu": {
-        "knotenId": "definition-mathematik-endlichemenge-endliche-menge-0-ausgang-0",
-        "anschlussId": "definition-mathematik-endlichemenge-endliche-menge-0-ausgang-0-wert"
-      }
+  "verbindungen": [{
+    "eingangsReihenfolge": 0,
+    "von": {
+      "knotenId": "definition-mathematik-endlichemenge-endliche-menge-0-regel",
+      "anschlussId": "definition-mathematik-endlichemenge-endliche-menge-0-regel-0"
+    },
+    "id": "definition-mathematik-endlichemenge-endliche-menge-0-a-0",
+    "zu": {
+      "knotenId": "definition-mathematik-endlichemenge-endliche-menge-0-ausgang-0",
+      "anschlussId": "definition-mathematik-endlichemenge-endliche-menge-0-ausgang-0-wert"
     }
-  ],
+  }],
   "visuelleGruppen": [],
   "archiviert": false,
   "name": "Definition von Endliche Menge",
@@ -23,18 +22,18 @@
         "breite": 390,
         "höhe": 150
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "menge",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-endlichemenge-endliche-menge-0-regel-0",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "menge",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-endlichemenge-endliche-menge-0-regel-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "knotenArt": "mathematik.endlicheMenge",
         "regel": "Endliche Menge aus einer geordnet bearbeitbaren Liste typisierter Elemente.",
@@ -54,22 +53,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.menge",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-endlichemenge-endliche-menge-0-ausgang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.menge",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-endlichemenge-endliche-menge-0-ausgang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.menge",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "menge",
       "id": "definition-mathematik-endlichemenge-endliche-menge-0-ausgang-0",
@@ -86,6 +85,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

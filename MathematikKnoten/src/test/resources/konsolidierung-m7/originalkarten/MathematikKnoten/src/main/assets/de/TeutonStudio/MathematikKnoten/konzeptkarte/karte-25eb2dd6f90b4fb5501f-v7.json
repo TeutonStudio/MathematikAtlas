@@ -1,0 +1,36 @@
+{
+  "erstelltAm": 1785883810561,
+  "verbindungen": [],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Äquivalente Darstellungen Kubik",
+  "knoten": [
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 620,
+        "höhe": 210
+      },
+      "anschlüsse": [],
+      "parameter": {
+        "knotenArt": "mathematik.zahlenrechner",
+        "regel": "a³ ist die spezialisierte Potenz a^3 und äquivalent zu a·a·a."
+      },
+      "name": "Äquivalente Darstellung",
+      "id": "zahlenrechner-zahl-kubik-aequivalente-regel",
+      "position": {
+        "x": 70,
+        "y": 65
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.dc072a2.aequivalente",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

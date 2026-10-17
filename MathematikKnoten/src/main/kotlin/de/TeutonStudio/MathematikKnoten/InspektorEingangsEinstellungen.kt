@@ -18,7 +18,7 @@ fun hatRechnerEingangsEinstellungen(knoten: KnotenDaten): Boolean {
     val erweitert = ErweiterterZahlenOperator.vonId(knoten.parameter[ZAHLENRECHNER_OPERATOR])
     return knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach } &&
         (standard?.let { istVariadischerZahlenOperator(it) || istKomplexKonstruktor(it) } == true ||
-            erweitert in setOf(ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL, ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL))
+            erweitert in setOf(ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL, ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL, ErweiterterZahlenOperator.POLYNOM))
 }
 
 @Composable
@@ -36,6 +36,7 @@ fun InspektorZahlenRechnerEingänge(knoten: KnotenDaten, übernehmen: (KnotenDat
     val operatorId = knoten.parameter[ZAHLENRECHNER_OPERATOR]
     val standardOperator = UniversellerZahlenOperator.entries.firstOrNull { operatorId == it.stabileId || operatorId.equals(it.name, ignoreCase = true) }
     val erweiterterOperator = ErweiterterZahlenOperator.vonId(operatorId)
+    if (erweiterterOperator == ErweiterterZahlenOperator.POLYNOM) InspektorPolynomArgument(knoten, übernehmen)
     val erweiterterMittelwert = erweiterterOperator == ErweiterterZahlenOperator.ARITHMETISCHES_MITTEL ||
         erweiterterOperator == ErweiterterZahlenOperator.GEOMETRISCHES_MITTEL
     if (knoten.anschlüsse.none { it.belegung == AnschlussBelegung.Mehrfach } && ((standardOperator != null && istVariadischerZahlenOperator(standardOperator)) || erweiterterMittelwert)) {
@@ -243,3 +244,29 @@ fun InspektorTensorAchsen(knoten: KnotenDaten, übernehmen: (KnotenDaten) -> Uni
 private fun inspektorDynamischeAchsenAnzahl(knoten: KnotenDaten, definition: TensorOperationDefinition): Int =
     knoten.anschlüsse.count { it.richtung == AnschlussRichtung.Eingang && it.name.startsWith("achse.") }
         .coerceAtLeast(definition.minimaleAchsenAnzahl.coerceAtLeast(1))
+
+@Composable
+private fun InspektorPolynomArgument(knoten: KnotenDaten, übernehmen: (KnotenDaten) -> Unit) {
+    val modus = knoten.parameter[POLYNOM_ARGUMENT_MODUS] ?: POLYNOM_ARGUMENT_EINGANG
+    val gespeichert = knoten.parameter[ZAHLENRECHNER_VARIABLE] ?: "x"
+    var entwurf by remember(knoten.id, gespeichert) { mutableStateOf(gespeichert) }
+    Text("Polynomargument", style = MaterialTheme.typography.titleSmall)
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilterChip(selected = modus == POLYNOM_ARGUMENT_EINGANG,
+            onClick = { entwurf=gespeichert; übernehmen(konfigurierePolynomArgument(knoten, POLYNOM_ARGUMENT_EINGANG)) },
+            label = { Text("Eingang") })
+        FilterChip(selected = modus == POLYNOM_ARGUMENT_VARIABLE, enabled = entwurf.isNotBlank(),
+            onClick = { übernehmen(konfigurierePolynomArgument(knoten, POLYNOM_ARGUMENT_VARIABLE, entwurf)) },
+            label = { Text("Intrinsische Variable") })
+    }
+    if (modus != POLYNOM_ARGUMENT_EINGANG || gespeichert.isBlank()) {
+        OutlinedTextField(value = entwurf, onValueChange = { entwurf = it },
+            label = { Text("Polynomvariable") }, singleLine = true,
+            isError = entwurf.isBlank(), modifier = Modifier.fillMaxWidth(),
+            supportingText = { Text(if(entwurf.isBlank()) "Ein nichtleerer Name ist erforderlich." else "Formale Variable ohne Bindung an eine Kartenquelle.") })
+        OutlinedButton(enabled = entwurf.isNotBlank(),
+            onClick = { übernehmen(konfigurierePolynomArgument(knoten, POLYNOM_ARGUMENT_VARIABLE, entwurf)) }) {
+            Text("Variable übernehmen")
+        }
+    }
+}

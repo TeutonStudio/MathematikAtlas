@@ -478,6 +478,24 @@ class KartenAuswerter(
         fun aUndB(zeichen: String) = "${wert("a")} $zeichen ${wert("b")}"
 
         val darstellungen: Map<String, String> = when (knoten.art) {
+            "mathematik.zahlenrechner" -> {
+                val operator=knoten.parameter["operator"]
+                val wertObjekt=ausgaben["wert"]?.objekt
+                val beiträge=eingänge.filterKeys { "@" in it }.values.map {it.anzeigeLatex()}.ifEmpty { geordnet() }
+                val text=if(wertObjekt is Methode) null else when(operator) {
+                    "zahl.addition" -> beiträge.joinToString(" + ")
+                    "zahl.multiplikation" -> beiträge.joinToString(" \\cdot ")
+                    "zahl.potenz" -> "\\left(${wert("a")}\\right)^{${wert("b")}}"
+                    "zahl.kehrwert" -> "\\left(${wert("a")}\\right)^{-1}"
+                    "zahl.quadratwurzel" -> "\\sqrt{${wert("a")}}"
+                    "zahl.logarithmus" -> "\\log_{${wert("a")}}\\left(${wert("b")}\\right)"
+                    "zahl.division" -> if(wertObjekt is StrukturierteDivision || (wertObjekt is ZahlFallAusdruck && wertObjekt.lüge is StrukturierteDivision)) null
+                        else if(eingänge["c"]==null) "\\frac{${wert("a")}}{${wert("b")}}"
+                        else """\begin{cases}${wert("c")},&${wert("b")}=0\\\frac{${wert("a")}}{${wert("b")}},&${wert("b")}\ne0\end{cases}"""
+                    else -> null
+                }
+                if(text==null) emptyMap() else mapOf("wert" to text)
+            }
             "mathematik.addition" -> mapOf("wert" to geordnet().joinToString(" + "))
             "mathematik.multiplikation" -> mapOf("wert" to geordnet().joinToString(" \\cdot "))
             "mathematik.division" -> mapOf(

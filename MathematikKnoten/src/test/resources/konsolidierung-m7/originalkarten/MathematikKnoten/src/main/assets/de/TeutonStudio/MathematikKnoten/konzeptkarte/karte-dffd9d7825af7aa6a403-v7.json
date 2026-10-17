@@ -1,0 +1,424 @@
+{
+  "erstelltAm": 1785883810221,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-eingang-methode",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-eingang-methode-wert"
+      },
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-methode-anwendung",
+      "zu": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-eingang-indexmenge",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-eingang-indexmenge-wert"
+      },
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-indexmenge-konstruktor",
+      "zu": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor-anschluss-2"
+      },
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-index-anwendung",
+      "zu": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-neutral",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-neutral-anschluss-0"
+      },
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-neutral-konstruktor",
+      "zu": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor-anschluss-3"
+      },
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-akkumulator-verknuepfung",
+      "zu": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung-anschluss-2"
+      },
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-anwendung-verknuepfung",
+      "zu": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung-anschluss-1"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung-anschluss-2"
+      },
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung-definator",
+      "zu": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungsdefinator",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungsdefinator-anschluss-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungsdefinator",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungsdefinator-anschluss-1"
+      },
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-definator-ausgang",
+      "zu": {
+        "knotenId": "definition-iterierteAussagenverknüpfung-adjunktion-21-karten-ausgang",
+        "anschlussId": "definition-iterierteAussagenverknüpfung-adjunktion-21-karten-ausgang-anschluss-0"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Leere Indexmenge von Iterierte Adjunktion",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 250,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-eingang-methode-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.methode",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "P",
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-eingang-methode",
+      "position": {
+        "x": 20,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.leereMenge",
+      "größe": {
+        "breite": 250,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-eingang-indexmenge-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Leere Menge",
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-eingang-indexmenge",
+      "position": {
+        "x": 20,
+        "y": 430
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.lüge",
+      "größe": {
+        "breite": 180,
+        "höhe": 90
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-neutral-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {},
+      "name": "Lüge",
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-neutral",
+      "position": {
+        "x": 310,
+        "y": 610
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.faltungskonstruktor",
+      "größe": {
+        "breite": 285,
+        "höhe": 145
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "indexmenge",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "neutral",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "index",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor-anschluss-2",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "akkumulator",
+          "kante": "Rechts",
+          "artFolgtEingang": "neutral",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor-anschluss-3",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "faltung.paar": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltung",
+        "faltung.akkumulatorName": "a",
+        "faltung.operator": "adjunktion",
+        "faltung.indexName": "i"
+      },
+      "name": "Faltungskonstruktor",
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungskonstruktor",
+      "position": {
+        "x": 590,
+        "y": 330
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.methodenAnwendung",
+      "größe": {
+        "breite": 265,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "argument",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "methodenAnwendung.ergebnisArt": "mathematik.aussage"
+      },
+      "name": "Aussagenmethode anwenden",
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-methoden-anwendung",
+      "position": {
+        "x": 920,
+        "y": 95
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.adjunktion",
+      "größe": {
+        "breite": 240,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung-anschluss-1",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "aussage",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung-anschluss-2",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "logikSemantik": "xor",
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Adjunktion",
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-verknuepfung",
+      "position": {
+        "x": 1260,
+        "y": 315
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.faltungsdefinator",
+      "größe": {
+        "breite": 285,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "nächsterAkkumulator",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungsdefinator-anschluss-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "artFolgtEingang": "nächsterAkkumulator",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungsdefinator-anschluss-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "faltung.paar": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltung",
+        "faltung.operator": "adjunktion"
+      },
+      "name": "Faltungsdefinator",
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-faltungsdefinator",
+      "position": {
+        "x": 1590,
+        "y": 315
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-karten-ausgang-anschluss-0",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "aussage"
+      },
+      "name": "Karten-Ausgang",
+      "id": "definition-iterierteAussagenverknüpfung-adjunktion-21-karten-ausgang",
+      "position": {
+        "x": 1920,
+        "y": 315
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "mathematik.iterierteAussagenverknüpfung|Iterierte Adjunktion|logikSemantik=xor;operator=adjunktion.4202aca1.iterierte-adjunktion-leere-indexmenge-2",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

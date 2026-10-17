@@ -160,17 +160,7 @@ object VektorKonstruktorV2300Vorlagen {
 
 fun MathematikAuswerterRegister.registriereVektorKonstruktorV2300() {
     registriere(VEKTOR_KONSTRUKTOR_ART) { kontext -> werteVektorKonstruktorAus(kontext) }
-    // Historische Karten bleiben ohne vorherige Persistenzmigration ausführbar.
-    registriere("mathematik.zeilenVektor") { kontext ->
-        werteVektorKonstruktorAus(
-            kontext.copy(
-                knoten = kontext.knoten.copy(
-                    parameter = kontext.knoten.parameter +
-                        (VEKTOR_ORIENTIERUNG_PARAMETER to VEKTOR_ORIENTIERUNG_ZEILE),
-                ),
-            ),
-        )
-    }
+
 }
 
 private fun werteVektorKonstruktorAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {

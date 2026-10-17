@@ -245,7 +245,6 @@ class MathematikAuswerterRegister {
         MENGENDEFINATOR_ART -> MengendefinatorAuswerter
         FALTUNGSKONSTRUKTOR_ART -> FaltungskonstruktorAuswerter
         FALTUNGSDEFINATOR_ART -> FaltungsdefinatorAuswerter
-        METHODEN_ANWENDUNG_ART -> MethodenAnwendungAuswerter
         METHODEN_AUFRUF_ART -> MethodenAufrufAuswerter
         METHODEN_ZIELMENGE_ART -> MethodenZielmengeSignaturAuswerter
         METHODEN_WERTEVORRAT_ART -> MethodenWertevorratAuswerter
@@ -258,7 +257,6 @@ class MathematikAuswerterRegister {
         MENGENDEFINATOR_ART,
         FALTUNGSKONSTRUKTOR_ART,
         FALTUNGSDEFINATOR_ART,
-        METHODEN_ANWENDUNG_ART,
         METHODEN_AUFRUF_ART,
         METHODEN_ZIELMENGE_ART,
         METHODEN_WERTEVORRAT_ART,

@@ -29,7 +29,7 @@ class MengendefinitionKartenEingangTest {
             ),
         )
 
-        val ergebnis = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister()).auswerten(karte)
+        val ergebnis = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister()).auswertenNachMigration(karte)
 
         assertTrue(ergebnis.fehler.isEmpty(), ergebnis.fehler.joinToString("\n"))
         val menge = ergebnis.knoten.getValue(paar.definator.id).ausgaben.getValue("menge")

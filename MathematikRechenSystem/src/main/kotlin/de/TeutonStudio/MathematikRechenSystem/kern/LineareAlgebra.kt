@@ -44,14 +44,7 @@ fun polynomAusKoeffizienten(koeffizienten: List<ZahlAusdruck>, variable: Variabl
     require(koeffizienten.none { it.enthältVariable(variable) }) {
         "Koeffizienten dürfen die Polynomvariable '${variable.name}' nicht enthalten."
     }
-    val terme = koeffizienten.mapIndexed { index, koeffizient ->
-        when (index) {
-            0 -> koeffizient
-            1 -> multiplikation(koeffizient, variable)
-            else -> multiplikation(koeffizient, Potenz(variable, RationaleZahl.von(index.toLong())))
-        }
-    }
-    return vereinfache(addition(terme.reversed()))
+    return polynomAusKoeffizienten(koeffizienten, variable as ZahlAusdruck)
 }
 
 /** Rückwärtskompatible Bezeichnung: ein ungerichteter Altvektor wird als Spaltenvektor geführt. */

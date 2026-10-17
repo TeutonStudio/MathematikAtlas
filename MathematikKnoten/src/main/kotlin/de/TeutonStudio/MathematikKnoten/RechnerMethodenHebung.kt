@@ -47,6 +47,10 @@ fun normalisiereRechnerMethodenAnschluesse(knoten: KnotenDaten): KnotenDaten {
     val hebbareEingaenge = mutableListOf<String>()
     val anschluesse = knoten.anschlüsse.map { anschluss ->
         if (anschluss.richtung != AnschlussRichtung.Eingang) return@map anschluss
+        if(knoten.art==ZAHLENRECHNER_ART) {
+            val rollen=RechnerOperatorDefinitionen.finde(OperatorFamilie.ZAHL,knoten.parameter[ZAHLENRECHNER_OPERATOR])?.signaturen.orEmpty().flatMap {it.eingänge}
+            if(rollen.none {it.methodenfähig && (it.name==anschluss.name || it.variadisch)}) return@map anschluss
+        }
         if (anschluss.art == MathematikAnschlussArten.Methode.id) return@map anschluss
 
         val deklarierteWertArten = buildSet {

@@ -478,20 +478,10 @@ fun MathematikAuswerterRegister.registriereÜbersetzungsKnoten() {
             KnotenAuswertungsErgebnis(mapOf("radius" to übersetzterWert(rollenErgebnis,polar.elemente[0]),"winkel" to übersetzterWert(rollenErgebnis,polar.elemente[1])),eingänge=k.eingänge)
         } else KnotenAuswertungsErgebnis(mapOf("ergebnis" to rollenErgebnis), eingänge = k.eingänge)
     }
-    registriere(TUPEL_ABFLACHEN_ART) { k ->
-        val wert = k.eingänge["tupel"] ?: error("Tupel fehlt.")
-        val tupel = wert.objekt as? Tupel ?: error("Abflachen benötigt ein Tupel.")
-        if(k.knoten.parameter["abflachen.ebenen"]=="1") {
-            val ergebnis=strukturEineEbeneAbflachen(tupel)
-            return@registriere KnotenAuswertungsErgebnis(mapOf("tupel" to übersetzterWert(wert.copy(zielMenge=null,werteVorrat=null,komponentenMengen=null),ergebnis)))
-        }
-        val raum = tupelAbflachenRaum(tupel, wert.komponentenMengen?.let(::Tupelraum) ?: wert.zielMenge as? Tupelraum)
-        KnotenAuswertungsErgebnis(mapOf("tupel" to übersetzterWert(wert.copy(zielMenge = raum, werteVorrat = null, komponentenMengen = raum.komponenten), tupelAbflachen(tupel))))
-    }
+
     bezeugeÜbersetzer(ÜBERSETZER_ART) { k ->
         if (k.knoten.parameter["indexmethode.baustein"] != null) ÜbersetzungsZiel.INDEXMETHODE else ÜbersetzungsZiel.vonId(übersetzerZiel(k.knoten))
     }
-    bezeugeÜbersetzer(TUPEL_ABFLACHEN_ART) { ÜbersetzungsZiel.ABFLACHEN }
 }
 
 internal fun übersetzterWert(quelle: BedingterWert, ergebnis: MathematischesObjekt): BedingterWert = quelle.copy(

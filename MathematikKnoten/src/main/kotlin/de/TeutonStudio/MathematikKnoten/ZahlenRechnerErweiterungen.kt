@@ -8,6 +8,27 @@ const val ZAHLENRECHNER_FORMEL_ID = "zahl.formel"
 const val ZAHLENRECHNER_FORMEL_LATEX = "formelLatex"
 const val ZAHLENRECHNER_FORMEL_VARIABLEN = "formelVariablen"
 
+const val POLYNOM_ARGUMENT_MODUS = "polynom.argumentModus"
+const val POLYNOM_ARGUMENT_EINGANG = "eingang"
+const val POLYNOM_ARGUMENT_VARIABLE = "variable"
+const val POLYNOM_KONFIG_DIAGNOSE = "Polynomkonfiguration:"
+
+fun polynomArgumentModus(knoten: KnotenDaten): String =
+    (knoten.parameter[POLYNOM_ARGUMENT_MODUS] ?: POLYNOM_ARGUMENT_EINGANG).also {
+        require(it in setOf(POLYNOM_ARGUMENT_EINGANG,POLYNOM_ARGUMENT_VARIABLE)) { "$POLYNOM_KONFIG_DIAGNOSE Unbekannter Argumentmodus '$it'." }
+    }
+
+fun polynomVariablenName(knoten: KnotenDaten): String =
+    (knoten.parameter[ZAHLENRECHNER_VARIABLE] ?: "x").trim().also {
+        require(it.isNotEmpty()) { "$POLYNOM_KONFIG_DIAGNOSE Die intrinsische Polynomvariable darf nicht leer sein." }
+    }
+
+fun konfigurierePolynomArgument(knoten: KnotenDaten, modus: String, variable: String = knoten.parameter[ZAHLENRECHNER_VARIABLE] ?: "x"): KnotenDaten {
+    val parameter = knoten.parameter + mapOf(POLYNOM_ARGUMENT_MODUS to modus,ZAHLENRECHNER_VARIABLE to variable.trim())
+    val repariert = if(parameter[RECHNER_MIGRATION_DIAGNOSE]?.startsWith("$ZAHLENRECHNER_ART bleibt erhalten: $POLYNOM_KONFIG_DIAGNOSE")==true) parameter-RECHNER_MIGRATION_DIAGNOSE else parameter
+    return konfiguriereErweitertenZahlenRechner(knoten.copy(parameter=repariert),ErweiterterZahlenOperator.POLYNOM).copy(name=knoten.name)
+}
+
 typealias ErweiterterZahlenOperator = de.TeutonStudio.MathematikRechenSystem.kern.ZusätzlicherZahlenOperator
 
 fun istZahlenRechnerFormel(knoten: KnotenDaten): Boolean =
@@ -177,6 +198,8 @@ private fun zahlenOderMethodenAusgang(
 )
 
 private fun konfigurierePolynomZahlenRechner(knoten: KnotenDaten): KnotenDaten {
+    val intrinsisch = polynomArgumentModus(knoten)==POLYNOM_ARGUMENT_VARIABLE
+    if(intrinsisch) polynomVariablenName(knoten)
     val vorhandeneEingänge = knoten.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
     val bisherigeKoeffizienten = vorhandeneEingänge.firstOrNull { it.name == "koeffizienten" }
     val bisherigesArgument = vorhandeneEingänge.firstOrNull { it.name == "argument" }
@@ -199,10 +222,10 @@ private fun konfigurierePolynomZahlenRechner(knoten: KnotenDaten): KnotenDaten {
         dynamischErzeugt = false,
         zulässigeArten = setOf(MathematikAnschlussArten.Zahl.id, MathematikAnschlussArten.Methode.id),
     )
-    val ausgang = zahlenOderMethodenAusgang(bisherigerAusgang, listOf("argument"))
+    val ausgang = zahlenOderMethodenAusgang(bisherigerAusgang, listOf("argument")).let {if(intrinsisch) it.copy(artPriorisiertEingänge=null) else it}
     return knoten.copy(
         name = ErweiterterZahlenOperator.POLYNOM.titel,
-        anschlüsse = listOf(koeffizienten, argument, ausgang),
+        anschlüsse = if(intrinsisch) listOf(koeffizienten,ausgang) else listOf(koeffizienten, argument, ausgang),
         parameter = (knoten.parameter - ZAHLENRECHNER_FORMEL_LATEX - ZAHLENRECHNER_FORMEL_VARIABLEN) +
             (ZAHLENRECHNER_OPERATOR to ErweiterterZahlenOperator.POLYNOM.stabileId),
     )
@@ -429,7 +452,8 @@ private fun werteStammfunktionAus(kontext: KnotenAuswertungsKontext): KnotenAusw
 
 private fun wertePolynomAus(kontext: KnotenAuswertungsKontext): KnotenAuswertungsErgebnis {
     val koeffizientenWert = kontext.eingänge["koeffizienten"] ?: error("Das Koordinatentupel der Koeffizienten fehlt.")
-    val argumentWert = kontext.eingänge["argument"] ?: error("Das Polynomargument fehlt.")
+    val intrinsisch = polynomArgumentModus(kontext.knoten)==POLYNOM_ARGUMENT_VARIABLE
+    val argumentWert = if(intrinsisch) BedingterWert(Variable(polynomVariablenName(kontext.knoten))) else kontext.eingänge["argument"] ?: error("Das Polynomargument fehlt.")
     val koeffizienten = when (val objekt = koeffizientenWert.objekt) {
         is Tupel -> objekt.elemente.mapIndexed { index, element ->
             element as? ZahlAusdruck ?: error("Koeffizient ${index + 1} des Tupels ist keine Zahl.")
@@ -439,27 +463,33 @@ private fun wertePolynomAus(kontext: KnotenAuswertungsKontext): KnotenAuswertung
     }
     val argumentMethode = argumentWert.objekt as? Methode
     val vorbereitung = argumentMethode?.let { bereitePunktweiseZahlenfunktionVor(mapOf("argument" to it)) }
-    val argument = vorbereitung?.operanden?.getValue("argument")
+    val argument: ZahlAusdruck = vorbereitung?.operanden?.getValue("argument")
         ?: (argumentWert.objekt as? ZahlAusdruck ?: error("Das Polynomargument ist weder Zahl noch Zahlenfunktion."))
+    val werte = listOf(koeffizientenWert, argumentWert)
+    val quellBereiche=werte.rechnerQuellBereiche()+vorbereitung?.werteVorräte.orEmpty()
     val ausdruck = polynomAusKoeffizienten(koeffizienten, argument)
+    val annahmen=werte.flatMap {it.annahmen}.toSet()
+    val ergebnisBereich=if(intrinsisch && ausdruck.freieVariablen().any {it==argument})
+        maximaleZahlenGrundmenge(koeffizienten.map {inferiereZahlenWertevorrat(it,quellBereiche,annahmen)}+
+            inferiereZahlenWertevorrat(argument,emptyMap(),annahmen))
+        else inferiereZahlenWertevorrat(ausdruck,quellBereiche,annahmen)
     val objekt: AtlasWert = vorbereitung?.erzeugeMethode(
         name = "p(${argumentMethode?.name})",
         vorschrift = ausdruck,
-        zielMenge = inferiereZahlenWertevorrat(ausdruck),
+        zielMenge = ergebnisBereich,
     ) ?: ausdruck
-    val werte = listOf(koeffizientenWert, argumentWert)
     return KnotenAuswertungsErgebnis(
         ausgaben = mapOf(
             "wert" to BedingterWert(
                 objekt = objekt,
                 annahmen = werte.flatMap { it.annahmen }.toSet(),
                 zielMenge = (objekt as? Methode)?.zielMenge,
-                werteVorrat = (objekt as? Methode)?.mathematischeMethodenSignatur()?.definitionsRaum ?: inferiereZahlenWertevorrat(ausdruck),
+                werteVorrat = (objekt as? Methode)?.mathematischeMethodenSignatur()?.definitionsRaum ?: ergebnisBereich,
                 reelleVariablen = reelleVariablen(werte),
                 variablenQuellen = werte.flatMap { it.variablenQuellen }.geordnetEindeutig(),
             ),
         ),
-        eingänge = kontext.eingänge,
+        eingänge = kontext.eingänge.filterKeys {it=="koeffizienten" || !intrinsisch && it=="argument"},
     )
 }
 

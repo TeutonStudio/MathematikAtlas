@@ -109,7 +109,7 @@ private fun endlicheMengeDefinitionsKarte(
             name = "Definition: Endliche Menge",
             knoten = knoten,
             verbindungen = verbindungen,
-        )
+        ).let(MathematikKartenMigrationen::nachLaden)
     }
 
     val einzelAusgaenge = mutableListOf<Pair<KnotenId, AnschlussId>>()
@@ -235,7 +235,7 @@ private fun endlicheMengeDefinitionsKarte(
         name = "Definition: Endliche Menge",
         knoten = knoten,
         verbindungen = verbindungen,
-    ).migriereRechnerMethodenAnschluesse().normalisiereJoinEingänge()
+    ).let(MathematikKartenMigrationen::nachLaden)
 }
 
 private fun endlicheMengeFehlerKonzept(

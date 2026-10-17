@@ -24,7 +24,3 @@ object VektorOrientierungsVorlagen {
 fun MathematikAuswerterRegister.registriereVektorKonstruktor() {
     registriereVektorKonstruktorV2300()
 }
-
-fun MathematikAuswerterRegister.registriereVektorOrientierungsKnoten() {
-    registriereVektorOrientierungsKnotenV2300()
-}

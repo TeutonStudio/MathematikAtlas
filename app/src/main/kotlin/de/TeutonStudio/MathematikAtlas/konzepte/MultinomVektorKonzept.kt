@@ -87,7 +87,8 @@ internal fun multinomVektorDefinitionsKarte(
     )
     val exponent = KnotenDaten(
         id = KnotenId("multinom-definition-exponent"),
-        art = "mathematik.subtraktion",
+        art = ZAHLENRECHNER_ART,
+        parameter = mapOf(ZAHLENRECHNER_OPERATOR to "zahl.subtraktion"),
         name = "idx − 1",
         position = GraphPunkt(445f, 205f),
         größe = GraphGröße(220f, 115f),
@@ -196,5 +197,5 @@ internal fun multinomVektorDefinitionsKarte(
             verbindung("multinom-v-methode-konstruktor", indexMethode, "methode", konstruktor, "methode"),
             verbindung("multinom-v-konstruktor-ziel", konstruktor, konstruktorAusgangName, ziel, "wert"),
         ),
-    )
+    ).let(MathematikKartenMigrationen::nachLaden)
 }

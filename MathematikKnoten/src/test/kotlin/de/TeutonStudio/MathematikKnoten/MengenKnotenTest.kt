@@ -19,7 +19,7 @@ class MengenKnotenTest {
     fun `Mengenquelle besitzt optionalen Dimensionseingang und erzeugt Potenzraum`() {
         val knoten = MengenKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
         assertEquals("dimension", knoten.anschlüsse.first { it.richtung == AnschlussRichtung.Eingang }.name)
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
+        val ergebnis = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(knoten, mapOf("dimension" to BedingterWert(RationaleZahl.von(3))), RechenKontext()),
         )
         assertIs<KartesischerPotenzraum>(ergebnis.ausgaben.getValue("menge").objekt)
@@ -39,7 +39,7 @@ class MengenKnotenTest {
     fun `Einzelmenge nimmt beliebiges Objekt auf`() {
         val knoten = MathematikKnotenVorlagen.Einzelmenge.erzeuge(GraphPunkt.Zero)
         val aussage = WahrheitsKonstante(true)
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
+        val ergebnis = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(knoten, mapOf("element" to BedingterWert(aussage)), RechenKontext()),
         )
 
@@ -59,7 +59,7 @@ class MengenKnotenTest {
         )
         val menge = EndlicheMenge(setOf(RationaleZahl.von(-2), RationaleZahl.Null, RationaleZahl.von(3)))
         val knoten = MathematikKnotenVorlagen.Mengenfilter.erzeuge(GraphPunkt.Zero)
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
+        val ergebnis = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf("menge" to BedingterWert(menge), "methode" to BedingterWert(methode)),
@@ -94,7 +94,7 @@ class MengenKnotenTest {
                 },
             )
         }
-        val minWert = register.finde(kartenEingang.art)!!.auswerten(
+        val minWert = register.findeNachMigration(kartenEingang.art).auswerten(
             KnotenAuswertungsKontext(kartenEingang, emptyMap(), RechenKontext()),
         ).ausgaben.getValue("wert")
         assertFalse(minWert.variablenQuellen.single().alsMethodenParameter)
@@ -109,7 +109,7 @@ class MengenKnotenTest {
             ),
         )
         val termZuMethode = MathematikKnotenVorlagen.TermZuMethode.erzeuge(GraphPunkt.Zero)
-        val methode = assertIs<Methode>(register.finde(termZuMethode.art)!!.auswerten(
+        val methode = assertIs<Methode>(register.findeNachMigration(termZuMethode.art).auswerten(
             KnotenAuswertungsKontext(
                 termZuMethode,
                 mapOf("term" to termWert),

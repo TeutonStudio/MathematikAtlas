@@ -88,7 +88,7 @@ class StandardwerteUndKonjugationTest {
 
         val ergebnis = auswerter.auswerten(karte.mitTestGrundräumen())
 
-        assertTrue(ergebnis.fehler.single().contains("Standardwert für 'exponent'"))
+        assertTrue(ergebnis.fehler.single().contains("Standardwert für 'b'"))
     }
 
     @Test

@@ -1,0 +1,793 @@
+{
+  "erstelltAm": 1785883810244,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "division-kn-p-zaehler",
+        "anschlussId": "division-kn-p-zaehler-ausgang-wert"
+      },
+      "id": "division-knp1",
+      "zu": {
+        "knotenId": "division-kn-p-radius-a",
+        "anschlussId": "division-kn-p-radius-a-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-zaehler",
+        "anschlussId": "division-kn-p-zaehler-ausgang-wert"
+      },
+      "id": "division-knp2",
+      "zu": {
+        "knotenId": "division-kn-p-winkel-a",
+        "anschlussId": "division-kn-p-winkel-a-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-nenner",
+        "anschlussId": "division-kn-p-nenner-ausgang-wert"
+      },
+      "id": "division-knp3",
+      "zu": {
+        "knotenId": "division-kn-p-radius-b",
+        "anschlussId": "division-kn-p-radius-b-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-nenner",
+        "anschlussId": "division-kn-p-nenner-ausgang-wert"
+      },
+      "id": "division-knp4",
+      "zu": {
+        "knotenId": "division-kn-p-winkel-b",
+        "anschlussId": "division-kn-p-winkel-b-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-radius-b",
+        "anschlussId": "division-kn-p-radius-b-ausgang-wert"
+      },
+      "id": "division-knp5",
+      "zu": {
+        "knotenId": "division-kn-p-radius-kehrwert",
+        "anschlussId": "division-kn-p-radius-kehrwert-eingang-zahl"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-radius-a",
+        "anschlussId": "division-kn-p-radius-a-ausgang-wert"
+      },
+      "id": "division-knp6",
+      "zu": {
+        "knotenId": "division-kn-p-radius-produkt",
+        "anschlussId": "division-kn-p-radius-produkt-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-radius-kehrwert",
+        "anschlussId": "division-kn-p-radius-kehrwert-ausgang-wert"
+      },
+      "id": "division-knp7",
+      "zu": {
+        "knotenId": "division-kn-p-radius-produkt",
+        "anschlussId": "division-kn-p-radius-produkt-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-winkel-b",
+        "anschlussId": "division-kn-p-winkel-b-ausgang-wert"
+      },
+      "id": "division-knp8",
+      "zu": {
+        "knotenId": "division-kn-p-winkel-negiert",
+        "anschlussId": "division-kn-p-winkel-negiert-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-minus-eins",
+        "anschlussId": "division-kn-p-minus-eins-ausgang-wert"
+      },
+      "id": "division-knp9",
+      "zu": {
+        "knotenId": "division-kn-p-winkel-negiert",
+        "anschlussId": "division-kn-p-winkel-negiert-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-winkel-a",
+        "anschlussId": "division-kn-p-winkel-a-ausgang-wert"
+      },
+      "id": "division-knp10",
+      "zu": {
+        "knotenId": "division-kn-p-winkel-differenz",
+        "anschlussId": "division-kn-p-winkel-differenz-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-winkel-negiert",
+        "anschlussId": "division-kn-p-winkel-negiert-ausgang-wert"
+      },
+      "id": "division-knp11",
+      "zu": {
+        "knotenId": "division-kn-p-winkel-differenz",
+        "anschlussId": "division-kn-p-winkel-differenz-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-radius-produkt",
+        "anschlussId": "division-kn-p-radius-produkt-ausgang-wert"
+      },
+      "id": "division-knp12",
+      "zu": {
+        "knotenId": "division-kn-p-tupel",
+        "anschlussId": "division-kn-p-tupel-eingang-a"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-winkel-differenz",
+        "anschlussId": "division-kn-p-winkel-differenz-ausgang-wert"
+      },
+      "id": "division-knp13",
+      "zu": {
+        "knotenId": "division-kn-p-tupel",
+        "anschlussId": "division-kn-p-tupel-eingang-b"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-tupel",
+        "anschlussId": "division-kn-p-tupel-ausgang-tupel"
+      },
+      "id": "division-knp14",
+      "zu": {
+        "knotenId": "division-kn-p-komplex",
+        "anschlussId": "division-kn-p-komplex-eingang-tupel"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "division-kn-p-komplex",
+        "anschlussId": "division-kn-p-komplex-ausgang-zahl"
+      },
+      "id": "division-knp15",
+      "zu": {
+        "knotenId": "division-kn-p-ausgang",
+        "anschlussId": "division-kn-p-ausgang-eingang-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Komplexe Division in Polarform (Winkel modulo 2π)",
+  "knoten": [
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-zaehler-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Zähler a"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-kn-p-zaehler",
+      "position": {
+        "x": 30,
+        "y": 70
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenEingang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-nenner-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Nenner b ∈ ℂ∖ℝ"
+      },
+      "name": "Karten-Eingang",
+      "id": "division-kn-p-nenner",
+      "position": {
+        "x": 30,
+        "y": 420
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-a-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-a-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.komplexerRadius"
+      },
+      "name": "Komplexer Radius",
+      "id": "division-kn-p-radius-a",
+      "position": {
+        "x": 350,
+        "y": 50
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-a-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-a-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.komplexerWinkel"
+      },
+      "name": "Komplexer Winkel",
+      "id": "division-kn-p-winkel-a",
+      "position": {
+        "x": 350,
+        "y": 190
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-b-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-b-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.komplexerRadius"
+      },
+      "name": "Komplexer Radius",
+      "id": "division-kn-p-radius-b",
+      "position": {
+        "x": 350,
+        "y": 390
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-b-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-b-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.komplexerWinkel"
+      },
+      "name": "Komplexer Winkel",
+      "id": "division-kn-p-winkel-b",
+      "position": {
+        "x": 350,
+        "y": 530
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahl",
+      "größe": {
+        "breite": 180,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-minus-eins-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "wert": "-1"
+      },
+      "name": "Zahl",
+      "id": "division-kn-p-minus-eins",
+      "position": {
+        "x": 660,
+        "y": 690
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 210,
+        "höhe": 105
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-kehrwert-eingang-zahl",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-kehrwert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "operator": "zahl.kehrwert"
+      },
+      "name": "Kehrwert",
+      "id": "division-kn-p-radius-kehrwert",
+      "position": {
+        "x": 680,
+        "y": 390
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-produkt-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-produkt-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-radius-produkt-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-kn-p-radius-produkt",
+      "position": {
+        "x": 980,
+        "y": 110
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-negiert-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-negiert-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-negiert-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.multiplikation"
+      },
+      "name": "Multiplikation",
+      "id": "division-kn-p-winkel-negiert",
+      "position": {
+        "x": 680,
+        "y": 530
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 220,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-differenz-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-differenz-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-winkel-differenz-ausgang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "operatorAnzeige": "wert",
+        "gradWinkel": "false",
+        "variable": "x",
+        "komplexEingabe": "separiert",
+        "gradAlsBogenmassAuswerten": "true",
+        "festeEingänge": "2",
+        "operator": "zahl.addition"
+      },
+      "name": "Addition",
+      "id": "division-kn-p-winkel-differenz",
+      "position": {
+        "x": 1000,
+        "y": 440
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.tupel",
+      "größe": {
+        "breite": 220,
+        "höhe": 115
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-tupel-eingang-a",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": true,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-tupel-eingang-b",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "tupel",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-tupel-ausgang-tupel",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "festeEingänge": "2",
+        "operatorAnzeige": "wert"
+      },
+      "name": "Tupel",
+      "id": "division-kn-p-tupel",
+      "position": {
+        "x": 1300,
+        "y": 230
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.zahlenrechner",
+      "größe": {
+        "breite": 250,
+        "höhe": 110
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.tupel",
+          "kannSichErweitern": false,
+          "name": "tupel",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-komplex-eingang-tupel",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "a",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "0fb97d67-4720-4978-8482-2d1468391580",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "b",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "05269e56-9afb-4bd7-b3cf-5b500ee2b926",
+          "reihenfolge": 1
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-komplex-ausgang-zahl",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "variable": "x",
+        "komplexEingabe": "tupel",
+        "gradWinkel": "false",
+        "gradAlsBogenmassAuswerten": "true",
+        "modus": "polar",
+        "operator": "zahl.komplexAusPolar"
+      },
+      "name": "Komplex aus Polarform",
+      "id": "division-kn-p-komplex",
+      "position": {
+        "x": 1600,
+        "y": 230
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.kartenAusgang",
+      "größe": {
+        "breite": 210,
+        "höhe": 100
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "division-kn-p-ausgang-eingang-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "name": "Ergebnis"
+      },
+      "name": "Karten-Ausgang",
+      "id": "division-kn-p-ausgang",
+      "position": {
+        "x": 1910,
+        "y": 240
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.zahlenrechner.5d7c91ae.komplexer-nenner.polar",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 0.56
+  },
+  "formatVersion": 7,
+  "version": 1
+}

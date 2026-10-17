@@ -11,7 +11,7 @@ class RechnerKonsolidierungUndReihenfolgeTest {
     private val register = GesamterMathematikAuswerter.erzeugeRegister()
     private fun z(n: Long) = RationaleZahl.von(n)
     private fun m(n: Long) = Matrix(listOf(listOf(z(n))))
-    private fun aus(k: KnotenDaten, werte: Map<String, BedingterWert>) = register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k, werte, RechenKontext()))
+    private fun aus(k: KnotenDaten, werte: Map<String, BedingterWert>) = register.findeNachMigration(k.art).auswerten(KnotenAuswertungsKontext(k, werte, RechenKontext()))
     private fun eingänge(k: KnotenDaten) = k.anschlüsse.filter { it.richtung == AnschlussRichtung.Eingang }.sortedBy { it.reihenfolge }
 
     @Test fun `Matrixmigration erhaelt alle IDs Parameter Darstellung und Auswertung`() {
@@ -19,7 +19,8 @@ class RechnerKonsolidierungUndReihenfolgeTest {
         vorlagen.forEach { vorlage ->
             val alt = vorlage.erzeuge(GraphPunkt(17f, 29f)).let { it.copy(name = "Mein Rechner", parameter = it.parameter + ("persoenlich" to "ja")) }
             val werte = eingänge(alt).associate { it.name to BedingterWert(m(2)) }
-            val vorher = aus(alt, werte).ausgaben.values.single().objekt
+            val r=aus(alt,werte);assertNull(r.fehler,vorlage.art+": "+r.fehler)
+            val vorher = r.ausgaben.values.single().objekt
             val neu = RechnerEinzeloperationMigration.migriere(alt)
             assertEquals(MatrixRechner.KNOTEN_ART, neu.art)
             assertEquals(alt.id, neu.id)
@@ -92,7 +93,7 @@ class RechnerKonsolidierungUndReihenfolgeTest {
             eingangsKartenVerweise = mapOf("input3" to KartenVerweis(KartenId("quelle"), 1)))
         val karte = KartenDaten(name = "Zahlenrollen", knoten = listOf(alt))
         val neu = MathematikKartenCodec.lade(KartenDatenJson.schreibe(karte)).knoten.single()
-        assertEquals("3", neu.parameter["join.lokal.${dritter.id.wert}"])
+        assertEquals("3", neu.parameter["standardwert.c"])
         assertEquals(alt.eingangsKartenVerweise.getValue("input3"), neu.eingangsKartenVerweise.values.single())
         assertEquals(z(6), KartenAuswerter(register).auswerten(karte.copy(knoten = listOf(neu))).knoten.getValue(neu.id).ausgaben.getValue("wert").objekt)
     }
@@ -113,7 +114,7 @@ class RechnerKonsolidierungUndReihenfolgeTest {
         }
     }
 
-    @Test fun `gespeicherte binaere Rechner werden idempotent zu Join mit stabiler Hauptrolle`() {
+    @Test fun `gespeicherte binaere Rechner behalten idempotent alle Einzelanschluesse`() {
         listOf(
             StrukturFormelRechnerVorlagen.Matrix.erzeuge(GraphPunkt.Zero),
             konfiguriereTensorOperation(StrukturFormelRechnerVorlagen.Tensor.erzeuge(GraphPunkt.Zero), aktuelleTensorOperationDefinition(StrukturFormelRechnerVorlagen.Tensor.erzeuge(GraphPunkt.Zero))),
@@ -122,8 +123,8 @@ class RechnerKonsolidierungUndReihenfolgeTest {
             val alt = aktuell.copy(anschlüsse = aktuell.anschlüsse.map { it.copy(kannSichErweitern = false) })
             val karte = KartenDaten(name = "Testkarte", knoten = listOf(alt))
             val neu = MathematikKartenCodec.lade(KartenDatenJson.schreibe(karte))
-            assertEquals(listOf(alt.anschlüsse.first().id, alt.anschlüsse.last().id).toSet(), neu.knoten.single().anschlüsse.map { it.id }.toSet())
-            assertTrue(eingänge(neu.knoten.single()).all { it.belegung == AnschlussBelegung.Mehrfach })
+            assertEquals(alt.anschlüsse.map {it.id}.toSet(), neu.knoten.single().anschlüsse.map { it.id }.toSet())
+            assertTrue(eingänge(neu.knoten.single()).all { it.belegung == AnschlussBelegung.Einzeln })
             assertEquals(neu, MathematikKartenCodec.lade(MathematikKartenCodec.schreibe(neu)))
         }
     }
@@ -156,7 +157,7 @@ class RechnerKonsolidierungUndReihenfolgeTest {
                 mapOf("standardwert.a" to "true", "standardwert.b" to "false")) }
             val karte = KartenDaten(name = "Aussagen", knoten = listOf(alt))
             val geladen = MathematikKartenCodec.lade(KartenDatenJson.schreibe(karte))
-            val vorher = auswerter.auswerten(karte).knoten.getValue(alt.id).ausgaben.values.single().objekt as Aussage
+            val vorher = auswerter.auswertenNachMigration(karte).knoten.getValue(alt.id).ausgaben.values.single().objekt as Aussage
             val nachher = auswerter.auswerten(geladen).knoten.getValue(alt.id).ausgaben.values.single().objekt as Aussage
             assertEquals(vorher.entscheide(), nachher.entscheide(), vorlage.name)
             assertEquals(alt.name, geladen.knoten.single().name)

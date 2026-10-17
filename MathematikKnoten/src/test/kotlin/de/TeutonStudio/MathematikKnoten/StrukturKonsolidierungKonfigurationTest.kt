@@ -34,24 +34,23 @@ class StrukturKonsolidierungKonfigurationTest {
         val op=FormelAusdruck.Operation("diag","matrix.hauptdiagonale",listOf(FormelArgument("matrix",0,FormelAusdruck.Literal("m",matrix,FormelTyp.MATRIX))),FormelTyp.TUPEL)
         val formel=konfiguriereStrukturRechnerFormel(zeile,StrukturRechnerKnotenFamilie.MATRIX,op)
         val register=GesamterMathematikAuswerter.erzeugeRegister()
-        val r=register.finde(formel.art)!!.auswerten(KnotenAuswertungsKontext(formel,emptyMap(),RechenKontext()))
+        val r=register.findeNachMigration(formel.art).auswerten(KnotenAuswertungsKontext(formel,emptyMap(),RechenKontext()))
         assertNull(r.fehler);assertIs<Tupel>(r.ausgaben.getValue("wert").objekt)
         val a=SpaltenVektor(listOf(RationaleZahl.Eins,RationaleZahl.Null,RationaleZahl.Null))
         val b=SpaltenVektor(listOf(RationaleZahl.Null,RationaleZahl.Eins,RationaleZahl.Null))
         val kreuz=konfiguriereKreuzproduktRechnerOrientierung(vektorRechnerVorlage(VektorRechnerOperator.KREUZPRODUKT).erzeuge(GraphPunkt.Zero),"zeile")
         val ast=FormelAusdruck.Operation("kreuz","vektor.kreuzprodukt",listOf(FormelArgument("links",0,FormelAusdruck.Literal("a",a,FormelTyp.VEKTOR)),FormelArgument("rechts",1,FormelAusdruck.Literal("b",b,FormelTyp.VEKTOR))),FormelTyp.VEKTOR)
         val k=konfiguriereStrukturRechnerFormel(kreuz,StrukturRechnerKnotenFamilie.VEKTOR,ast)
-        val aus=register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k,emptyMap(),RechenKontext()))
+        val aus=register.findeNachMigration(k.art).auswerten(KnotenAuswertungsKontext(k,emptyMap(),RechenKontext()))
         assertNull(aus.fehler);assertEquals(kreuzprodukt(a,b),aus.ausgaben.getValue("wert").objekt)
     }
-    @Test fun `Basisvektor unterscheidet Graphposition und Legacyindex und lehnt defekte Eingaben ab`() {
+    @Test fun `Basisvektor verwendet die Graphposition und lehnt defekte Eingaben ab`() {
         val basis=VektorOrientierungsV2300Vorlagen.EinheitsVektor.erzeuge(GraphPunkt.Zero)
         val register=GesamterMathematikAuswerter.erzeugeRegister()
-        fun aus(k:KnotenDaten,e:Map<String,BedingterWert>)=register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k,e,RechenKontext()))
+        fun aus(k:KnotenDaten,e:Map<String,BedingterWert>)=register.findeNachMigration(k.art).auswerten(KnotenAuswertungsKontext(k,e,RechenKontext()))
         val graph=mapOf("dimension" to BedingterWert(RationaleZahl.von(3)),"position" to BedingterWert(RationaleZahl.Eins))
         val erwartet=SpaltenVektor(listOf(RationaleZahl.Null,RationaleZahl.Eins,RationaleZahl.Null))
         assertEquals(erwartet,aus(basis,graph).ausgaben.getValue("vektor").objekt)
-        assertEquals(erwartet,aus(basis.copy(parameter=basis.parameter+mapOf("dimension" to "3","index" to "2")),emptyMap()).ausgaben.getValue("vektor").objekt)
         for(e in listOf(graph-"position",graph-"dimension",graph+("dimension" to BedingterWert(Variable("d"))),graph+("position" to BedingterWert(RationaleZahl.von(3)))))
             assertFails {aus(basis,e)}
         for(p in listOf("dimension" to "kaputt","index" to "kaputt",VEKTOR_ORIENTIERUNG_PARAMETER to "kaputt"))
@@ -69,7 +68,7 @@ class StrukturKonsolidierungKonfigurationTest {
         assertEquals(neu,MathematikKartenCodec.lade(MathematikKartenCodec.schreibe(neu)))
         val matrix=Matrix(listOf(listOf(RationaleZahl.Eins,RationaleZahl.von(2)),listOf(RationaleZahl.von(3),RationaleZahl.von(4))))
         val register=GesamterMathematikAuswerter.erzeugeRegister()
-        fun wert(knoten:KnotenDaten,rolle:String)=register.finde(knoten.art)!!.auswerten(KnotenAuswertungsKontext(knoten,mapOf("matrix" to BedingterWert(matrix)),RechenKontext())).ausgaben.getValue(rolle)
+        fun wert(knoten:KnotenDaten,rolle:String)=register.findeNachMigration(knoten.art).auswerten(KnotenAuswertungsKontext(knoten,mapOf("matrix" to BedingterWert(matrix)),RechenKontext())).ausgaben.getValue(rolle)
         assertEquals(wert(original,"diagonale").objekt,wert(k,"wert").objekt)
     }
 }

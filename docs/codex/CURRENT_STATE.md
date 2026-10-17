@@ -1,39 +1,43 @@
 ## Aktueller Konsolidierungsstand, 17. Oktober 2026
 
-M0–M6 veröffentlicht und vollständig abgenommen. Aktuelle Basis v3.4.9,
-49945974dbe96778b70341f29a32bd96747d18d8. PR #463: geprüfter SamAI-Head
-c2b539ef, alle sechs Prüfungen grün, isolierter Emulator 68/68 ohne Fehler/Skips.
-Finaler Master: Android 39006842925, Linux/RPM/Persistenz 39006843006,
-Kern/Emulator 39006842966 und Guard 39006843009 sämtlich grün. Lokale M6-Suite
-2244 Fälle, 0 Fehler, 1 vorhandener Skip; 3 min 47 s/277 Tasks.
-GitHub-Squashidentität Alexander/GitHub, lokale Commits SamAI/SamAI.
+M0–M6 und M7a vollständig veröffentlicht und abgenommen. Aktuelle Basis
+v3.4.10, f2d06d3087a0f27bbe58fad81187e8c6ac0c3501. PR #464: lokaler
+SamAI-Head 32f32e5c, alle sechs finalen PR-Gates grün, neuer isolierter
+Emulatorbericht 68/68 ohne Fehler/Skips. Finaler Master: Android 39011501316,
+Linux/RPM/Persistenz 39011501582, Kern/Emulator 39011501513 und Guard
+39011501311 sämtlich grün. Lokale Suite 2256/0/1, 3 min 34 s/277 Tasks.
+GitHub-Squashidentität Alexander/GitHub; lokale Commits SamAI/SamAI verifiziert.
+Der fehlgeschlagene frühere Desktop-Bildvergleich und die Korrektur der
+Sampling-/Zeichenpaket-Fertigbarriere sind im aktiven Plan dokumentiert.
 
-M7 wird nach belegten älteren Migrationsfehlern geteilt: M7a v3.4.10/x sichert
-Originaldaten, Sperrdiagnosen und benannte mathematische Rollen. Branch
-samai/v3.4.10/konsolidierung-m7; Androidziel 3.4.10/3004010, Desktop/Linux 3.4.10.
-Unabhängige Prüfung und Regressionen belegen unter anderem doppelte Default-
-Umsetzung, verlorene Originalkanten, ungesicherte Ports und falsche Logarithmus-
-rollen. Der historische einstellige Wurzelknoten wird ausdrücklich als
-Quadratwurzel umgesetzt; kein Gradanschluss wird erfunden. Alte Division mit
-zusätzlichem Nullaussage-Ausgang bleibt unverändert diagnostiziert und gesperrt.
-M7a lokal vollständig geprüft: 2256 JVM-/Desktopfälle, 0 Fehler, 1 vorhandener
-Opt-in-Skip; 3 min 32 s/277 Tasks einschließlich Lint und Builds. Alle 523
-Repositorykarten über vier Codecphasen stabil, ohne neue Sperrdiagnose.
-Unabhängiger finaler Review ohne Blocker. Noch keine PR-/CI-/Laufzeitfreigabe
-oder Veröffentlichung.
-Erster PR-Head e66e0c92 ist wegen eines Desktop-Bildvergleichs im Push-Build
-gesperrt (PR-Build und isolierte 68 Androidfälle erfolgreich). Codebelegte
-Sampling-/Zeichenpaket-Barriere eng korrigiert; 17 Bedienungstests und
-unabhängiger Nachreview grün. Erneute volle lokale Abnahme grün: 3 min 34 s,
-277 Tasks, 2256/0/1. CI-Abnahme am korrigierten Head noch erforderlich;
-kein blinder CI-Retry oder Merge.
+M7b v3.4.11/x basiert direkt auf f2d06d30, Branch
+samai/v3.4.11/konsolidierung-m7b, Reservierung 536ee028 SamAI/SamAI.
+Die Umsetzung ist vollständig lokal geprüft: historische unabhängige Auswerter
+entfernt, gültige Altarten über den gemeinsamen Codec migriert, mehrdeutige
+Originale mit Diagnose gesperrt. Getrennte Operandenports und Joinbeiträge behalten
+ihre IDs; historische Zeilen-/Basisquellen sowie eingebettete Methodenquellen
+sind berücksichtigt. Polynommodus, Nullersatzdivision, Formelpfade und dynamische
+Definitionskarten verwenden die kanonischen Verträge.
 
-M7b entfernt anschließend alte Auswerter und kanonisiert gültige Repositorykarten.
-Dafür ist keine Folgeversion reserviert. Gemeinsamer Katalog bleibt 121 mathematische
-und 123 Androidtypen. Der Gesamtabschluss M0–M7 und die abschließende Produkt-
-abnahme bleiben offen. Lokale Prüfgrenzen: Standalone-kotlinc fehlt, jpackage
-unterstützt rpm nicht, Nutzersignatur verhindert nichtdestruktive Testinstallation;
-isolierte CI-Abnahmen sind verpflichtend.
+523 ausgelieferte Originalkarten sind samt SHA-Ledger unveränderlich gesichert.
+Alle ursprünglichen Knoten-/Anschluss-/Verbindungs-IDs, Diagnosefreiheit und
+Speicherrundläufe sind geprüft. Produktkarten sind kanonisch in Format 10,
+mit stabilen Pfaden/Karten-IDs/Versionen und historischen Konzeptverweisen;
+Quellenindex, Standardkartenhashes und Typanforderungen stimmen überein.
+Katalog: 121 gemeinsame mathematische/123 vollständige Android-Arten. Keine neue
+Produktionsabhängigkeit, Registry, Operator- oder Knotentypeinführung.
+
+Finaler lokaler Produktlauf /tmp/atlas-m7b-produkt-final.log grün:
+57 s/277 Tasks, 2273 Testfälle, 0 Fehler, 1 vorhandener Opt-in-Skip,
+2272 bestanden; JVM-/Desktoptests, Android-Lint, App-/App-Test-/Editor-Test-APKs
+und Desktopkompilierung. Repository/Architektur, 15 Standardkarten,
+Releaseplan 117, Versionsfolge, 14 Guardregressionen und Diffprüfung grün.
+Unabhängige Schlussprüfung ohne offene Blocker. Standalone-Kernskript mangels
+kotlinc nicht ausführbar; Gradle-Kerntests grün. Lokale RPM-Paketierung scheitert
+an fehlender jpackage-Unterstützung für rpm (/tmp/atlas-m7b-rpm.log).
+Veröffentlichung und native Abnahme erfordern sämtliche PR-/Master-Gates und
+isolierte Android-/Linux-Laufzeitbelege des finalen SHA. Keine Gesamtfreigabe
+der unverändert als Anforderungsevidenz geführten 77-Punkte-Matrix.
 
 Nachfolgend historische Einträge.
 

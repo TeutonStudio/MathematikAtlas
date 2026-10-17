@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 class VektorZuPolynomTest {
     @Test fun `Vorlage und Auswerter akzeptieren beide Vektororientierungen`() {
         val knoten = MathematikKnotenVorlagen.VektorZuPolynom.erzeuge(GraphPunkt.Zero)
-        val auswerter = StandardMathematikAuswerter.erzeugeRegister().finde(knoten.art)!!
+        val auswerter = StandardMathematikAuswerter.erzeugeRegister().findeNachMigration(knoten.art)
         val koeffizienten = listOf(RationaleZahl.von(2), RationaleZahl.von(-3), RationaleZahl.von(5))
 
         val spalte = auswerter.auswerten(KnotenAuswertungsKontext(knoten, mapOf("vektor" to BedingterWert(SpaltenVektor(koeffizienten))), RechenKontext()))
@@ -60,18 +60,18 @@ class VektorZuPolynomTest {
 
     @Test fun `fehlender Vektor und leere Variable sind sichtbare Auswertungsfehler`() {
         val basis = MathematikKnotenVorlagen.VektorZuPolynom.erzeuge(GraphPunkt.Zero)
-        val auswerter = KartenAuswerter(StandardMathematikAuswerter.erzeugeRegister())
+        val auswerter = KartenAuswerter(GesamterMathematikAuswerter.erzeugeRegister())
 
-        val ohneVektor = auswerter.auswerten(KartenDaten(name = "Test", knoten = listOf(basis))).knoten.getValue(basis.id)
+        val ohneVektor = auswerter.auswertenNachMigration(KartenDaten(name = "Test", knoten = listOf(basis))).knoten.getValue(basis.id)
         val quelle = MathematikKnotenVorlagen.Vektor.erzeuge(GraphPunkt.Zero)
         val ohneVariableKnoten = basis.copy(parameter = mapOf("variable" to "  "))
         val verbindung = VerbindungDaten(
             von = AnschlussVerweis(quelle.id, quelle.anschlüsse.single { it.name == "vektor" }.id),
             zu = AnschlussVerweis(ohneVariableKnoten.id, ohneVariableKnoten.anschlüsse.single { it.name == "vektor" }.id),
         )
-        val ohneVariable = auswerter.auswerten(KartenDaten(name = "Test", knoten = listOf(quelle, ohneVariableKnoten), verbindungen = listOf(verbindung))).knoten.getValue(ohneVariableKnoten.id)
+        val ohneVariable = auswerter.auswertenNachMigration(KartenDaten(name = "Test", knoten = listOf(quelle, ohneVariableKnoten), verbindungen = listOf(verbindung))).knoten.getValue(ohneVariableKnoten.id)
 
-        assertTrue(ohneVektor.fehler.orEmpty().contains("Vektoreingang fehlt"))
+        assertTrue(ohneVektor.fehler.orEmpty().contains("Koeffizienten"))
         assertTrue(ohneVariable.fehler.orEmpty().contains("Polynomvariable darf nicht leer sein"))
     }
 }

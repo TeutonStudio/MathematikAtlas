@@ -35,7 +35,7 @@ class MatrixProduktUndBildmengeKnotenTest {
     @Test
     fun `Matrixprodukt Knoten berechnet Zeile mal Spalte als eins mal eins Matrix`() {
         val knoten = MathematikKnotenVorlagen.MatrixProdukt.erzeuge(GraphPunkt.Zero)
-        val auswerter = register.finde("mathematik.matrixProdukt")!!
+        val auswerter = register.findeNachMigration("mathematik.matrixProdukt")
         val ergebnis = auswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
@@ -65,7 +65,7 @@ class MatrixProduktUndBildmengeKnotenTest {
             werteVorräte = mapOf(x.name to ReelleZahlen, y.name to ReelleZahlen),
         )
         val knoten = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero)
-        val auswerter = register.finde("mathematik.abbild")!!
+        val auswerter = register.findeNachMigration("mathematik.abbild")
         val ergebnis = auswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
@@ -102,7 +102,7 @@ class MatrixProduktUndBildmengeKnotenTest {
         val knoten = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf(BILDMENGE_ARGUMENT_MODUS to BILDMENGE_MODUS_EINZELMENGEN),
         )
-        val auswerter = register.finde("mathematik.abbild")!!
+        val auswerter = register.findeNachMigration("mathematik.abbild")
         val ergebnis = auswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
@@ -127,7 +127,7 @@ class MatrixProduktUndBildmengeKnotenTest {
         for (modus in listOf(BILDMENGE_MODUS_PRODUKT, BILDMENGE_MODUS_EINZELMENGEN)) {
             val knoten = MathematikKnotenVorlagen.Abbild.erzeuge(GraphPunkt.Zero).copy(
                 parameter = mapOf(BILDMENGE_ARGUMENT_MODUS to modus))
-            val ergebnis = register.finde("mathematik.abbild")!!.auswerten(KnotenAuswertungsKontext(knoten,
+            val ergebnis = register.findeNachMigration("mathematik.abbild").auswerten(KnotenAuswertungsKontext(knoten,
                 mapOf("methode" to BedingterWert(methode), "menge" to BedingterWert(EndlicheMenge(setOf(Tupel(emptyList()))))), RechenKontext()))
             assertEquals(EndlicheMenge(setOf(zahl(5))), ergebnis.ausgaben.getValue("menge").objekt)
         }

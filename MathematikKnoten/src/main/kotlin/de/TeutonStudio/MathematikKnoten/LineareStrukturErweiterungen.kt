@@ -97,42 +97,7 @@ fun KartenEditorZustand.setzeTensorRechnerOperator(knotenId: KnotenId, operator:
  * Komponentenverträge und auf auswertbare Fehlerzustände.
  */
 internal fun MathematikAuswerterRegister.registriereLineareStrukturErweiterungen() {
-    registriere(SKALARPRODUKT_ART) { kontext ->
-        val links = kontext.eingänge["links"]?.mathematischesObjekt("Linker Skalarprodukt-Eingang")
-            ?: return@registriere kontext.fehler("Linker Eingang fehlt.")
-        val rechts = kontext.eingänge["rechts"]?.mathematischesObjekt("Rechter Skalarprodukt-Eingang")
-            ?: return@registriere kontext.fehler("Rechter Eingang fehlt.")
-        val linearitaet = runCatching {
-            SkalarproduktLinearitaet.valueOf(
-                kontext.knoten.parameter["linearitaet"] ?: SkalarproduktLinearitaet.RECHTSLINEAR.name,
-            )
-        }.getOrDefault(SkalarproduktLinearitaet.RECHTSLINEAR)
 
-        when (
-            val ergebnis = standardSkalarprodukt(
-                links,
-                rechts,
-                SkalarproduktSpezifikation(linearitaet = linearitaet, konjugiert = true),
-            )
-        ) {
-            is StrukturPruefung.Gueltig -> KnotenAuswertungsErgebnis(
-                ausgaben = mapOf("wert" to BedingterWert(ergebnis.wert, kontext.annahmen())),
-                eingänge = kontext.eingänge,
-                warnungen = if (kontext.knoten.parameter["konjugiert"] == "false") {
-                    listOf("Die veraltete Option 'konjugiert=false' wird beim Standardskalarprodukt ignoriert.")
-                } else emptyList(),
-            )
-            is StrukturPruefung.Bedingt -> ergebnis.wert?.let { wert ->
-                KnotenAuswertungsErgebnis(
-                    ausgaben = mapOf("wert" to BedingterWert(wert, kontext.annahmen())),
-                    eingänge = kontext.eingänge,
-                    warnungen = ergebnis.bedingungen,
-                )
-            } ?: kontext.fehler(ergebnis.bedingungen.joinToString())
-            is StrukturPruefung.Ungueltig -> kontext.fehler(ergebnis.grund)
-            is StrukturPruefung.Unentscheidbar -> kontext.fehler(ergebnis.grund)
-        }
-    }
 
     registriere(TensorRechner.KNOTEN_ART) { kontext ->
         val operator = tensorOperator(kontext.knoten.parameter[RECHNER_OPERATOR_PARAMETER])

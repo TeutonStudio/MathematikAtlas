@@ -2,6 +2,7 @@
   "erstelltAm": 1785883810233,
   "verbindungen": [
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-mathematik-dimensionen-dimensionen-0-eingang-0",
         "anschlussId": "definition-mathematik-dimensionen-dimensionen-0-eingang-0-wert"
@@ -13,6 +14,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-mathematik-dimensionen-dimensionen-0-regel",
         "anschlussId": "definition-mathematik-dimensionen-dimensionen-0-regel-1"
@@ -24,6 +26,7 @@
       }
     },
     {
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-mathematik-dimensionen-dimensionen-0-regel",
         "anschlussId": "definition-mathematik-dimensionen-dimensionen-0-regel-2"
@@ -45,22 +48,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.objekt",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-dimensionen-dimensionen-0-eingang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.objekt",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-dimensionen-dimensionen-0-eingang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.objekt",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "objekt",
       "id": "definition-mathematik-dimensionen-dimensionen-0-eingang-0",
@@ -78,6 +81,7 @@
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
           "art": "mathematik.objekt",
           "kannSichErweitern": false,
@@ -85,9 +89,11 @@
           "kante": "Links",
           "dynamischErzeugt": false,
           "id": "definition-mathematik-dimensionen-dimensionen-0-regel-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.tupel",
           "kannSichErweitern": false,
@@ -95,9 +101,11 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-mathematik-dimensionen-dimensionen-0-regel-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.zahl",
           "kannSichErweitern": false,
@@ -105,6 +113,7 @@
           "kante": "Rechts",
           "dynamischErzeugt": false,
           "id": "definition-mathematik-dimensionen-dimensionen-0-regel-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
@@ -127,22 +136,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.tupel",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-dimensionen-dimensionen-0-ausgang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.tupel",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-dimensionen-dimensionen-0-ausgang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.tupel",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "dimensionen",
       "id": "definition-mathematik-dimensionen-dimensionen-0-ausgang-0",
@@ -158,22 +167,22 @@
         "breite": 260,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-mathematik-dimensionen-dimensionen-0-ausgang-1-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-mathematik-dimensionen-dimensionen-0-ausgang-1-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.zahl",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "stufe",
       "id": "definition-mathematik-dimensionen-dimensionen-0-ausgang-1",
@@ -190,6 +199,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

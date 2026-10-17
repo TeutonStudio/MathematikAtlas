@@ -38,7 +38,7 @@ class KonsolidierteKnotenTest {
         val knoten = MengenKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero).copy(
             parameter = mapOf(MENGEN_KNOTEN_AUSWAHL to MengenKnotenAuswahl.GANZE_ZAHLEN.stabileId),
         )
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
+        val ergebnis = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(knoten, emptyMap(), RechenKontext()),
         )
         assertEquals(GanzeZahlen, ergebnis.ausgaben.getValue("menge").objekt)
@@ -47,7 +47,7 @@ class KonsolidierteKnotenTest {
     @Test
     fun `Einheitsvektor verwendet nullbasierte Position und dynamische Dimension`() {
         val knoten = EinheitsvektorKnotenVorlagen.Spalte.erzeuge(GraphPunkt.Zero)
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
+        val ergebnis = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
@@ -68,7 +68,7 @@ class KonsolidierteKnotenTest {
     fun `Einheitsvektor lehnt Position außerhalb der Dimension ab`() {
         val knoten = EinheitsvektorKnotenVorlagen.Zeile.erzeuge(GraphPunkt.Zero)
         assertFailsWith<IllegalArgumentException> {
-            register.finde(knoten.art)!!.auswerten(
+            register.findeNachMigration(knoten.art).auswerten(
                 KnotenAuswertungsKontext(
                     knoten,
                     mapOf(
@@ -85,7 +85,7 @@ class KonsolidierteKnotenTest {
     fun `Vektorrechner bildet Skalarprodukt auch aus kartesischen Tupeln`() {
         val knoten = VektorRechnerKnotenVorlagen.standard.erzeuge(GraphPunkt.Zero)
         assertEquals(VEKTOR_RECHNER_AUSGANG, knoten.anschlüsse.single { it.richtung == AnschlussRichtung.Ausgang }.name)
-        val ergebnis = register.finde(knoten.art)!!.auswerten(
+        val ergebnis = register.findeNachMigration(knoten.art).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(

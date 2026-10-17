@@ -195,7 +195,7 @@ class AuswertenUndStandardwertDarstellungTest {
                 "standardwert.exponent" to "-1",
             ),
         )
-        val ergebnis = kartenAuswerter.auswerten(
+        val ergebnis = kartenAuswerter.auswertenNachMigration(
             KartenDaten(name = "Standardwert-LaTeX", knoten = listOf(potenz)),
         )
         val wert = ergebnis.knoten.getValue(potenz.id).ausgaben.getValue("wert")

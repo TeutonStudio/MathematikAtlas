@@ -2,77 +2,84 @@
   "erstelltAm": 1785883810215,
   "verbindungen": [
     {
-      "id": "definition-reelles-intervall-0-edge-0",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-reelles-intervall-0-eingang-0",
         "anschlussId": "definition-reelles-intervall-0-eingang-0-wert"
       },
+      "id": "definition-reelles-intervall-0-edge-0",
       "zu": {
         "knotenId": "definition-reelles-intervall-0-untergrenze",
         "anschlussId": "definition-reelles-intervall-0-untergrenze-port-0"
       }
     },
     {
-      "id": "definition-reelles-intervall-0-edge-1",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-reelles-intervall-0-eingang-1",
         "anschlussId": "definition-reelles-intervall-0-eingang-1-wert"
       },
+      "id": "definition-reelles-intervall-0-edge-1",
       "zu": {
         "knotenId": "definition-reelles-intervall-0-untergrenze",
         "anschlussId": "definition-reelles-intervall-0-untergrenze-port-1"
       }
     },
     {
-      "id": "definition-reelles-intervall-0-edge-2",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-reelles-intervall-0-eingang-2",
         "anschlussId": "definition-reelles-intervall-0-eingang-2-wert"
       },
+      "id": "definition-reelles-intervall-0-edge-2",
       "zu": {
         "knotenId": "definition-reelles-intervall-0-obergrenze",
         "anschlussId": "definition-reelles-intervall-0-obergrenze-port-0"
       }
     },
     {
-      "id": "definition-reelles-intervall-0-edge-3",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-reelles-intervall-0-eingang-3",
         "anschlussId": "definition-reelles-intervall-0-eingang-3-wert"
       },
+      "id": "definition-reelles-intervall-0-edge-3",
       "zu": {
         "knotenId": "definition-reelles-intervall-0-obergrenze",
         "anschlussId": "definition-reelles-intervall-0-obergrenze-port-1"
       }
     },
     {
-      "id": "definition-reelles-intervall-0-edge-4",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-reelles-intervall-0-untergrenze",
         "anschlussId": "definition-reelles-intervall-0-untergrenze-port-2"
       },
+      "id": "definition-reelles-intervall-0-edge-4",
       "zu": {
         "knotenId": "definition-reelles-intervall-0-schnitt-halbstrahlen",
         "anschlussId": "definition-reelles-intervall-0-schnitt-halbstrahlen-anschluss-0"
       }
     },
     {
-      "id": "definition-reelles-intervall-0-edge-5",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-reelles-intervall-0-obergrenze",
         "anschlussId": "definition-reelles-intervall-0-obergrenze-port-2"
       },
+      "id": "definition-reelles-intervall-0-edge-5",
       "zu": {
         "knotenId": "definition-reelles-intervall-0-schnitt-halbstrahlen",
         "anschlussId": "definition-reelles-intervall-0-schnitt-halbstrahlen-anschluss-1"
       }
     },
     {
-      "id": "definition-reelles-intervall-0-edge-6",
+      "eingangsReihenfolge": 0,
       "von": {
         "knotenId": "definition-reelles-intervall-0-schnitt-halbstrahlen",
         "anschlussId": "definition-reelles-intervall-0-schnitt-halbstrahlen-anschluss-2"
       },
+      "id": "definition-reelles-intervall-0-edge-6",
       "zu": {
         "knotenId": "definition-reelles-intervall-0-karten-ausgang",
         "anschlussId": "definition-reelles-intervall-0-karten-ausgang-anschluss-0"
@@ -89,22 +96,22 @@
         "breite": 240,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-reelles-intervall-0-eingang-0-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-reelles-intervall-0-eingang-0-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.zahl",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "links",
       "id": "definition-reelles-intervall-0-eingang-0",
@@ -120,18 +127,18 @@
         "breite": 240,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.aussage",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-reelles-intervall-0-eingang-1-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.aussage",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-reelles-intervall-0-eingang-1-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "vorschauWert": "false",
         "typ": "mathematik.aussage",
@@ -152,22 +159,22 @@
         "breite": 240,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.zahl",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-reelles-intervall-0-eingang-2-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.zahl",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-reelles-intervall-0-eingang-2-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "typ": "mathematik.zahl",
-        "variabel": "false",
-        "folgtEingang": ""
+        "folgtEingang": "",
+        "variabel": "false"
       },
       "name": "rechts",
       "id": "definition-reelles-intervall-0-eingang-2",
@@ -183,18 +190,18 @@
         "breite": 240,
         "höhe": 92
       },
-      "anschlüsse": [
-        {
-          "richtung": "Ausgang",
-          "art": "mathematik.aussage",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Rechts",
-          "dynamischErzeugt": false,
-          "id": "definition-reelles-intervall-0-eingang-3-wert",
-          "reihenfolge": 0
-        }
-      ],
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Ausgang",
+        "art": "mathematik.aussage",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Rechts",
+        "dynamischErzeugt": false,
+        "id": "definition-reelles-intervall-0-eingang-3-wert",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
       "parameter": {
         "vorschauWert": "false",
         "typ": "mathematik.aussage",
@@ -215,21 +222,19 @@
         "breite": 210,
         "höhe": 100
       },
-      "anschlüsse": [
-        {
-          "richtung": "Eingang",
-          "art": "mathematik.objekt",
-          "kannSichErweitern": false,
-          "name": "wert",
-          "kante": "Links",
-          "dynamischErzeugt": false,
-          "id": "definition-reelles-intervall-0-karten-ausgang-anschluss-0",
-          "reihenfolge": 0
-        }
-      ],
-      "parameter": {
-        "name": "menge"
-      },
+      "anschlüsse": [{
+        "belegung": "Einzeln",
+        "richtung": "Eingang",
+        "art": "mathematik.objekt",
+        "kannSichErweitern": false,
+        "name": "wert",
+        "kante": "Links",
+        "dynamischErzeugt": false,
+        "id": "definition-reelles-intervall-0-karten-ausgang-anschluss-0",
+        "nächsteBeitragsReihenfolge": 0,
+        "reihenfolge": 0
+      }],
+      "parameter": {"name": "menge"},
       "name": "Karten-Ausgang",
       "id": "definition-reelles-intervall-0-karten-ausgang",
       "position": {
@@ -239,46 +244,68 @@
       "eigenschaften": {}
     },
     {
-      "art": "mathematik.schnitt",
+      "art": "mathematik.mengenrechner",
       "größe": {
         "breite": 220,
         "höhe": 110
       },
       "anschlüsse": [
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.menge",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "a",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.menge",
+            "mathematik.methode"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-reelles-intervall-0-schnitt-halbstrahlen-anschluss-0",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Eingang",
-          "art": "mathematik.menge",
+          "art": "atlas.wert",
           "kannSichErweitern": true,
           "name": "b",
           "kante": "Links",
+          "zulässigeArten": [
+            "mathematik.menge",
+            "mathematik.methode"
+          ],
           "dynamischErzeugt": false,
           "id": "definition-reelles-intervall-0-schnitt-halbstrahlen-anschluss-1",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 1
         },
         {
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
           "art": "mathematik.menge",
           "kannSichErweitern": false,
           "name": "menge",
           "kante": "Rechts",
           "dynamischErzeugt": false,
+          "artPriorisiertEingänge": {
+            "eingänge": [
+              "a",
+              "b"
+            ],
+            "prioritäten": ["mathematik.methode"]
+          },
           "id": "definition-reelles-intervall-0-schnitt-halbstrahlen-anschluss-2",
+          "nächsteBeitragsReihenfolge": 0,
           "reihenfolge": 0
         }
       ],
       "parameter": {
         "festeEingänge": "2",
-        "operatorAnzeige": "wert"
+        "operatorAnzeige": "wert",
+        "operator": "menge.schnitt"
       },
       "name": "Schnitt",
       "id": "definition-reelles-intervall-0-schnitt-halbstrahlen",
@@ -289,102 +316,110 @@
       "eigenschaften": {}
     },
     {
-      "id": "definition-reelles-intervall-0-untergrenze",
       "art": "mathematik.halbesIntervall",
+      "größe": {
+        "breite": 260,
+        "höhe": 130
+      },
+      "anschlüsse": [
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.zahl",
+          "kannSichErweitern": false,
+          "name": "grenze",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-reelles-intervall-0-untergrenze-port-0",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "offen",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-reelles-intervall-0-untergrenze-port-1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
+        },
+        {
+          "belegung": "Einzeln",
+          "richtung": "Ausgang",
+          "art": "mathematik.menge",
+          "kannSichErweitern": false,
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-reelles-intervall-0-untergrenze-port-2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {"richtung": "aufwaerts"},
       "name": "Halbes Intervall (Untergrenze)",
+      "id": "definition-reelles-intervall-0-untergrenze",
       "position": {
         "x": 440,
         "y": 125
       },
+      "eigenschaften": {}
+    },
+    {
+      "art": "mathematik.halbesIntervall",
       "größe": {
         "breite": 260,
         "höhe": 130
       },
-      "parameter": {
-        "richtung": "aufwaerts"
-      },
-      "eigenschaften": {},
       "anschlüsse": [
         {
-          "id": "definition-reelles-intervall-0-untergrenze-port-0",
-          "name": "grenze",
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
           "art": "mathematik.zahl",
-          "richtung": "Eingang",
-          "kante": "Links",
-          "reihenfolge": 0,
           "kannSichErweitern": false,
-          "dynamischErzeugt": false
+          "name": "grenze",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-reelles-intervall-0-obergrenze-port-0",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
         },
         {
-          "id": "definition-reelles-intervall-0-untergrenze-port-1",
-          "name": "offen",
+          "belegung": "Einzeln",
+          "richtung": "Eingang",
           "art": "mathematik.aussage",
-          "richtung": "Eingang",
-          "kante": "Links",
-          "reihenfolge": 1,
           "kannSichErweitern": false,
-          "dynamischErzeugt": false
+          "name": "offen",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-reelles-intervall-0-obergrenze-port-1",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 1
         },
         {
-          "id": "definition-reelles-intervall-0-untergrenze-port-2",
-          "name": "menge",
-          "art": "mathematik.menge",
+          "belegung": "Einzeln",
           "richtung": "Ausgang",
-          "kante": "Rechts",
-          "reihenfolge": 0,
+          "art": "mathematik.menge",
           "kannSichErweitern": false,
-          "dynamischErzeugt": false
+          "name": "menge",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-reelles-intervall-0-obergrenze-port-2",
+          "nächsteBeitragsReihenfolge": 0,
+          "reihenfolge": 0
         }
-      ]
-    },
-    {
-      "id": "definition-reelles-intervall-0-obergrenze",
-      "art": "mathematik.halbesIntervall",
+      ],
+      "parameter": {"richtung": "abwaerts"},
       "name": "Halbes Intervall (Obergrenze)",
+      "id": "definition-reelles-intervall-0-obergrenze",
       "position": {
         "x": 440,
         "y": 510
       },
-      "größe": {
-        "breite": 260,
-        "höhe": 130
-      },
-      "parameter": {
-        "richtung": "abwaerts"
-      },
-      "eigenschaften": {},
-      "anschlüsse": [
-        {
-          "id": "definition-reelles-intervall-0-obergrenze-port-0",
-          "name": "grenze",
-          "art": "mathematik.zahl",
-          "richtung": "Eingang",
-          "kante": "Links",
-          "reihenfolge": 0,
-          "kannSichErweitern": false,
-          "dynamischErzeugt": false
-        },
-        {
-          "id": "definition-reelles-intervall-0-obergrenze-port-1",
-          "name": "offen",
-          "art": "mathematik.aussage",
-          "richtung": "Eingang",
-          "kante": "Links",
-          "reihenfolge": 1,
-          "kannSichErweitern": false,
-          "dynamischErzeugt": false
-        },
-        {
-          "id": "definition-reelles-intervall-0-obergrenze-port-2",
-          "name": "menge",
-          "art": "mathematik.menge",
-          "richtung": "Ausgang",
-          "kante": "Rechts",
-          "reihenfolge": 0,
-          "kannSichErweitern": false,
-          "dynamischErzeugt": false
-        }
-      ]
+      "eigenschaften": {}
     }
   ],
   "id": "mathematik.reellesIntervall|Reelles Intervall|.f0cea39b.definition",
@@ -393,6 +428,6 @@
     "y": 0,
     "zoom": 1
   },
-  "formatVersion": 7,
+  "formatVersion": 10,
   "version": 1
 }

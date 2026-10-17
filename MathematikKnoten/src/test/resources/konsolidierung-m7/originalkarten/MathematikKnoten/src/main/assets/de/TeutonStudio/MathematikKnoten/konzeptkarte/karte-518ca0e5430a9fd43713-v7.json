@@ -1,0 +1,143 @@
+{
+  "erstelltAm": 1785883810226,
+  "verbindungen": [
+    {
+      "von": {
+        "knotenId": "definition-mathematik-termzumethode-aussage-zu-methode-1-eingang-0",
+        "anschlussId": "definition-mathematik-termzumethode-aussage-zu-methode-1-eingang-0-wert"
+      },
+      "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-e-0",
+      "zu": {
+        "knotenId": "definition-mathematik-termzumethode-aussage-zu-methode-1-regel",
+        "anschlussId": "definition-mathematik-termzumethode-aussage-zu-methode-1-regel-0"
+      }
+    },
+    {
+      "von": {
+        "knotenId": "definition-mathematik-termzumethode-aussage-zu-methode-1-regel",
+        "anschlussId": "definition-mathematik-termzumethode-aussage-zu-methode-1-regel-1"
+      },
+      "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-a-0",
+      "zu": {
+        "knotenId": "definition-mathematik-termzumethode-aussage-zu-methode-1-ausgang-0",
+        "anschlussId": "definition-mathematik-termzumethode-aussage-zu-methode-1-ausgang-0-wert"
+      }
+    }
+  ],
+  "visuelleGruppen": [],
+  "archiviert": false,
+  "name": "Definition von Aussage zu Methode",
+  "knoten": [
+    {
+      "art": "konzept.eingang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-eingang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.aussage",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "term",
+      "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-eingang-0",
+      "position": {
+        "x": 30,
+        "y": 55
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.regel",
+      "größe": {
+        "breite": 390,
+        "höhe": 150
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.aussage",
+          "kannSichErweitern": false,
+          "name": "term",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-regel-0",
+          "reihenfolge": 0
+        },
+        {
+          "richtung": "Ausgang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "methode",
+          "kante": "Rechts",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-regel-1",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "knotenArt": "mathematik.termZuMethode",
+        "regel": "Erzeugt aus einer Aussage eine typisierte Aussagenmethode.",
+        "kategorie": "Methoden"
+      },
+      "name": "Aussage zu Methode",
+      "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-regel",
+      "position": {
+        "x": 370,
+        "y": 55
+      },
+      "eigenschaften": {}
+    },
+    {
+      "art": "konzept.ausgang",
+      "größe": {
+        "breite": 260,
+        "höhe": 92
+      },
+      "anschlüsse": [
+        {
+          "richtung": "Eingang",
+          "art": "mathematik.methode",
+          "kannSichErweitern": false,
+          "name": "wert",
+          "kante": "Links",
+          "dynamischErzeugt": false,
+          "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-ausgang-0-wert",
+          "reihenfolge": 0
+        }
+      ],
+      "parameter": {
+        "typ": "mathematik.methode",
+        "variabel": "false",
+        "folgtEingang": ""
+      },
+      "name": "methode",
+      "id": "definition-mathematik-termzumethode-aussage-zu-methode-1-ausgang-0",
+      "position": {
+        "x": 830,
+        "y": 55
+      },
+      "eigenschaften": {}
+    }
+  ],
+  "id": "konzept.term-zu-methode.e7cd10b2.variante-aussage-zu-methode-1",
+  "ansicht": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "formatVersion": 7,
+  "version": 1
+}

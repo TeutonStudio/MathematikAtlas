@@ -264,6 +264,16 @@ fun KartenDaten.migriereVektorRechnerKonfiguration(): KartenDaten = migriereHist
     val id=knoten.parameter[VEKTOR_RECHNER_OPERATOR]
     require(id!=null && RechnerOperatorRegistry.finde(RechnerFamilie.VEKTOR,id) is RechnerOperatorAuflösung.Bekannt) {"Die Vektoroperator-ID fehlt oder ist unbekannt: $id"}
     val operator=VektorRechnerOperator.vonIdOderNull(id) ?: return@migriereHistorischeKnotenRollen knoten
+    if(knoten.anschlüsse.any {it.belegung==AnschlussBelegung.Mehrfach}) {
+        prüfeHistorischeAnschlussForm(knoten)
+        require(istJoinRechnerOperator(id)) { "Der Vektoroperator besitzt keinen Sammelvertrag." }
+        val eingänge=knoten.anschlüsse.filter {it.richtung==AnschlussRichtung.Eingang}
+        require(eingänge.size==1 && eingänge.single().belegung==AnschlussBelegung.Mehrfach) { "Mehrdeutige Vektorsammelrollen." }
+        prüfeHistorischenPortTyp(eingänge.single(),setOf(MathematikAnschlussArten.Vektor.id,MathematikAnschlussArten.Tupel.id,MathematikAnschlussArten.Methode.id),variadisch=true)
+        val ausgang=knoten.anschlüsse.single {it.richtung==AnschlussRichtung.Ausgang}
+        prüfeHistorischenPortTyp(ausgang,setOf(MathematikAnschlussArten.Vektor.id))
+        return@migriereHistorischeKnotenRollen knoten
+    }
     val neu=konfiguriereVektorRechner(knoten,operator)
     val ids=knoten.anschlüsse.map {it.id}.toSet()
     require(neu.anschlüsse.map {it.id}.toSet().containsAll(ids)) {"Ein gespeicherter Vektoranschluss würde verloren gehen."}

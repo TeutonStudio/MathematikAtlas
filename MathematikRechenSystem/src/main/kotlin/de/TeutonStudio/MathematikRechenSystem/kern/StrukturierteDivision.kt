@@ -130,3 +130,31 @@ fun strukturierteDivision(
     struktur,
     voraussetzungen,
 ).normalisiereKommutativ()
+
+class DivisionNichtDefiniert : IllegalArgumentException("Division durch null ist ohne verbundenen Ersatzwert nicht definiert.")
+
+data class DivisionsAnwendung(val wert: ZahlAusdruck, val bedingungen: Set<Aussage> = emptySet())
+
+/** Der Nullersatz gilt nur im Nullzweig; offene Nennerbedingungen bleiben im Fallausdruck. */
+fun divisionMitNullersatz(
+    dividend: ZahlAusdruck,
+    divisor: ZahlAusdruck,
+    nullersatz: ZahlAusdruck?,
+    kontext: RechenKontext,
+    quotient: ZahlAusdruck = Division(dividend, divisor),
+): DivisionsAnwendung {
+    val nullfall = Gleichheit(divisor, RationaleZahl.Null)
+    val bekannteNull=nullfall in kontext.annahmen || Gleichheit(RationaleZahl.Null,divisor) in kontext.annahmen
+    val bekannteNichtNull=Ungleichheit(divisor,RationaleZahl.Null) in kontext.annahmen || Ungleichheit(RationaleZahl.Null,divisor) in kontext.annahmen
+    require(!bekannteNull || !bekannteNichtNull) { "Widersprüchliche Nennerbedingungen." }
+    require(kontext.annahmen.none {it.entscheide(RechenKontext()).wahrheitswert==Wahrheitswert.Lüge}) { "Eine Nenneranwendung besitzt widerlegte Voraussetzungen." }
+    val objektiv=nullfall.entscheide(RechenKontext()).wahrheitswert
+    require(!(objektiv==Wahrheitswert.Wahr && bekannteNichtNull || objektiv==Wahrheitswert.Lüge && bekannteNull)) { "Widersprüchliche Nennerbedingungen." }
+    val entscheidung=objektiv ?: when {bekannteNull -> Wahrheitswert.Wahr; bekannteNichtNull -> Wahrheitswert.Lüge; else -> nullfall.entscheide(kontext).wahrheitswert}
+    return when (entscheidung) {
+        Wahrheitswert.Wahr -> DivisionsAnwendung(nullersatz ?: throw DivisionNichtDefiniert())
+        Wahrheitswert.Lüge -> DivisionsAnwendung(quotient)
+        else -> if (nullersatz == null) DivisionsAnwendung(quotient,setOf(Ungleichheit(divisor,RationaleZahl.Null)))
+            else DivisionsAnwendung(ZahlFallAusdruck(wahr=nullersatz,aussage=nullfall,lüge=quotient))
+    }
+}

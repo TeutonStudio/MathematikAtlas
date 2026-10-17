@@ -424,7 +424,7 @@ internal fun werteFormelOperationAus(
                 bedingungen += it.bedingungen
             }.ergebnis
         }
-        operatorId.startsWith("zahl.") -> werteZahlFormelAus(operatorId, mathematischeArgumente.values.toList())
+        operatorId.startsWith("zahl.") -> werteZahlFormelAus(operatorId, mathematischeArgumente.values.toList(),bedingungen,annahmen)
         operatorId.startsWith("aussage.") -> werteAussagenFormelAus(operatorId, mathematischeArgumente, knoten)
         formelFamilie == OperatorFamilie.VEKTOR -> werteVektorFormelAus(operatorId, mathematischeArgumente,variablenVorräte,annahmen+bedingungen,bedingungen)
         formelFamilie == OperatorFamilie.MATRIX -> werteMatrixFormelAus(operatorId, mathematischeArgumente, variablenVorräte, bedingungen)
@@ -433,13 +433,16 @@ internal fun werteFormelOperationAus(
     }
 }
 
-private fun werteZahlFormelAus(operatorId: String, argumente: List<MathematischesObjekt>): ZahlAusdruck {
+private fun werteZahlFormelAus(operatorId: String, argumente: List<MathematischesObjekt>, bedingungen: MutableSet<Aussage>, annahmen: Set<Aussage>): ZahlAusdruck {
     val zahlen = argumente.map { it as? ZahlAusdruck ?: error("$operatorId benötigt Zahlargumente.") }
     return when (operatorId) {
         "zahl.addition" -> addition(zahlen)
         "zahl.subtraktion" -> subtraktion(zahlen[0], zahlen[1])
         "zahl.multiplikation" -> multiplikation(zahlen[0], zahlen[1])
-        "zahl.division" -> Division(zahlen[0], zahlen[1])
+        "zahl.division" -> {
+            require(zahlen.size==2) { "Die freie Divisionsformel benötigt genau zwei Argumente." }
+            divisionMitNullersatz(zahlen[0],zahlen[1],null,RechenKontext(annahmen=annahmen+bedingungen)).also {bedingungen+=it.bedingungen}.wert
+        }
         "zahl.potenz" -> Potenz(zahlen[0], zahlen[1])
         "zahl.wurzel" -> Wurzel(zahlen[0])
         else -> error("Nicht unterstützter Zahloperator $operatorId.")

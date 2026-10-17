@@ -40,7 +40,7 @@ object RechnerEinzeloperationMigration {
         val ausgänge = alt.anschlüsse.filter { it.richtung == AnschlussRichtung.Ausgang }
         val variadisch = istAssoziativerRechnerOperator(id)
         val bekannteNamen=when(alt.art) {
-            "mathematik.matrixProdukt" -> setOf("a","b")
+            "mathematik.matrixProdukt" -> eingänge.indices.map {when(it){0->"a";1->"b";else->"input${it+1}"}}.toSet()
             "mathematik.matrixInvertieren","mathematik.transponiereMatrix" -> setOf("matrix")
             "mathematik.negation" -> setOf("aussage")
             "mathematik.vektornorm" -> setOf("vektor")
@@ -50,7 +50,8 @@ object RechnerEinzeloperationMigration {
         require(eingänge.map {it.reihenfolge}.distinct().size==eingänge.size) {"Mehrdeutige historische Rechnerreihenfolge."}
         if(!variadisch || alt.art=="mathematik.matrixProdukt") require(eingänge.map {it.name}.toSet()==bekannteNamen) {"Historische Pflichtrollen fehlen oder sind überzählig."}
         if(alt.art=="mathematik.matrixProdukt" || alt.art=="mathematik.kreuzprodukt" || alt.art=="mathematik.implikation") {
-            val erwartet=if("links" in bekannteNamen) listOf("links","rechts") else listOf("a","b")
+            val erwartet=if(alt.art=="mathematik.matrixProdukt") eingänge.indices.map {when(it){0->"a";1->"b";else->"input${it+1}"}}
+                else if("links" in bekannteNamen) listOf("links","rechts") else listOf("a","b")
             require(eingänge.map {it.name}==erwartet) {"Die Reihenfolge widerspricht den historischen festen Operandenrollen."}
         }
         val eingangsArten=when(familie) {

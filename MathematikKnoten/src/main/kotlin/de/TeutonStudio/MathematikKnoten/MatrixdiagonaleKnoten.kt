@@ -92,38 +92,3 @@ object MatrixdiagonaleKnotenVorlagen {
         EinheitsvektorKnotenVorlagen.alle +
         VektorRechnerKnotenVorlagen.standard
 }
-
-internal fun MathematikAuswerterRegister.registriereMatrixdiagonale() {
-    registriere(MATRIXDIAGONALE_ART) { kontext ->
-        val artText = kontext.knoten.parameter[MATRIXDIAGONALE_ART_PARAMETER]
-        val art = MatrixDiagonalArt.vonParameter(artText)
-        val warnungen = mutableListOf<String>()
-        if (artText != null && MatrixDiagonalArt.ausParameterOderNull(artText) == null)
-            warnungen += "Unbekannte Diagonalart; Hauptdiagonale verwendet."
-        val annahmen = kontext.eingänge.values.flatMap { it.annahmen }.toSet()
-        val ergebnis: MathematischesObjekt
-        val ausgang: String
-        if (matrixdiagonaleModus(kontext.knoten) == MATRIXDIAGONALE_ERZEUGEN) {
-            val objekt = kontext.eingänge["werte"]?.mathematischesObjekt("Diagonalmatrix-Eingang")
-                ?: error("Tupel oder Vektor zum Erzeugen fehlt.")
-            ergebnis = diagonalmatrixErzeugen(objekt, art)
-            ausgang = "matrix"
-        } else {
-            val objekt = kontext.eingänge["matrix"]?.objekt ?: error("Matrixeingang fehlt.")
-            val matrix = objekt as? Tensorartig ?: error("Der Eingang ist keine Matrix.")
-            require(matrix.tensorStufe == 2) { "Eine Diagonale benötigt einen Tensor zweiter Stufe." }
-            val tupel = matrixDiagonale(matrix, art)
-            ergebnis = projiziereMatrixDiagonale(tupel, VektorStrukturAusgabe.entries.single {
-                it.stabileId == matrixdiagonaleAusgabe(kontext.knoten)
-            })
-            if (objekt is Matrix && art == MatrixDiagonalArt.HAUPTDIAGONALE &&
-                (!istDiagonalmatrix(objekt) || objekt.zeilenAnzahl != objekt.spaltenAnzahl))
-                warnungen += "Auslesen verwirft Nebendiagonaleinträge; nur Diagonalmatrizen sind umkehrbar."
-            ausgang = "diagonale"
-        }
-        KnotenAuswertungsErgebnis(
-            ausgaben = mapOf(ausgang to kontext.rechnerErgebnisWert(ergebnis, annahmen)),
-            eingänge = kontext.eingänge, warnungen = warnungen,
-        )
-    }
-}

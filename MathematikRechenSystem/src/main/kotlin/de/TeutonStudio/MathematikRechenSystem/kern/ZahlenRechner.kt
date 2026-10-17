@@ -187,6 +187,7 @@ object ZahlenRechner {
     fun erzeuge(
         operator: ZahlenRechnerOperator,
         eingaben: List<ZahlenRechnerEingabe>,
+        kontext: RechenKontext = RechenKontext(),
     ): ZahlenRechnerErgebnis {
         val spezifikation = ZahlenRechnerKatalog.spezifikation(operator)
         pruefeRollen(spezifikation, eingaben)?.let { return it }
@@ -202,6 +203,7 @@ object ZahlenRechner {
             )
         }
 
+        var divisionsBedingungen: Set<Aussage>? = null
         val ausdruck = when (operator) {
             ZahlenRechnerOperator.ADDITION -> addition(eingaben.map { it.ausdruck })
             ZahlenRechnerOperator.SUBTRAKTION -> subtraktion(
@@ -212,10 +214,11 @@ object ZahlenRechner {
             ZahlenRechnerOperator.DIVISION -> {
                 val zaehler = eingaben.einzeln("zaehler").ausdruck
                 val nenner = eingaben.einzeln("nenner").ausdruck
-                if (nenner == RationaleZahl.Null) {
-                    return luecke(operator, eingaben, "division_durch_null", "Division durch null ist nicht definiert.")
-                }
-                Division(zaehler, nenner)
+                val anwendung=try {divisionMitNullersatz(zaehler,nenner,null,kontext)}
+                    catch(_:DivisionNichtDefiniert) {return luecke(operator,eingaben,"division_durch_null","Division durch null ist nicht definiert.")}
+                    catch(fehler:IllegalArgumentException) {return ZahlenRechnerErgebnis.Ungueltig("voraussetzungen",fehler.message ?: "Widerlegte Divisionsvoraussetzungen.",eingaben.map {it.rollenId})}
+                divisionsBedingungen=anwendung.bedingungen
+                anwendung.wert
             }
             ZahlenRechnerOperator.POTENZ -> Potenz(
                 eingaben.einzeln("basis").ausdruck,
@@ -247,7 +250,7 @@ object ZahlenRechner {
 
         val ergebnisBereich = inferiereErgebnisBereich(operator, eingaben, gemeinsamerBereich)
         val definition = requireNotNull(spezifikation.definitionsIds[ergebnisBereich])
-        val bedingungen = definitionsBedingungen(operator, eingaben)
+        val bedingungen = divisionsBedingungen?.toList() ?: definitionsBedingungen(operator, eingaben)
         return ZahlenRechnerErgebnis.Wert(
             ausdruck = ausdruck,
             bereich = ergebnisBereich,

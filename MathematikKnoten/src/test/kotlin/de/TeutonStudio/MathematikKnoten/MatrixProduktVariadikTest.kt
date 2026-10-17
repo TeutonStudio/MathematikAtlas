@@ -25,7 +25,7 @@ class MatrixProduktVariadikTest {
             assertTrue(ergebnis.getOrThrow().ausgaben.isEmpty())
         } else assertIs<IllegalArgumentException>(ergebnis.exceptionOrNull())
     }
-    private fun auswerten(k: KnotenDaten, werte: Map<String,BedingterWert>) = register.finde(k.art)!!.auswerten(KnotenAuswertungsKontext(k,werte,RechenKontext()))
+    private fun auswerten(k: KnotenDaten, werte: Map<String,BedingterWert>) = register.findeNachMigration(k.art).auswerten(KnotenAuswertungsKontext(k,werte,RechenKontext()))
 
     @Test fun `beide Pfade rechnen sechs geordnete Faktoren ohne Obergrenze`() {
         listOf(false,true).forEach { kanonisch ->
@@ -47,6 +47,6 @@ class MatrixProduktVariadikTest {
         val reserve=k.anschlüsse.first().copy(id=AnschlussId("reserve"),name="input3",reihenfolge=2,dynamischErzeugt=true)
         val neu=k.copy(anschlüsse=k.anschlüsse+reserve)
         assertEquals(matrix(6),auswerten(neu,mapOf("a" to BedingterWert(matrix(2)),"b" to BedingterWert(matrix(3)))).ausgaben.values.single().objekt)
-        assertFails { auswerten(neu,mapOf("a" to BedingterWert(matrix(2)),"input3" to BedingterWert(matrix(4)))) }
+        diagnosetest { auswerten(neu,mapOf("a" to BedingterWert(matrix(2)),"input3" to BedingterWert(matrix(4)))) }
     }
 }

@@ -152,30 +152,12 @@ object MengenraumKnotenVorlagen {
 }
 
 internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
-    registriere("mathematik.leereMenge") {
-        mengenraumErgebnis(LeereMenge)
-    }
-    registriere("mathematik.gaussZahlen") {
-        mengenraumErgebnis(GaußscheGanzeZahlen)
-    }
-    registriere("mathematik.primzahlen") {
-        mengenraumErgebnis(Primzahlen)
-    }
-    registriere("mathematik.gaussPrimzahlen") {
-        mengenraumErgebnis(GaußschePrimzahlen)
-    }
-    registriere("mathematik.potenzmenge") { k ->
-        mengenraumErgebnis(Potenzmenge(k.mengenraumEingabe("grundmenge")), k)
-    }
-    registriere("mathematik.abbildungsmenge") { k ->
-        mengenraumErgebnis(
-            Abbildungsmenge(
-                zielMenge = k.mengenraumEingabe("zielmenge"),
-                definitionsMenge = k.mengenraumEingabe("definitionsmenge"),
-            ),
-            k,
-        )
-    }
+
+
+
+
+
+
     registriere("mathematik.vektorraum") { k ->
         mengenraumErgebnis(
             Tensorraum(
@@ -219,15 +201,7 @@ internal fun MathematikAuswerterRegister.registriereMengenraumKnoten() {
     registriere("mathematik.moduloZahlenraum") { k ->
         mengenraumErgebnis(ModuloZahlenraum(k.mengenraumPositiveGanzzahl("modul", minimum = 2)), k)
     }
-    registriere("mathematik.symmetrischeDifferenz") { k ->
-        mengenraumErgebnis(
-            symmetrischeDifferenz(
-                k.mengenraumEingabe("links"),
-                k.mengenraumEingabe("rechts"),
-            ),
-            k,
-        )
-    }
+
 }
 
 private fun mengenraumErgebnis(

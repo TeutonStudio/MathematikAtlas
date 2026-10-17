@@ -24,13 +24,13 @@ class StrukturRechnerKnotenTest {
 
         assertTrue(sichtbar.all(arten::contains))
         assertFalse(SKALARPRODUKT_ART in arten)
-        auswerterArten.forEach { assertNotNull(register.finde(it), "Auswerter für $it fehlt") }
+        auswerterArten.forEach { assertNotNull(register.findeNachMigration(it), "Auswerter für $it fehlt") }
     }
 
     @Test
     fun `Skalarproduktknoten akzeptiert Zeile und Spalte gemeinsam`() {
         val knoten = StrukturRechnerKnotenVorlagen.Skalarprodukt.erzeuge(GraphPunkt.Zero)
-        val ergebnis = register.finde(SKALARPRODUKT_ART)!!.auswerten(
+        val ergebnis = register.findeNachMigration(SKALARPRODUKT_ART).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
@@ -41,6 +41,7 @@ class StrukturRechnerKnotenTest {
             ),
         )
 
+        assertNull(ergebnis.fehler)
         assertEquals(zahl(11), ergebnis.ausgaben.getValue("wert").objekt)
         assertNull(ergebnis.fehler)
     }
@@ -48,7 +49,7 @@ class StrukturRechnerKnotenTest {
     @Test
     fun `Skalarprodukt meldet ungleiche Tupellaengen strukturiert`() {
         val knoten = StrukturRechnerKnotenVorlagen.Skalarprodukt.erzeuge(GraphPunkt.Zero)
-        val ergebnis = register.finde(SKALARPRODUKT_ART)!!.auswerten(
+        assertFailsWith<IllegalArgumentException> { register.findeNachMigration(SKALARPRODUKT_ART).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
@@ -58,9 +59,7 @@ class StrukturRechnerKnotenTest {
                 RechenKontext(),
             ),
         )
-
-        assertTrue(ergebnis.ausgaben.isEmpty())
-        assertFalse(ergebnis.fehler.isNullOrBlank())
+        }
     }
 
     @Test
@@ -72,7 +71,7 @@ class StrukturRechnerKnotenTest {
                 listOf(zahl(4), zahl(5), zahl(6)),
             ),
         )
-        val ergebnis = register.finde(DIMENSIONEN_ART)!!.auswerten(
+        val ergebnis = register.findeNachMigration(DIMENSIONEN_ART).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf("objekt" to BedingterWert(matrix)),
@@ -111,7 +110,7 @@ class StrukturRechnerKnotenTest {
             StrukturRechnerKnotenVorlagen.Tensorrechner.erzeuge(GraphPunkt.Zero),
             TensorRechnerOperator.KONTRAKTION,
         )
-        val ergebnis = register.finde(TensorRechner.KNOTEN_ART)!!.auswerten(
+        val ergebnis = register.findeNachMigration(TensorRechner.KNOTEN_ART).auswerten(
             KnotenAuswertungsKontext(knoten, emptyMap(), RechenKontext()),
         )
 
@@ -127,7 +126,7 @@ class StrukturRechnerKnotenTest {
             höhe = 2,
             breite = 2,
         )
-        val ergebnis = register.finde("mathematik.matrix")!!.auswerten(
+        val ergebnis = register.findeNachMigration("mathematik.matrix").auswerten(
             KnotenAuswertungsKontext(
                 matrix,
                 mapOf(
@@ -152,7 +151,7 @@ class StrukturRechnerKnotenTest {
             höhe = 1,
             breite = 2,
         )
-        val ergebnis = register.finde("mathematik.matrix")!!.auswerten(
+        val ergebnis = register.findeNachMigration("mathematik.matrix").auswerten(
             KnotenAuswertungsKontext(
                 matrix,
                 mapOf(matrixZeileName(0) to BedingterWert(SpaltenVektor(listOf(zahl(1), zahl(2))))),
@@ -169,7 +168,7 @@ class StrukturRechnerKnotenTest {
             StrukturRechnerKnotenVorlagen.Tensorrechner.erzeuge(GraphPunkt.Zero),
             TensorRechnerOperator.NORM,
         )
-        val ergebnis = register.finde(TensorRechner.KNOTEN_ART)!!.auswerten(
+        val ergebnis = register.findeNachMigration(TensorRechner.KNOTEN_ART).auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf("tensor" to BedingterWert(SpaltenVektor(listOf(zahl(3), zahl(4))))),

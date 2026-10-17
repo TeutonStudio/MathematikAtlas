@@ -103,7 +103,6 @@ internal object ExpliziteKonzeptKnoten {
         VariableKonzeptDatei75AF5028,
         RadiusSpalteKonzeptDatei0B34B00C,
         RadiusZeileKonzeptDatei63B931F8,
-        VektorZuPolynomKonzeptDatei9DB43D81,
         VektorrechnerKonzeptDatei7D632CEB,
         SpaltenvektorKonzeptDateiF5C13360,
         VereinigungKonzeptDatei0C0E4F66,

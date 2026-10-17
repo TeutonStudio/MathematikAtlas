@@ -66,16 +66,16 @@ class FaltungsAuswerterTest {
     }
 
     @Test
-    fun `Methoden Anwendung wertet konkrete einwertige Methode aus`() {
+    fun `gemeinsamer Methodenaufruf wertet konkrete einwertige Methode direkt aus`() {
         val x = Variable("x")
         val methode = Methode(
             "f", listOf(x), mapOf("wert" to addition(x, RationaleZahl.Eins)),
             mapOf("wert" to ReelleZahlen), mapOf(x.name to ReelleZahlen),
         )
         val knoten = KnotenDaten(
-            art = METHODEN_ANWENDUNG_ART,
+            art = METHODEN_AUFRUF_ART,
             name = "Methode anwenden",
-            parameter = mapOf(METHODEN_ANWENDUNG_ERGEBNIS_ART to "mathematik.zahl"),
+            parameter = mapOf(METHODEN_AUFRUF_ERGEBNISPROJEKTION to METHODEN_ERGEBNISPROJEKTION_DIREKT),
             anschlüsse = listOf(
                 AnschlussDaten(name = "methode", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.funktion.zahl"), reihenfolge = 0),
                 AnschlussDaten(name = "argument", richtung = AnschlussRichtung.Eingang, kante = AnschlussKante.Links, art = AnschlussArtId("mathematik.zahl"), reihenfolge = 1),
@@ -83,7 +83,7 @@ class FaltungsAuswerterTest {
             ),
         )
 
-        val ergebnis = MethodenAnwendungAuswerter.auswerten(
+        val ergebnis = MethodenAufrufAuswerter.auswerten(
             KnotenAuswertungsKontext(
                 knoten,
                 mapOf(
