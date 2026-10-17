@@ -216,11 +216,15 @@ class MethodenKonsolidierungMigrationTest {
         val x=Variable("x")
         val m=MathematischeMethode("f",listOf(x),x,ReelleZahlen,mapOf("x" to ReelleZahlen))
         val e=KartenAuswertungsErgebnis(mapOf(original.id to KnotenAuswertungsErgebnis(emptyMap(),eingänge=mapOf("methode" to BedingterWert(m),"argument" to BedingterWert(RationaleZahl.von(3))))),emptyList())
-        val n=synchronisiereMethodenAufrufe(graph,e,prüfung)
-        val k=n.knoten.single {it.id==original.id}
-        assertFalse(METHODEN_AUFRUF_VERTRAGSFEHLER in k.parameter)
-        assertEquals(graph.verbindungen,n.verbindungen)
-        assertEquals(original.anschlüsse.single {it.name=="argument"}.art,k.anschlüsse.single {it.name=="argument"}.art)
+        for (wert in listOf(BedingterWert(RationaleZahl.von(3)), BedingterWert(Variable("u"),werteVorrat=ReelleZahlen))) {
+            val mitWert = e.copy(knoten=e.knoten.mapValues { (_, ergebnis) -> ergebnis.copy(
+                eingänge=ergebnis.eingänge+("argument" to wert)) })
+            val n=synchronisiereMethodenAufrufe(graph,mitWert,prüfung)
+            val k=n.knoten.single {it.id==original.id}
+            assertFalse(METHODEN_AUFRUF_VERTRAGSFEHLER in k.parameter,k.parameter.toString())
+            assertEquals(graph.verbindungen,n.verbindungen)
+            assertEquals(original.anschlüsse.single {it.name=="argument"}.art,k.anschlüsse.single {it.name=="argument"}.art)
+        }
     }
 
 }

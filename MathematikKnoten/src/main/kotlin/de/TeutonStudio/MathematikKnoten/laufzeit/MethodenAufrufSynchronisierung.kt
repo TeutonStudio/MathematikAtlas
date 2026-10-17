@@ -304,7 +304,9 @@ private fun synchronisiereMethodenAufruf(
             val tatsächlicherTyp = when (objekt) {
                 is Methode -> objekt.methodenTypAusdruck()
                 is MathematischesObjekt -> runCatching {
-                    inferiereZielmenge(objekt, wert.reelleVariablen, wert.annahmen).elementTypAusdruck()
+                    val vorräte = wert.reelleVariablen + wert.variablenQuellen.associate { it.name to it.werteVorrat } +
+                        if (objekt is Variable) (wert.werteVorrat ?: wert.zielMenge)?.let { mapOf(objekt.name to it) }.orEmpty() else emptyMap()
+                    inferiereZielmenge(objekt, vorräte, wert.annahmen).elementTypAusdruck()
                 }.getOrNull()
                 else -> null
             } ?: wert?.zielMenge?.elementTypAusdruck() ?: wert?.werteVorrat?.elementTypAusdruck()

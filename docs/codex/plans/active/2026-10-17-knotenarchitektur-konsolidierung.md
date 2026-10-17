@@ -302,3 +302,17 @@ Findings. Frühere Fehlversuche (zu strenge Legacy-Portprüfung und überlappend
 Desktop-Gradle-Läufe) sind durch diesen sequenziellen finalen Lauf ersetzt.
 Freigabe zur Erstellung des eigenständigen Release-PRs v3.4.3; Veröffentlichung
 weiter an alle Gates am finalen PR-Head und nachfolgenden master-SHA gebunden.
+
+M1-Abnahmeergänzung vor Veröffentlichung: Ein gezielt reproduzierter Randfall
+zeigte, dass ein symbolischer Eingang mit explizitem reellem Wertevorrat ohne
+zusätzliche reelleVariablen-Map konservativ als komplex abgeleitet wurde. Die
+Synchronisierung berücksichtigt nun Quellenmetadaten und den ausdrücklich
+deklarierten Bereich einer direkten Variable. Konkrete Werte werden weiter anhand
+ihres Objekts typisiert. Erweiterte Standard-Altaufrufregression für Zahl und reelles
+Symbol sowie alle 14 Migrations-/Differenzenquotientfälle bestehen. Unabhängige
+Zusatzprüfung ohne Findings. PR #457 erhält dafür einen neuen Head; Nachweise des
+vorangegangenen f90a14b9 gelten nicht als CI-Freigabe des aktualisierten Heads.
+Zusatz-Vollprüfung ebenfalls erfolgreich: 3m36s, 277 Tasks, alle Test-/Lint-/APK-
+und Desktop-Kompilieraufgaben grün. Unabhängige Zusatzprüfung ohne Findings.
+Der aktualisierte Produktbaum ist zur Commit-/PR-Aktualisierung freigegeben;
+Veröffentlichung erst nach CI am dadurch erzeugten endgültigen SHA.
